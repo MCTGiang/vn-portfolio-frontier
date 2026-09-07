@@ -1,0 +1,148 @@
+# ==============================================================================
+# Python
+# ==============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django / Flask (unused, but guard anyway)
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+instance/
+.webassets-cache
+
+# Sphinx documentation
+docs/_build/
+
+# Environments
+.env
+.env.local
+.env.*.local
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# pyenv
+.python-version
+
+# PEP 582
+__pypackages__/
+
+# Type checkers / linters cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ==============================================================================
+# Project-specific
+# ==============================================================================
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# dbt
+target/
+dbt_packages/
+logs/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# IPython
+profile_default/
+ipython_config.py
+
+# Raw / processed data (regenerable from source; managed via Neon)
+data/raw/*.csv
+data/raw/*.parquet
+data/processed/
+!data/**/.gitkeep
+
+# ML model artifacts (large; store elsewhere)
+models/*.pt
+models/*.bin
+models/*.safetensors
+models/*.onnx
+
+# Prefect
+.prefect/
+
+# ==============================================================================
+# IDEs / editors
+# ==============================================================================
+
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+
+# ==============================================================================
+# OS
+# ==============================================================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
