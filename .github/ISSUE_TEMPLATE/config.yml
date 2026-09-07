@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Related — Project 1 (vn-portfolio-optimizer)
+    url: https://github.com/MCTGiang/vn-portfolio-optimizer
+    about: Predecessor project — MPT minimum-variance optimizer.
