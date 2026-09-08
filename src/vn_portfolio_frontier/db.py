@@ -1,7 +1,8 @@
 """Database connection helpers for Neon Cloud PostgreSQL.
 
 Loads NEON_DATABASE_URL from `.env` (via python-dotenv) or the system
-environment, and exposes connection helpers for the rest of the package.
+environment, and exposes connection + introspection helpers for the rest
+of the package.
 
 Typical usage:
 
@@ -75,3 +76,35 @@ def connection_scope() -> Iterator[psycopg2.extensions.connection]:
         yield conn
     finally:
         conn.close()
+
+
+def list_schemas() -> list[str]:
+    """Return sorted list of user schemas.
+
+    Excludes Postgres system schemas (pg_*, information_schema).
+    """
+    with connection_scope() as conn, conn.cursor() as cur:
+        cur.execute("""
+            SELECT schema_name
+            FROM information_schema.schemata
+            WHERE schema_name NOT LIKE 'pg_%'
+              AND schema_name != 'information_schema'
+            ORDER BY schema_name
+            """)
+        return [row[0] for row in cur.fetchall()]
+
+
+def list_tables(schema: str) -> list[str]:
+    """Return sorted list of base tables in the given schema."""
+    with connection_scope() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = %s
+              AND table_type = 'BASE TABLE'
+            ORDER BY table_name
+            """,
+            (schema,),
+        )
+        return [row[0] for row in cur.fetchall()]
