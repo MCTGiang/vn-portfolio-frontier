@@ -1,0 +1,59 @@
+# Auto-detect text files, normalize to LF in the repo
+* text=auto eol=lf
+
+# Explicit text (LF)
+*.py           text eol=lf
+*.pyi          text eol=lf
+*.md           text eol=lf
+*.rst          text eol=lf
+*.txt          text eol=lf
+*.yml          text eol=lf
+*.yaml         text eol=lf
+*.toml         text eol=lf
+*.cfg          text eol=lf
+*.ini          text eol=lf
+*.json         text eol=lf
+*.jsonc        text eol=lf
+*.html         text eol=lf
+*.css          text eol=lf
+*.js           text eol=lf
+*.ts           text eol=lf
+*.tsx          text eol=lf
+*.sh           text eol=lf
+*.sql          text eol=lf
+*.env.example  text eol=lf
+.gitignore     text eol=lf
+.gitattributes text eol=lf
+LICENSE        text eol=lf
+Dockerfile     text eol=lf
+
+# Jupyter notebooks (JSON but treated as text)
+*.ipynb        text eol=lf
+
+# Windows-specific scripts keep CRLF
+*.bat          text eol=crlf
+*.cmd          text eol=crlf
+*.ps1          text eol=crlf
+
+# Binary
+*.png          binary
+*.jpg          binary
+*.jpeg         binary
+*.gif          binary
+*.ico          binary
+*.svg          binary
+*.pdf          binary
+*.zip          binary
+*.gz           binary
+*.tar          binary
+*.parquet      binary
+*.db           binary
+*.sqlite       binary
+*.sqlite3      binary
+*.pkl          binary
+*.pt           binary
+*.bin          binary
+*.safetensors  binary
+*.onnx         binary
+*.woff         binary
+*.woff2        binary
