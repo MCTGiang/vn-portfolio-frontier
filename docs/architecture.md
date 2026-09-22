@@ -546,9 +546,9 @@ All simulation runs are persisted to `simulation.rebalance_run` (Task 4b, migrat
 
 # Open decisions (pending)
 
-## ADR-007 (OPEN): Prefect vs Apache Airflow for workflow orchestration
+## ADR-007: Prefect vs Apache Airflow for workflow orchestration
 
-**Status:** PROPOSED — decision deadline **2026-09-15**
+**Status:** SUPERSEDED — 2026-09-22 (deferred to Phase 4 / thesis platform)
 
 ### Context
 
@@ -568,7 +568,19 @@ Phase 3 needs a workflow orchestrator for scheduled data pipelines:
 | Ecosystem | Newer, smaller | Industry standard, larger |
 | Learning curve | Gentler for Python devs | Steeper (concepts like DAG runs, task instances) |
 
-### Preliminary recommendation
+### Resolution (2026-09-22)
+
+**Deferred to Phase 4 (thesis platform).** Original deadline (2026-09-15) passed without decision because Project 2's core features (Efficient Frontier + Auto-Rebalancing + PhoBERT Sentiment) don't require a workflow orchestrator during the 3-month build phase:
+
+- Data ingestion (Task 5, Sprint 10) is a **one-time backfill** — no scheduling needed.
+- Feature 2 rebalancing runs are user-triggered simulations, not scheduled jobs.
+- Feature 3 sentiment extraction is batch-invoked from ad-hoc scripts during PhoBERT development.
+
+Scheduled pipelines (daily price refresh, weekly fundamentals, hourly news scrape) become meaningful only in **Phase 4 (thesis platform)** when the microservices architecture serves real-time users. Decision defers to that phase.
+
+Preliminary recommendation **Prefect** remains the leaning choice for Phase 4 — reasons preserved below for future reference.
+
+### Preliminary recommendation (retained for Phase 4)
 
 **Prefect** — better fits project scale and 8 GB RAM constraint. Airflow's operational complexity is overkill for ~4 daily flows.
 
