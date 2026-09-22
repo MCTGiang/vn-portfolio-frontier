@@ -1,8 +1,7 @@
 """Database connection helpers for Neon Cloud PostgreSQL.
 
-Loads NEON_DATABASE_URL from `.env` (via python-dotenv) or the system
-environment, and exposes connection + introspection helpers for the rest
-of the package.
+Reads settings via `vn_portfolio_frontier.config.get_settings()` and
+exposes connection + introspection helpers for the rest of the package.
 
 Typical usage:
 
@@ -15,45 +14,37 @@ Typical usage:
 
 from __future__ import annotations
 
-import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 
 import psycopg2
 import psycopg2.extensions
-from dotenv import load_dotenv
+
+from vn_portfolio_frontier.config import get_settings
 
 
 def _load_url() -> str:
-    """Load NEON_DATABASE_URL from environment (.env or system env).
-
-    Returns:
-        A libpq-compatible connection string ready for psycopg2.connect.
+    """Return the Neon connection URL from settings.
 
     Raises:
-        RuntimeError: If NEON_DATABASE_URL is not set.
+        RuntimeError: If NEON_DATABASE_URL is not configured.
     """
-    load_dotenv()  # walks upward from CWD looking for .env; safe if absent
-    url = os.getenv("NEON_DATABASE_URL")
-    if not url:
+    settings = get_settings()
+    if settings.neon_database_url is None:
         raise RuntimeError(
             "NEON_DATABASE_URL is not set. Copy .env.example to .env and "
             "fill in your Neon connection string, then rerun."
         )
-    return url
+    return settings.neon_database_url.get_secret_value()
 
 
 def is_configured() -> bool:
-    """Whether Neon credentials are available in the environment.
+    """Whether Neon credentials are available.
 
     Used by test suites to skip integration tests gracefully when the
     developer has not configured `.env` (typical for CI runs).
     """
-    try:
-        _load_url()
-        return True
-    except RuntimeError:
-        return False
+    return get_settings().neon_database_url is not None
 
 
 def get_connection() -> psycopg2.extensions.connection:
