@@ -13,7 +13,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "vn-portfolio-frontier"
 version = "0.1.0"
-description = "Efficient Frontier extension with auto-rebalancing and PhoBERT sentiment signals for Vietnamese equity portfolios"
+description = "Efficient Frontier Portfolio Optimization and Auto-Rebalancing System with Vietnamese Financial News Sentiment Signals"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }

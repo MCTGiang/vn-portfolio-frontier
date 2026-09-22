@@ -72,7 +72,8 @@ docs/_build/
 .env
 .env.local
 .env.*.local
-.venv
+.venv/
+.venv-*/
 env/
 venv/
 ENV/

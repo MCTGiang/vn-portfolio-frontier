@@ -1,6 +1,6 @@
 # vn-portfolio-frontier
 
-> Efficient Frontier extension with auto-rebalancing and PhoBERT sentiment signals for Vietnamese equity portfolios.
+> Efficient Frontier Portfolio Optimization and Auto-Rebalancing System with Vietnamese Financial News Sentiment Signals.
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
