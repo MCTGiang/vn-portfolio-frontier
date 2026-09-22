@@ -37,9 +37,9 @@ repos:
         language_version: python3
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.4
+    rev: v0.16.6
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix]
 
   - repo: https://github.com/gitleaks/gitleaks
