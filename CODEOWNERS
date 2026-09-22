@@ -1,0 +1,10 @@
+# Code owners for vn-portfolio-frontier.
+# GitHub auto-requests review from listed owners when a PR touches matching paths.
+# Solo project → single owner across the tree.
+
+*                       @MCTGiang
+
+# Sensitive areas — explicit for clarity when future collaborators join.
+.github/                @MCTGiang
+migrations/             @MCTGiang
+docs/                   @MCTGiang
