@@ -37,7 +37,7 @@ Semantic prefixes required — the CI matrix and PR template rely on them:
 | `infra/`     | Docker, Neon, dbt, or deployment infra     |
 | `polish/`    | Small quality-of-life improvements         |
 
-Descriptive slugs: `test/pytest-fixture-scoping`, **not** `test/day6`.  
+Descriptive slugs: `test/pytest-fixture-scoping`, **not** `test/day6`.
 Delete branches after merge.
 
 ## Commit conventions

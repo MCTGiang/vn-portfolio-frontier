@@ -1,0 +1,53 @@
+# Dependabot: weekly dependency updates for pip + GitHub Actions.
+#
+# Rationale:
+# - Reduces manual maintenance burden across a 3-month project.
+# - Surfaces CVEs via automated PRs instead of silent staleness.
+# - PRs reviewed manually — no auto-merge for a research project where
+#   a dependency bump can break reproducibility of thesis results.
+#
+# Reference: https://docs.github.com/en/code-security/dependabot
+
+version: 2
+updates:
+  # Python runtime + dev dependencies (declared in pyproject.toml)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Ho_Chi_Minh"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "MCTGiang"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      # Batch minor/patch updates to reduce PR noise; major stays individual.
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions workflow dependencies (actions/checkout, setup-python, ...)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Ho_Chi_Minh"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "MCTGiang"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"

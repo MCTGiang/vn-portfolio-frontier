@@ -43,13 +43,15 @@ def test_migration_004_recorded() -> None:
 def test_article_has_expected_columns() -> None:
     """article schema matches design: URL-keyed dedup, source enum, bilingual-ready."""
     with connection_scope() as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT column_name, data_type, is_nullable
             FROM information_schema.columns
             WHERE table_schema = 'news_sentiment'
               AND table_name = 'article'
             ORDER BY ordinal_position
-            """)
+            """
+        )
         rows = cur.fetchall()
 
     columns = {row[0]: (row[1], row[2]) for row in rows}
@@ -75,13 +77,15 @@ def test_article_has_expected_columns() -> None:
 def test_extracted_signal_has_expected_columns() -> None:
     """extracted_signal schema matches: entities JSONB, extractor_version, no direct ticker FK."""
     with connection_scope() as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT column_name, data_type, is_nullable
             FROM information_schema.columns
             WHERE table_schema = 'news_sentiment'
               AND table_name = 'extracted_signal'
             ORDER BY ordinal_position
-            """)
+            """
+        )
         rows = cur.fetchall()
 
     columns = {row[0]: (row[1], row[2]) for row in rows}
@@ -108,7 +112,8 @@ def test_extracted_signal_has_expected_columns() -> None:
 def test_signal_fk_to_article_uses_cascade() -> None:
     """extracted_signal.article_id → article.article_id must use ON DELETE CASCADE."""
     with connection_scope() as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT rc.delete_rule, kcu.column_name, ccu.table_name, ccu.column_name
             FROM information_schema.referential_constraints rc
             JOIN information_schema.key_column_usage kcu
@@ -119,7 +124,8 @@ def test_signal_fk_to_article_uses_cascade() -> None:
                 AND rc.unique_constraint_schema = ccu.constraint_schema
             WHERE rc.constraint_schema = 'news_sentiment'
               AND kcu.table_name = 'extracted_signal'
-            """)
+            """
+        )
         row = cur.fetchone()
 
     assert row is not None, "No FK found on extracted_signal"
@@ -133,14 +139,16 @@ def test_signal_fk_to_article_uses_cascade() -> None:
 def test_signal_dedupe_unique_constraint_exists() -> None:
     """UNIQUE (article_id, ticker, event_type, extractor_version) prevents rescore duplicates."""
     with connection_scope() as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT tc.constraint_name
             FROM information_schema.table_constraints tc
             WHERE tc.table_schema = 'news_sentiment'
               AND tc.table_name = 'extracted_signal'
               AND tc.constraint_type = 'UNIQUE'
               AND tc.constraint_name = 'uq_signal_dedupe'
-            """)
+            """
+        )
         row = cur.fetchone()
 
     assert row is not None, "uq_signal_dedupe UNIQUE constraint missing"

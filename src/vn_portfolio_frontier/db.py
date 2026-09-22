@@ -84,13 +84,15 @@ def list_schemas() -> list[str]:
     Excludes Postgres system schemas (pg_*, information_schema).
     """
     with connection_scope() as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT schema_name
             FROM information_schema.schemata
             WHERE schema_name NOT LIKE 'pg_%'
               AND schema_name != 'information_schema'
             ORDER BY schema_name
-            """)
+            """
+        )
         return [row[0] for row in cur.fetchall()]
 
 

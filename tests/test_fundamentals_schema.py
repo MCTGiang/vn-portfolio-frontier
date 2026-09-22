@@ -43,13 +43,15 @@ def test_migration_003_recorded() -> None:
 def test_vn30_constituent_has_expected_columns() -> None:
     """vn30_constituent has bilingual name + sector + historical tracking columns."""
     with connection_scope() as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT column_name, data_type, is_nullable
             FROM information_schema.columns
             WHERE table_schema = 'fundamentals'
               AND table_name = 'vn30_constituent'
             ORDER BY ordinal_position
-            """)
+            """
+        )
         rows = cur.fetchall()
 
     columns = {row[0]: (row[1], row[2]) for row in rows}
@@ -79,13 +81,15 @@ def test_vn30_constituent_has_expected_columns() -> None:
 def test_financial_report_has_expected_columns() -> None:
     """financial_report has minimal scope: revenue + net_income + EPS + metadata."""
     with connection_scope() as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT column_name, data_type
             FROM information_schema.columns
             WHERE table_schema = 'fundamentals'
               AND table_name = 'financial_report'
             ORDER BY ordinal_position
-            """)
+            """
+        )
         columns = {row[0]: row[1] for row in cur.fetchall()}
 
     expected = {
@@ -114,7 +118,8 @@ def test_financial_report_has_expected_columns() -> None:
 def test_financial_report_has_fk_to_vn30_constituent() -> None:
     """financial_report.ticker has FK to vn30_constituent.ticker."""
     with connection_scope() as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT
                 tc.constraint_name,
                 kcu.column_name,
@@ -131,7 +136,8 @@ def test_financial_report_has_fk_to_vn30_constituent() -> None:
             WHERE tc.constraint_type = 'FOREIGN KEY'
               AND tc.table_schema = 'fundamentals'
               AND tc.table_name = 'financial_report'
-            """)
+            """
+        )
         fks = cur.fetchall()
 
     assert len(fks) == 1, f"Expected exactly 1 FK on financial_report, got {len(fks)}"

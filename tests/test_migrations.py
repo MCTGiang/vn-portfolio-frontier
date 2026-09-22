@@ -74,13 +74,15 @@ def test_prices_daily_ohlcv_table_exists() -> None:
 def test_prices_daily_ohlcv_has_expected_columns() -> None:
     """prices.daily_ohlcv has the columns the ADR-009 schema design specifies."""
     with connection_scope() as conn, conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT column_name, data_type
             FROM information_schema.columns
             WHERE table_schema = 'prices'
               AND table_name = 'daily_ohlcv'
             ORDER BY ordinal_position
-            """)
+            """
+        )
         columns = {row[0]: row[1] for row in cur.fetchall()}
 
     expected = {

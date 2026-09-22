@@ -1,0 +1,48 @@
+# Pre-commit hooks: local validation before commit reaches origin.
+#
+# Rationale:
+# - Catch formatting/lint issues locally in <5s instead of failing CI in 2+ min.
+# - Block secrets at commit time as a second line of defense (GitHub push
+#   protection is the first).
+# - Enforce consistency across sessions — same tools, same versions.
+#
+# Setup (one-time, per clone):
+#   pip install pre-commit
+#   pre-commit install
+#
+# Run manually across all files:
+#   pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.0
+    hooks:
+      - id: gitleaks
