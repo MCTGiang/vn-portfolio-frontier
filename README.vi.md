@@ -1,6 +1,6 @@
 # vn-portfolio-frontier
 
-> Mở rộng Đường biên Hiệu quả và Tích hợp Phân tích Cảm xúc Thị trường cho Danh mục Chứng khoán Việt Nam.
+> Hệ thống Tối ưu và Tái cân bằng Danh mục Cổ phiếu Việt Nam theo Đường biên Hiệu quả với Tín hiệu Cảm xúc từ Tin tức Tài chính tiếng Việt.
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
