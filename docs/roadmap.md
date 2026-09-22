@@ -37,7 +37,7 @@ Deadline for submission: **2026-11-17** (Tuesday). Working cadence: ~2 h weekday
 | Security posture + version pinning | 2026-09-22 | Locked | [ADR-010](./architecture.md#adr-010-security-posture-and-version-pinning-discipline) |
 | VN news sources (VnExpress/CafeF/VietStock) | 2026-09-22 | Locked | [ADR-011](./architecture.md#adr-011-vietnamese-financial-news-sources-for-sentiment-extraction) |
 | Rebalancing cost model (user-parameterized) | 2026-09-21 | Locked | [ADR-012](./architecture.md#adr-012-auto-rebalancing-transaction-cost-model--user-parameterized-cost-agnostic-framework) |
-| **Prefect vs Airflow** | 2026-09-15 (passed) | Reassess - may defer to thesis phase | [ADR-007](./architecture.md#adr-007-open-prefect-vs-apache-airflow-for-workflow-orchestration) |
+| Prefect vs Airflow | 2026-09-15 | Deferred to Phase 4 (thesis platform) — see ADR-007 Resolution | [ADR-007](./architecture.md#adr-007-prefect-vs-apache-airflow-for-workflow-orchestration) |
 | **PhoBERT vs RAG** | **2026-10-20** | Open (milestone gate end of week 10) | [ADR-008](./architecture.md#adr-008-open-phobert-fine-tune-vs-rag-for-sentiment-extraction) |
 
 ## Live sprint tracker
