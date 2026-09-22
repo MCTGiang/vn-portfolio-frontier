@@ -15,7 +15,7 @@ jobs:
     name: Lint (ruff + black)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -43,7 +43,7 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true   # non-strict: warning only, does not block PR merge
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
