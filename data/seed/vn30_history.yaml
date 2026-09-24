@@ -1,0 +1,287 @@
+# VN30 constituent history 2021-01 → 2026-07
+#
+# Source: 12 HOSE constituent-list publications provided by Ginny (Sep 2026).
+# Purpose: seed data for `fundamentals.vn30_membership_event` (Migration 006).
+#
+# Image → period mapping (verified by share counts + explicit "thay thế" notes):
+#   image  0cb2caca  → 1/2023  (note: BCM Được thêm thay thế KDH)
+#   image  218b9870  → 7/2021  (title visible)
+#   image  2c58b453  → 1/2021  (title visible)
+#   image  2f0019d6  → 7/2024  (same tickers as 1/2024, ACB shares grew 3.884B → 4.466B)
+#   image  35f70219  → not part of this batch (uploaded Aug 28, unrelated)
+#   image  3cfd8dd8  → 1/2026  (title "Kỳ 1/2026" visible)
+#   image  56306640  → 1/2022  (title visible)
+#   image  9329bef2  → 1/2024  (same tickers as 7/2023, BID/HDB shares grew)
+#   image  9d24df02  → 7/2026  (title "Kỳ 7/2026" visible; BSR/MCH/TCX new)
+#   image  b26be3ec  → 1/2025  (LPB in, POW out, BVH still present)
+#   image  cf3f7233  → 7/2022  (title visible; VIB added vs 1/2022)
+#   image  d769548d  → 7/2025  (title "Kỳ 7/2025" visible)
+#   image  d9eb39db  → 7/2023  (note: SHB Được thêm thay thế NVL, PDR)
+#
+# ⚠️ UNCERTAINTY WINDOW: periods 1/2023, 7/2023, 1/2024, 7/2024 assigned by
+#    inference (share-count monotonicity + swap notes). Verify against
+#    original HOSE publication filenames/metadata before locking the seed.
+#
+# Effective dates: estimated as first trading day of Feb / first trading day
+# of Aug (HOSE convention). Adjust if the announcement text on the images
+# gives an exact effective date. All dates below are ISO-8601 (YYYY-MM-DD).
+
+meta:
+  source: "HOSE VN30 constituent lists (12 images provided by user)"
+  generated_by: "claude vision + delta analysis"
+  generated_at: "2026-09-23"
+  universe_size_per_period: 30
+  unique_tickers_2021_2026: 43
+
+# ---------------------------------------------------------------------------
+# Full snapshot per rebalance period (30 tickers each).
+# ---------------------------------------------------------------------------
+snapshots:
+
+  - period: "1/2021"
+    effective_date: 2021-02-01
+    source_image: 2c58b453-image.webp
+    tickers:
+      [BID, BVH, CTG, FPT, GAS, HDB, HPG, KDH, MBB, MSN,
+       MWG, NVL, PDR, PLX, PNJ, POW, REE, SBT, SSI, STB,
+       TCB, TCH, TPB, VCB, VHM, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "7/2021"
+    effective_date: 2021-08-02
+    source_image: 218b9870-image.png
+    tickers:
+      [ACB, BID, BVH, CTG, FPT, GAS, GVR, HDB, HPG, KDH,
+       MBB, MSN, MWG, NVL, PDR, PLX, PNJ, POW, SAB, SSI,
+       STB, TCB, TPB, VCB, VHM, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "1/2022"
+    effective_date: 2022-02-07
+    source_image: 56306640-image.png
+    tickers:
+      [ACB, BID, BVH, CTG, FPT, GAS, GVR, HDB, HPG, KDH,
+       MBB, MSN, MWG, NVL, PDR, PLX, PNJ, POW, SAB, SSI,
+       STB, TCB, TPB, VCB, VHM, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "7/2022"
+    effective_date: 2022-08-01
+    source_image: cf3f7233-image.png
+    tickers:
+      [ACB, BID, BVH, CTG, FPT, GAS, GVR, HDB, HPG, KDH,
+       MBB, MSN, MWG, NVL, PDR, PLX, POW, SAB, SSI, STB,
+       TCB, TPB, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "1/2023"
+    effective_date: 2023-02-06
+    source_image: 0cb2caca-image.png
+    tickers:
+      [ACB, BCM, BID, BVH, CTG, FPT, GAS, GVR, HDB, HPG,
+       MBB, MSN, MWG, NVL, PDR, PLX, POW, SAB, SSI, STB,
+       TCB, TPB, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "7/2023"
+    effective_date: 2023-08-07
+    source_image: d9eb39db-image.png
+    tickers:
+      [ACB, BCM, BID, BVH, CTG, FPT, GAS, GVR, HDB, HPG,
+       MBB, MSN, MWG, PLX, POW, SAB, SHB, SSB, SSI, STB,
+       TCB, TPB, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "1/2024"
+    effective_date: 2024-02-05
+    source_image: 9329bef2-image.png
+    tickers:
+      [ACB, BCM, BID, BVH, CTG, FPT, GAS, GVR, HDB, HPG,
+       MBB, MSN, MWG, PLX, POW, SAB, SHB, SSB, SSI, STB,
+       TCB, TPB, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "7/2024"
+    effective_date: 2024-08-05
+    source_image: 2f0019d6-image.png
+    tickers:
+      [ACB, BCM, BID, BVH, CTG, FPT, GAS, GVR, HDB, HPG,
+       MBB, MSN, MWG, PLX, POW, SAB, SHB, SSB, SSI, STB,
+       TCB, TPB, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "1/2025"
+    effective_date: 2025-02-03
+    source_image: b26be3ec-image.png
+    tickers:
+      [ACB, BCM, BID, BVH, CTG, FPT, GAS, GVR, HDB, HPG,
+       LPB, MBB, MSN, MWG, PLX, SAB, SHB, SSB, SSI, STB,
+       TCB, TPB, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "7/2025"
+    effective_date: 2025-08-04
+    source_image: d769548d-image.png
+    tickers:
+      [ACB, BCM, BID, CTG, DGC, FPT, GAS, GVR, HDB, HPG,
+       LPB, MBB, MSN, MWG, PLX, SAB, SHB, SSB, SSI, STB,
+       TCB, TPB, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VRE]
+
+  - period: "1/2026"
+    effective_date: 2026-02-02
+    source_image: 3cfd8dd8-image.png
+    tickers:
+      [ACB, BID, CTG, DGC, FPT, GAS, GVR, HDB, HPG, LPB,
+       MBB, MSN, MWG, PLX, SAB, SHB, SSB, SSI, STB, TCB,
+       TPB, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VPL, VRE]
+
+  - period: "7/2026"
+    effective_date: 2026-08-03
+    source_image: 9d24df02-image.jpg
+    tickers:
+      [ACB, BID, BSR, CTG, FPT, GAS, GVR, HDB, HPG, LPB,
+       MBB, MCH, MSN, MWG, SAB, SHB, SSB, SSI, STB, TCB,
+       TCX, VCB, VHM, VIB, VIC, VJC, VNM, VPB, VPL, VRE]
+
+# ---------------------------------------------------------------------------
+# Rebalance events (deltas between consecutive snapshots).
+# Feeds INSERT INTO fundamentals.vn30_membership_event (...).
+# ---------------------------------------------------------------------------
+events:
+
+  - event_id: 1
+    effective_date: 2021-08-02
+    announced_date: 2021-07-19   # ~2 weeks before effective (typical HOSE lead)
+    rebalance_type: july_review
+    tickers_added:   [ACB, GVR, SAB]
+    tickers_removed: [REE, SBT, TCH]
+    notes: "Kỳ 7/2021 — 3 vào / 3 ra."
+
+  - event_id: 2
+    effective_date: 2022-02-07
+    announced_date: 2022-01-24
+    rebalance_type: january_review
+    tickers_added:   []
+    tickers_removed: []
+    notes: "Kỳ 1/2022 — không thay đổi danh sách so với kỳ 7/2021."
+
+  - event_id: 3
+    effective_date: 2022-08-01
+    announced_date: 2022-07-18
+    rebalance_type: july_review
+    tickers_added:   [VIB]
+    tickers_removed: [PNJ]
+    notes: "Kỳ 7/2022 — VIB thay PNJ."
+
+  - event_id: 4
+    effective_date: 2023-02-06
+    announced_date: 2023-01-23
+    rebalance_type: january_review
+    tickers_added:   [BCM]
+    tickers_removed: [KDH]
+    notes: "Kỳ 1/2023 — BCM thay KDH (visible note trên ảnh source)."
+
+  - event_id: 5
+    effective_date: 2023-08-07
+    announced_date: 2023-07-24
+    rebalance_type: july_review
+    tickers_added:   [SHB, SSB]
+    tickers_removed: [NVL, PDR]
+    notes: "Kỳ 7/2023 — SHB, SSB thay NVL, PDR (visible note trên ảnh source)."
+
+  - event_id: 6
+    effective_date: 2024-02-05
+    announced_date: 2024-01-22
+    rebalance_type: january_review
+    tickers_added:   []
+    tickers_removed: []
+    notes: "Kỳ 1/2024 — không thay đổi danh sách."
+
+  - event_id: 7
+    effective_date: 2024-08-05
+    announced_date: 2024-07-22
+    rebalance_type: july_review
+    tickers_added:   []
+    tickers_removed: []
+    notes: "Kỳ 7/2024 — không thay đổi danh sách."
+
+  - event_id: 8
+    effective_date: 2025-02-03
+    announced_date: 2025-01-20
+    rebalance_type: january_review
+    tickers_added:   [LPB]
+    tickers_removed: [POW]
+    notes: "Kỳ 1/2025 — LPB thay POW."
+
+  - event_id: 9
+    effective_date: 2025-08-04
+    announced_date: 2025-07-21
+    rebalance_type: july_review
+    tickers_added:   [DGC]
+    tickers_removed: [BVH]
+    notes: "Kỳ 7/2025 — DGC thay BVH."
+
+  - event_id: 10
+    effective_date: 2026-02-02
+    announced_date: 2026-01-19
+    rebalance_type: january_review
+    tickers_added:   [VPL]
+    tickers_removed: [BCM]
+    notes: "Kỳ 1/2026 — VPL (Vinpearl, niêm yết mới) thay BCM."
+
+  - event_id: 11
+    effective_date: 2026-08-03
+    announced_date: 2026-07-20
+    rebalance_type: july_review
+    tickers_added:   [BSR, MCH, TCX]
+    tickers_removed: [DGC, PLX, TPB]
+    notes: "Kỳ 7/2026 — 3 vào / 3 ra: BSR, MCH, TCX thay DGC, PLX, TPB."
+
+# ---------------------------------------------------------------------------
+# Universe (all tickers ever in VN30 during 2021-2026).
+# Used to size the price/fundamentals ingestion set.
+# ---------------------------------------------------------------------------
+universe_all_time:
+  count: 43
+  tickers:
+    - ACB   # 7/2021 →
+    - BCM   # 1/2023 → 1/2026
+    - BID   # entire window
+    - BSR   # 7/2026 →
+    - BVH   # 1/2021 → 7/2025
+    - CTG   # entire window
+    - DGC   # 7/2025 → 7/2026
+    - FPT   # entire window
+    - GAS   # entire window
+    - GVR   # 7/2021 →
+    - HDB   # entire window
+    - HPG   # entire window
+    - KDH   # 1/2021 → 1/2023
+    - LPB   # 1/2025 →
+    - MBB   # entire window
+    - MCH   # 7/2026 →
+    - MSN   # entire window
+    - MWG   # entire window
+    - NVL   # 1/2021 → 7/2023
+    - PDR   # 1/2021 → 7/2023
+    - PLX   # 1/2021 → 7/2026
+    - PNJ   # 1/2021 → 7/2022
+    - POW   # 1/2021 → 1/2025
+    - REE   # 1/2021 → 7/2021
+    - SAB   # 7/2021 →
+    - SBT   # 1/2021 → 7/2021
+    - SHB   # 7/2023 →
+    - SSB   # 7/2023 →
+    - SSI   # entire window
+    - STB   # entire window
+    - TCB   # entire window
+    - TCH   # 1/2021 → 7/2021
+    - TCX   # 7/2026 →
+    - TPB   # 1/2021 → 7/2026
+    - VCB   # entire window
+    - VHM   # entire window
+    - VIB   # 7/2022 →
+    - VIC   # entire window
+    - VJC   # entire window
+    - VNM   # entire window
+    - VPB   # entire window
+    - VPL   # 1/2026 →
+    - VRE   # entire window
+
+# ---------------------------------------------------------------------------
+# Never-in-VN30 during 2021-2026 window: sanity check — none intentional.
+# If Feature 2 hybrid portfolio wants tickers outside this list, the
+# universe-agnostic API (per ADR-013 draft) still accepts them; only the
+# "reproduce a VN30-tracking baseline" section of Report requires this set.
+# ---------------------------------------------------------------------------
