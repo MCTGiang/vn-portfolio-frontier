@@ -544,6 +544,141 @@ All simulation runs are persisted to `simulation.rebalance_run` (Task 4b, migrat
 - Task 4b (Sprint 9-10) — migration 005 creates `simulation.rebalance_run` schema referenced above.
 - Sprint 11-12 (06-19/10) — Feature 2 build implements this ADR.
 
+## ADR-013: VN30 event-sourcing membership + universe-agnostic rebalancing API
+
+**Status:** Accepted — 2026-09-24
+
+### Context
+
+Feature 2 (Auto-rebalancing simulator) must simulate portfolio behavior across historical time ranges. The VN30 index — the demo universe for Project 2 — is reviewed twice a year by HOSE (January and July rebalance). In the 2021-2026 window, the index has seen 11 rebalance events involving 43 unique tickers, all captured in seed file `vn30_history.yaml` (Sprint 9, 2026-09-23).
+
+Three interlocking design questions arise from this data-model reality:
+
+1. **Point-in-time correctness for backtests.** A backtest against a portfolio held in mid-2022 must reconstruct the VN30 composition effective at that date (VIB and PNJ both present at 2022-05; BCM not yet added; SHB and SSB not yet added). Applying today's VN30 list to reconstruct historical returns produces survivorship-biased results — a defense committee will surface this immediately when questioning data lineage.
+
+2. **Mixed query patterns.** Feature 2 must support three distinct query shapes with different latency and correctness constraints:
+   - `get_vn30_at(date: date) -> list[str]` — reconstruct the exact 30-ticker composition at a historical date, used for backtest portfolio construction.
+   - `get_membership_changes(start: date, end: date) -> list[Event]` — enumerate rebalance events in a window, used for turnover analytics.
+   - `get_current_vn30() -> list[str]` — return today's list, used as the default dropdown state for the Streamlit UI. Target latency < 50 ms to avoid perceived lag.
+
+3. **Real-world portfolio composition.** Individual investors typically hold hybrid portfolios mixing VN30 constituents with non-VN30 tickers (e.g., VNM + DXG). If the tool's public API hard-codes the VN30 universe into its signature, defense committee questions about hybrid portfolio analysis become unanswerable without a scope caveat that weakens the platform architecture claim. The `simulate_rebalancing` API contract must therefore accept an arbitrary ticker set from day one, treating VN30 as the demo default rather than a fundamental limit.
+
+These three concerns share a common data-model root: how membership is stored and queried determines what the rebalancing API can accept. They are documented in a single ADR — rather than split across three — so that the storage decision and the API contract lock together, preventing later drift between them.
+
+### Decision
+
+Two linked decisions that must ship together:
+
+1. **Membership storage.** Adopt an event-sourcing pattern with hybrid materialization. The append-only table `fundamentals.vn30_membership_event` is the source of truth for every historical rebalance. A separate table `fundamentals.vn30_constituent` prepopulates the flattened `(effective_date, ticker)` view (12 snapshots × 30 tickers = 360 rows) for constant-time reads. A verification script asserts that the flattened view reconciles with a fold of the event log.
+
+2. **Rebalancing API.** The public `simulate_rebalancing` function accepts an arbitrary `dict[str, float]` of target weights, not a VN30-typed ticker list. VN30 is the demo choice for Streamlit UI defaults; the API contract is universe-agnostic.
+
+### Schema (LOCKED)
+
+Migration 006 (Sprint 10, Task 5A) creates the event log:
+
+```sql
+CREATE TABLE IF NOT EXISTS fundamentals.vn30_membership_event (
+    event_id         BIGSERIAL PRIMARY KEY,
+    effective_date   DATE NOT NULL,
+    announced_date   DATE NOT NULL,
+    rebalance_type   VARCHAR(20) NOT NULL,
+    tickers_added    JSONB NOT NULL,
+    tickers_removed  JSONB NOT NULL,
+    source_ref       TEXT NOT NULL,
+    notes            TEXT,
+    logged_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_rebalance_type
+        CHECK (rebalance_type IN ('january_review', 'july_review', 'special')),
+    CONSTRAINT chk_dates
+        CHECK (announced_date <= effective_date)
+);
+
+CREATE INDEX idx_vn30_event_effective_date
+    ON fundamentals.vn30_membership_event (effective_date);
+
+CREATE INDEX idx_vn30_event_type
+    ON fundamentals.vn30_membership_event (rebalance_type);
+```
+
+The flattened view is a plain table (not a materialized view) because seed size (360 rows, growing ~2 rows/year) has negligible storage cost and avoids `REFRESH MATERIALIZED VIEW` overhead:
+
+```sql
+CREATE TABLE IF NOT EXISTS fundamentals.vn30_constituent (
+    effective_date  DATE NOT NULL,
+    ticker          VARCHAR(10) NOT NULL,
+    PRIMARY KEY (effective_date, ticker)
+);
+
+CREATE INDEX idx_vn30_constituent_ticker
+    ON fundamentals.vn30_constituent (ticker);
+```
+
+`source_ref` accepts either a URL (future HOSE publications) or a local filename (2021-2026 seed uses image references such as `cf3f7233-image.png`). Storing both under one column avoids branching logic in the loader.
+
+### API contract (LOCKED)
+
+Function signature (Feature 2 build, Sprint 11-12):
+
+```python
+def simulate_rebalancing(
+    target_weights: dict[str, float],       # ticker -> weight; sum == 1.0
+    start_date: date,
+    end_date: date,
+    strategy: Literal["threshold_band", "periodic", "hybrid"],
+    strategy_params: dict[str, Any],
+    cost_config: TransactionCostConfig,     # per ADR-012
+) -> RebalanceResult:
+    ...
+```
+
+Validation rules enforced at function entry:
+
+- `target_weights` keys match `^[A-Z0-9]{3,4}$` (VN ticker convention).
+- `abs(sum(target_weights.values()) - 1.0) < 0.001`.
+- Every ticker in `target_weights` has at least `min_history_days` (default 252) of price history ending before `start_date` (covariance stability requirement).
+- `start_date < end_date`; both must fall within available price data window.
+
+No hard-coded VN30 check. If a caller passes `{"VNM": 0.5, "DXG": 0.5}`, the function runs the same code path — success depends only on whether both tickers have adequate price history, not on their VN30 membership.
+
+### Query implementation notes
+
+`get_vn30_at(date)` queries `vn30_constituent` directly (indexed lookup, sub-ms). `get_membership_changes(start, end)` queries `vn30_membership_event` filtered by `effective_date`. `get_current_vn30()` calls `get_vn30_at(current_date)`.
+
+Seed workflow: a Python loader (`scripts/seed_vn30_history.py`, Sprint 10 D1) reads `vn30_history.yaml`, inserts all 11 events into `vn30_membership_event`, then folds events into 360 constituent rows and INSERTs those. Reconciliation script `tests/test_vn30_reconcile.py` runs in CI: it re-folds events at read time and asserts the result equals the stored constituent set. Fail-fast on drift.
+
+### Consequences
+
+**Positive:**
+
+- Backtests are point-in-time correct by construction. The reconciliation script (CI-enforced) guarantees no drift between the event log and the flattened constituent view — survivorship bias becomes an active check, not a hope.
+- The universe-agnostic API enables Strategy 2 hybrid portfolio defense at zero implementation cost: adding a Streamlit "Custom portfolio" tab to the UI is a display concern, not an API refactor.
+- Future rebalance events (post-2026-07) are appended by a single INSERT into `vn30_membership_event` plus a fold step into `vn30_constituent`; no schema migration required.
+- The seed data (`vn30_history.yaml`, 11 events + 12 snapshots) is reusable in both Migration 006 and the Feature 2 report "VN30 rebalance timeline" table — single source of truth for the paper.
+
+**Negative:**
+
+- Two tables must stay in sync. Mitigation: the reconciliation script runs in CI on every push touching migrations, seed, or constituent-related code; drift blocks merge.
+- The API cannot enforce ticker legitimacy at compile time (any string matching the regex passes validation). Mitigation: entry-level validation queries `market_data.daily_prices` for existence + adequate history; wrong tickers fail early with a clear message.
+- Documentation coupling: any future change to the events schema requires updating this ADR alongside Migration 006 — deliberate friction to prevent silent divergence.
+
+### Alternatives considered
+
+1. **Pure event-sourcing, no flattened table** — rejected. `get_current_vn30()` would require folding 11+ events at every UI page load; Streamlit cold-start latency measured in Feature 2 mockups already pushes 300 ms without this overhead. Storage saving (360 rows dropped) is negligible.
+2. **Snapshot-only, overwrite each rebalance** — rejected. Loses history entirely; backtest point-in-time correctness impossible; defense committee data-lineage question fatal.
+3. **Materialized view instead of plain table for `vn30_constituent`** — rejected. `REFRESH MATERIALIZED VIEW` semantics on Neon (managed PostgreSQL) require careful transaction handling for seed loads; a plain table with an explicit fold script is simpler and equally fast for 360 rows.
+4. **Hard-code VN30 universe into `simulate_rebalancing(vn30_tickers: list[str])`** — rejected. Compile-time type safety is real but small; the loss of hybrid portfolio flexibility is a defense weakness (Strategy 2) that outweighs it.
+5. **Whitelist config file `config/allowed_tickers.yaml`** — rejected. Adds a second source of truth for "which tickers are valid" that must be kept in sync with `market_data.daily_prices`. The database already answers this question; a whitelist duplicates without adding safety.
+
+### Related
+
+- ADR-002 (Neon PostgreSQL) — JSONB storage and index feasibility.
+- ADR-006 (Feature 3 structured extraction positioning) — informs but does not gate Feature 2.
+- ADR-009 (feature-driven schema methodology) — justifies the two-table (event + constituent) split over a single-table alternative.
+- ADR-012 (rebalancing cost model) — `TransactionCostConfig` parameter passed to `simulate_rebalancing`.
+- Sprint 10 Task 5A — Migration 006 implements the schema; `scripts/seed_vn30_history.py` loads `vn30_history.yaml`.
+- Sprint 11-12 Feature 2 — implements `simulate_rebalancing` per this API contract.
+
 # Open decisions (pending)
 
 ## ADR-007: Prefect vs Apache Airflow for workflow orchestration
