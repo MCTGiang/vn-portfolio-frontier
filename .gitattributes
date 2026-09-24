@@ -57,3 +57,18 @@ Dockerfile     text eol=lf
 *.onnx         binary
 *.woff         binary
 *.woff2        binary
+
+# Normalize line endings to LF for all text files.
+# Prevents cross-platform checksum drift for Migration SQL files
+# (learned from Migration 005 drift discovered during 006 apply,
+# 2026-09-24, see infra/migration-006-vn30-membership PR).
+
+* text=auto
+
+*.sql text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.bib text eol=lf
