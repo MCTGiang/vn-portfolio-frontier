@@ -64,6 +64,9 @@ dev = [
     "ipykernel>=6.29",
     "jupyterlab>=4.2",
 ]
+data = [
+    "vnstock>=4.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/MCTGiang/vn-portfolio-frontier"
