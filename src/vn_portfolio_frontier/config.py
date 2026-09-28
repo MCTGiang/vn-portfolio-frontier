@@ -34,6 +34,11 @@ class Settings(BaseSettings):
         ),
     )
 
+    vnstock_api_key: SecretStr | None = Field(
+        default=None,
+        description="vnstock Community tier API key (60 req/min); Guest tier 20/min if unset",
+    )
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
