@@ -32,6 +32,7 @@ from sync_prices import (  # noqa: E402
     get_latest_dates,
     insert_rows,
     sync_ticker,
+    sync_universe,
 )
 
 # ============================================================
@@ -203,6 +204,75 @@ class TestInsertRows:
             # Ensure short names not used
             assert " open," not in sql
             assert " high," not in sql
+
+
+class TestSyncUniverse:
+    @pytest.fixture(autouse=True)
+    def _mock_settings(self):
+        """Auto-mock get_settings to avoid needing NEON_DATABASE_URL on CI."""
+        with patch("sync_prices.get_settings") as m:
+            m.return_value.neon_database_url.get_secret_value.return_value = "postgresql://fake"
+            m.return_value.vnstock_api_key = None
+            yield
+
+    @patch("sync_prices.psycopg2.connect")
+    @patch("sync_prices.get_latest_dates")
+    @patch("sync_prices.sync_ticker")
+    def test_returns_stats_dict_with_expected_keys(self, mock_sync_t, mock_latest, mock_connect):
+        mock_latest.return_value = dict.fromkeys(VN30_UNIVERSE)
+        mock_sync_t.return_value = 22
+        result = sync_universe(end_date=date(2026, 9, 25), dry_run=True)
+        assert set(result.keys()) == {
+            "total_inserted",
+            "tickers_processed",
+            "tickers_fetched",
+            "tickers_up_to_date",
+        }
+        assert result["tickers_processed"] == 43
+        assert result["total_inserted"] == 22 * 43
+
+    @patch("sync_prices.psycopg2.connect")
+    @patch("sync_prices.get_latest_dates")
+    @patch("sync_prices.sync_ticker")
+    def test_progress_callback_invoked_per_ticker(self, mock_sync_t, mock_latest, mock_connect):
+        mock_latest.return_value = dict.fromkeys(VN30_UNIVERSE)
+        mock_sync_t.return_value = 22
+        calls = []
+
+        def cb(idx, total, ticker, inserted):
+            calls.append((idx, total, ticker, inserted))
+
+        sync_universe(end_date=date(2026, 9, 25), dry_run=True, progress_callback=cb)
+        assert len(calls) == 43
+        assert calls[0] == (1, 43, VN30_UNIVERSE[0], 22)
+        assert calls[-1] == (43, 43, VN30_UNIVERSE[-1], 22)
+
+    @patch("sync_prices.psycopg2.connect")
+    @patch("sync_prices.get_latest_dates")
+    @patch("sync_prices.sync_ticker")
+    def test_custom_tickers_subset_processed_only(self, mock_sync_t, mock_latest, mock_connect):
+        mock_latest.return_value = {"VCB": None, "ACB": None}
+        mock_sync_t.return_value = 22
+        result = sync_universe(
+            end_date=date(2026, 9, 25),
+            tickers=["VCB", "ACB"],
+            dry_run=True,
+        )
+        assert result["tickers_processed"] == 2
+        assert mock_sync_t.call_count == 2
+
+    @patch("sync_prices.psycopg2.connect")
+    @patch("sync_prices.get_latest_dates")
+    @patch("sync_prices.sync_ticker")
+    def test_up_to_date_vs_fetched_counts(self, mock_sync_t, mock_latest, mock_connect):
+        end_date = date(2026, 9, 25)
+        latest_map = {t: (end_date if i < 20 else None) for i, t in enumerate(VN30_UNIVERSE)}
+        mock_latest.return_value = latest_map
+        mock_sync_t.return_value = 0
+
+        result = sync_universe(end_date=end_date, dry_run=True)
+        assert result["tickers_up_to_date"] == 20
+        assert result["tickers_fetched"] == 23
 
 
 # ============================================================
