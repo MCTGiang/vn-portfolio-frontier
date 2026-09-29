@@ -207,6 +207,14 @@ class TestInsertRows:
 
 
 class TestSyncUniverse:
+    @pytest.fixture(autouse=True)
+    def _mock_settings(self):
+        """Auto-mock get_settings to avoid needing NEON_DATABASE_URL on CI."""
+        with patch("sync_prices.get_settings") as m:
+            m.return_value.neon_database_url.get_secret_value.return_value = "postgresql://fake"
+            m.return_value.vnstock_api_key = None
+            yield
+
     @patch("sync_prices.psycopg2.connect")
     @patch("sync_prices.get_latest_dates")
     @patch("sync_prices.sync_ticker")
