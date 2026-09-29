@@ -21,6 +21,7 @@ import argparse
 import contextlib
 import logging
 import sys
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 
 import psycopg2
@@ -185,6 +186,67 @@ def sync_ticker(
     return inserted
 
 
+def sync_universe(
+    end_date: date,
+    tickers: list[str] | None = None,
+    dry_run: bool = False,
+    progress_callback: Callable[[int, int, str, int], None] | None = None,
+) -> dict:
+    """Sync VN30 universe prices from vnstock to Neon (public API).
+
+    Callable from CLI, Streamlit UI, cron jobs. Handles VNSTOCK_API_KEY env
+    setup + Neon connection + per-ticker delta sync + commit.
+
+    Args:
+        end_date: Fetch through this date (inclusive).
+        tickers: Subset of VN30_UNIVERSE; None means all 43.
+        dry_run: If True, skip INSERT.
+        progress_callback: Called after each ticker with
+            (index_1based, total, ticker, rows_inserted). Streamlit UI uses
+            this for per-ticker progress updates.
+
+    Returns:
+        Dict {total_inserted, tickers_processed, tickers_fetched (had delta),
+        tickers_up_to_date (skipped)}.
+    """
+    import os
+
+    if tickers is None:
+        tickers = VN30_UNIVERSE
+    settings = get_settings()
+    if settings.vnstock_api_key is not None:
+        os.environ["VNSTOCK_API_KEY"] = settings.vnstock_api_key.get_secret_value()
+
+    dsn = settings.neon_database_url.get_secret_value()
+    conn = psycopg2.connect(dsn)
+    conn.autocommit = False
+    stats = {
+        "total_inserted": 0,
+        "tickers_processed": 0,
+        "tickers_fetched": 0,
+        "tickers_up_to_date": 0,
+    }
+    try:
+        latest_dates = get_latest_dates(conn)
+        total = len(tickers)
+        for idx, ticker in enumerate(tickers, start=1):
+            latest = latest_dates.get(ticker)
+            inserted = sync_ticker(conn, ticker, latest, end_date, dry_run)
+            stats["total_inserted"] += inserted
+            stats["tickers_processed"] += 1
+            if latest is not None and latest >= end_date:
+                stats["tickers_up_to_date"] += 1
+            else:
+                stats["tickers_fetched"] += 1
+            if progress_callback is not None:
+                progress_callback(idx, total, ticker, inserted)
+        if not dry_run:
+            conn.commit()
+    finally:
+        conn.close()
+    return stats
+
+
 def _ensure_utf8_streams() -> None:
     """Force stdout/stderr to UTF-8 to prevent cp1252 encode errors on Windows.
 
@@ -210,8 +272,13 @@ def main() -> int:
     parser.add_argument(
         "--end-date",
         type=lambda s: datetime.strptime(s, "%Y-%m-%d").date(),
-        required=True,
-        help="Fetch up to this date (inclusive), YYYY-MM-DD",
+        default=None,
+        help="Fetch up to this date (inclusive), YYYY-MM-DD (mutex --today)",
+    )
+    parser.add_argument(
+        "--today",
+        action="store_true",
+        help="Shortcut for --end-date=<today> (mutex --end-date)",
     )
     parser.add_argument(
         "--tickers",
@@ -222,17 +289,19 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    tickers = args.tickers.split(",") if args.tickers else VN30_UNIVERSE
-    tickers = [t.strip().upper() for t in tickers]
+    # Validate --today vs --end-date (exactly one required)
+    if args.today and args.end_date is not None:
+        parser.error("--today and --end-date are mutually exclusive")
+    if not args.today and args.end_date is None:
+        parser.error("Either --today or --end-date is required")
+    if args.today:
+        args.end_date = date.today()
 
+    tickers_list = [t.strip().upper() for t in args.tickers.split(",")] if args.tickers else None
+
+    # Log tier (sync_universe reads settings again silently)
     settings = get_settings()
-
-    # Set vnstock API key from config before Quote import
-    # (vnstock reads VNSTOCK_API_KEY env var at library load; Community 60/min vs Guest 20/min)
-    import os
-
     if settings.vnstock_api_key is not None:
-        os.environ["VNSTOCK_API_KEY"] = settings.vnstock_api_key.get_secret_value()
         logger.info("vnstock tier: Community (API key configured, 60 req/min)")
     else:
         logger.warning(
@@ -240,26 +309,18 @@ def main() -> int:
             "fetch of full VN30 universe will hit rate limit"
         )
 
-    dsn = settings.neon_database_url.get_secret_value()
-
+    target_count = len(tickers_list) if tickers_list else len(VN30_UNIVERSE)
     logger.info(
-        f"Sync target: {len(tickers)} ticker(s), "
+        f"Sync target: {target_count} ticker(s), "
         f"end_date={args.end_date}, dry_run={args.dry_run}"
     )
-    conn = psycopg2.connect(dsn)
-    conn.autocommit = False
-    try:
-        latest_dates = get_latest_dates(conn)
-        total_inserted = 0
-        for ticker in tickers:
-            latest = latest_dates.get(ticker)
-            inserted = sync_ticker(conn, ticker, latest, args.end_date, args.dry_run)
-            total_inserted += inserted
-        if not args.dry_run:
-            conn.commit()
-        logger.info(f"DONE: total_inserted={total_inserted}")
-    finally:
-        conn.close()
+
+    stats = sync_universe(
+        end_date=args.end_date,
+        tickers=tickers_list,
+        dry_run=args.dry_run,
+    )
+    logger.info(f"DONE: total_inserted={stats['total_inserted']}")
     return 0
 
 
