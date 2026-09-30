@@ -684,6 +684,29 @@ Seed workflow: a Python loader (`scripts/seed_vn30_history.py`, Sprint 10 D1) re
 
 The flattened snapshot table was originally specified as `fundamentals.vn30_constituent` in the initial Schema section. During Migration 006 implementation (Sprint 10 D1, 2026-09-24), a naming collision was discovered with `fundamentals.vn30_constituent` already created by Migration 003 as a static ticker registry (columns `company_name_vi`, `sector`, `is_current`, etc.), plus a FK reference from Migration 004. The Migration 006 snapshot table was therefore renamed to `fundamentals.vn30_membership_snapshot`, and this ADR body has been updated in-place to match the shipped schema (commit `a319d52`, PR #18).
 
+## ADR-014: Bronze/Silver Fundamentals Schema (Long-form + Curated Views)
+
+- **Status**: Accepted 2026-09-30
+- **Context**: Sprint 10 Task 5B needs fundamentals (income statement, ratios, cash flow) for 43 VN30 tickers to power Feature 2 rebalancing constraints and Feature 3 signal enrichment. vnstock Silver returns long-form DataFrames (7 columns: `period`, `id`, `name`, `order`, `level`, `unit`, `value`) with a variable metric taxonomy — 26 income items, 60 ratio items, 51 cash-flow items — and the taxonomy for banks (Thu nhập lãi thuần, TN từ hoạt động dịch vụ...) differs from non-banks (Doanh thu thuần, Giá vốn hàng bán...). A wide-column `financial_report(ticker, period, revenue, cogs, ...)` table would either force sector-specific NULLs across 43 tickers (14 banks + 29 non-banks) or fork the table by sector — both fragile as new metrics appear.
+- **Decision**:
+  1. **Bronze layer** (`fundamentals.metric_snapshot`): a single long-form BASE TABLE mirroring the vendor structure — `(ticker, period, statement_type, metric_id, metric_name, metric_order, metric_level, unit, value, source, ingested_at)` with PK `(ticker, period, statement_type, metric_id)`. Insert is 1-to-1 with vendor rows; new metrics land without `ALTER TABLE`.
+  2. **Silver layer** (VIEWs on top of bronze):
+     - `fundamentals.key_ratios` — pivots the ratio statement into columns Feature 2 consumes directly (P/E, P/B, ROE, ROA, EPS, market_cap, beta, dividend_yield, debt_to_equity).
+     - `fundamentals.financial_report` — sector-aware column projection: banks join `metric_snapshot` with `vn30_constituent.sector_vi = 'Ngân hàng'` to expose bank-specific columns (net interest income, service income, provision expense); non-banks expose the universal industrial columns (revenue, COGS, gross profit, operating expenses). Union both into one report shape.
+  3. **NOT materialized**: Views are re-computed on read. 43 tickers × 3 statement types × ~34 quarters × ~50 items ≈ 200K bronze rows, view scan is milliseconds on indexed metric_id + statement_type. Materializing adds a refresh job and staleness handling with no measurable Feature 2 gain at Project 2 scale.
+- **Consequences**:
+  - (+) One insert path (`INSERT INTO metric_snapshot`) for every statement type; a new metric ID from the vendor requires zero schema change.
+  - (+) Sector-aware business logic lives inside SQL, not scattered across Python scripts — single source of truth reviewers can inspect with `\d+ fundamentals.financial_report`.
+  - (+) Migration to materialized view is a 1-line SQL change (`CREATE VIEW` → `CREATE MATERIALIZED VIEW`) if Thesis-phase scale (universe expansion beyond VN30) or repeat query load makes it necessary.
+  - (−) Consumers must know which view to hit (`key_ratios` vs `financial_report`) instead of one wide table; mitigated by docstrings on each view and Feature 2 code importing the ratio view by name.
+  - (−) View SQL for `financial_report` encodes the sector split — if the vendor renames a metric ID mid-year, the view breaks silently and returns fewer columns than expected. Mitigated by a smoke test asserting expected column set post-migration.
+- **Alternatives considered**:
+  - **Wide-column financial_report base table**: rejected — sector taxonomy mismatch forces NULL columns across half the universe and every new metric requires an `ALTER TABLE` + backfill. Migration 003's empty `financial_report` table was the abandoned first attempt; Migration 007 drops it.
+  - **Materialized view from day one**: rejected — refresh timing (post-fetch trigger vs cron) adds moving parts. Bronze bulk insert is already the slow step (~30s for 43 tickers × 3 statements at 300 req/min). View scan under 10ms at current row count doesn't earn the operational cost.
+  - **Per-statement-type tables** (`income_statement`, `ratios`, `cash_flow` as base tables): rejected — three insert paths, three sets of migrations for new metric IDs, and the sector-aware `financial_report` view would still need to union across them. Long-form bronze is strictly simpler.
+  - **Store as JSONB per (ticker, period)**: rejected — loses metric-level indexing; every ratio query becomes a JSONB path expression instead of a `WHERE metric_id = 'RT_VALUE_PE'` seek.
+- **Related**: [[ADR-009]] (schema methodology), [[ADR-012]] (Feature 2 cost model uses `key_ratios` view), Migration 007 (implements this decision), Sprint 10 Task 5B PR #26.
+
 # Open decisions (pending)
 
 ## ADR-007: Prefect vs Apache Airflow for workflow orchestration
