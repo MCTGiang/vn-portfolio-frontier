@@ -58,7 +58,7 @@ def get_applied_migrations(conn) -> dict[str, str]:
 
 def apply_migration(conn, path: Path, checksum: str, verbose: bool) -> None:
     """Execute a migration file and record it in the tracking table."""
-    sql = path.read_text()
+    sql = path.read_text(encoding="utf-8")
     if verbose:
         print(f"  applying {path.name} ({len(sql)} bytes)")
     with conn.cursor() as cur:
