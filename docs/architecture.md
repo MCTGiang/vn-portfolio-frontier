@@ -707,6 +707,24 @@ The flattened snapshot table was originally specified as `fundamentals.vn30_cons
   - **Store as JSONB per (ticker, period)**: rejected — loses metric-level indexing; every ratio query becomes a JSONB path expression instead of a `WHERE metric_id = 'RT_VALUE_PE'` seek.
 - **Related**: [[ADR-009]] (schema methodology), [[ADR-012]] (Feature 2 cost model uses `key_ratios` view), Migration 007 (implements this decision), Sprint 10 Task 5B PR #26.
 
+
+---
+
+## ADR-015 — Hexagonal Architecture + Strategy/Repository/Template Method cho Feature 2
+
+Status: Accepted (2026-10-02)
+
+Detail: See [`adr-015-hexagonal.md`](adr-015-hexagonal.md) in this folder.
+
+Summary: Áp dụng Hexagonal Architecture 4-layer (domain / application / infrastructure / interface) cho Feature 2 Rebalancing Simulator (Sprint 11+). Kết hợp 3 GoF patterns: Strategy (4 rebalance strategies interchangeable), Template Method (BaseStrategy.rebalance() common flow), Repository (6 data stores với Protocol interfaces). Factory function wire DI, test code bypass factory. Enforce dependency direction qua `import-linter` pre-commit hook. Target domain + application coverage ≥ 85%.
+
+Rejected alternatives: monolithic script (Project 1 pattern), layered 3-tier, Clean Architecture full-stack, vertical slice.
+
+Reference artifacts (thesis repo `vn-p2-report`):
+- `analysis/feature-2/design-class-diagram.puml` — chi tiết class level
+- `analysis/feature-2/package-diagram.puml` — 4-layer dependency direction
+- `analysis/system/component-diagram.puml` — ports + adapters mapping
+
 # Open decisions (pending)
 
 ## ADR-007: Prefect vs Apache Airflow for workflow orchestration
