@@ -129,6 +129,10 @@ models/*.onnx
 # Prefect
 .prefect/
 
+# Local commit/PR scratch files (not tracked, used with git commit -F / gh pr create --body-file)
+_commit_msg.txt
+_pr_body.md
+
 # ==============================================================================
 # IDEs / editors
 # ==============================================================================
