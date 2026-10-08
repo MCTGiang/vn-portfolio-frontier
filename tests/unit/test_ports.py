@@ -85,6 +85,7 @@ def sample_run_record() -> RunRecord:
         backtest_end=date(2025, 12, 31),
         git_commit_sha="a" * 40,
         code_version="v2.0-sprint11",
+        initial_capital=Decimal("1000000000.00"),
     )
 
 
@@ -321,3 +322,44 @@ class TestFakeRebalanceDecisionRepository:
         decision_repo.save_batch(1, [d])
         decision_repo.save_batch(1, [d])  # intentional double
         assert len(decision_repo.find_by_run(1)) == 2
+
+
+# =====================================================================
+# RunRecord validation (F-H3)
+# =====================================================================
+
+
+class TestRunRecordValidation:
+    def test_rejects_zero_initial_capital(self) -> None:
+        """F-H3: initial_capital must be positive (Portfolio needs funding)."""
+        with pytest.raises(ValueError, match="initial_capital must be positive"):
+            RunRecord(
+                brokerage_pct=Decimal("0.0015"),
+                tax_pct=Decimal("0.001"),
+                market_impact_bps=10,
+                strategy_name="threshold_band",
+                strategy_params={"band_bps": 500},
+                target_weights={"VCB": 1.0},
+                backtest_start=date(2024, 1, 1),
+                backtest_end=date(2025, 12, 31),
+                git_commit_sha="a" * 40,
+                code_version="v2.0-sprint11",
+                initial_capital=Decimal("0"),  # invalid
+            )
+
+    def test_rejects_negative_initial_capital(self) -> None:
+        """F-H3: negative capital also rejected."""
+        with pytest.raises(ValueError, match="initial_capital must be positive"):
+            RunRecord(
+                brokerage_pct=Decimal("0.0015"),
+                tax_pct=Decimal("0.001"),
+                market_impact_bps=10,
+                strategy_name="threshold_band",
+                strategy_params={"band_bps": 500},
+                target_weights={"VCB": 1.0},
+                backtest_start=date(2024, 1, 1),
+                backtest_end=date(2025, 12, 31),
+                git_commit_sha="a" * 40,
+                code_version="v2.0-sprint11",
+                initial_capital=Decimal("-100"),  # invalid
+            )
