@@ -69,6 +69,8 @@ class RunRecord:
         40-char Git SHA for reproducibility.
     code_version : str
         Short semver / tag label (e.g. "v2.0-sprint11").
+    initial_capital : Decimal
+        Starting capital for backtest (VNĐ).
     sharpe_before_cost : Decimal | None, default None
         Sharpe ratio of gross returns (no cost drag).
     sharpe_after_cost : Decimal | None, default None
@@ -101,6 +103,7 @@ class RunRecord:
     backtest_end: date
     git_commit_sha: str
     code_version: str
+    initial_capital: Decimal
 
     # Optional: output (fill after backtest)
     sharpe_before_cost: Decimal | None = None
@@ -128,6 +131,10 @@ class RunRecord:
             raise ValueError(
                 f"RunRecord.status must be one of 'running'|'completed'|"
                 f"'failed'|'cancelled', got {self.status!r}"
+            )
+        if self.initial_capital <= Decimal("0"):
+            raise ValueError(
+                f"RunRecord: initial_capital must be positive, got " f"{self.initial_capital}"
             )
 
 

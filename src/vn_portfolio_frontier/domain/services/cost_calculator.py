@@ -14,6 +14,30 @@ Where:
     market_impact_bps: VN30 liquid default 10 bps (0.10%); override for small-cap
     tax_pct: Vietnam seller tax default 0.001 (0.1%); invariant per Thông tư
 
+ADR-012 cost-field mapping (F-M3)
+---------------------------------
+Explicit mapping between ADR-012 component names, Python parameters, default
+values, and primary sources. Reviewers can cross-check implementation vs ADR
+line-by-line.
+
+    ADR-012 component   | Python parameter      | Default         | Applies to | Source
+    --------------------+-----------------------+-----------------+------------+------------------------------
+    Broker commission   | brokerage_pct         | user-input      | BUY + SELL | VCBS 0.0015, SSI 0.0025 (2026)
+    Market impact       | market_impact_bps     | 10 bps          | BUY + SELL | VN30 Amihud illiq proxy
+    Transfer tax        | tax_pct               | Decimal("0.001")| SELL only  | Thông tư 111/2013/TT-BTC §12
+    (seller only)       |                       |                 |            |
+    Gross trade value   | order.gross_amount()  | shares x price  | per order  | ADR-012 §3.1 definition
+    Settlement precision| NUMERIC(20, 2)        | VND quantum 0.01| final sum  | Migration 005 schema +
+                        |                       |                 |            | NFR-R-07 Decimal invariant
+
+ADR-012 formula (§3.2) in matching Python shape:
+
+    brokerage = SUM_{o in orders}      gross_amount(o) * brokerage_pct
+    slippage  = SUM_{o in orders}      gross_amount(o) * market_impact_bps / 10_000
+    tax       = SUM_{o | o.side=SELL}  gross_amount(o) * tax_pct
+
+All three sums quantized to VND (ROUND_HALF_UP, 2 decimals) before return.
+
 Design decisions:
     - Pure domain service (no I/O): instantiated once per RebalanceRun with
       the user-input parameters, injected into BaseStrategy via constructor.

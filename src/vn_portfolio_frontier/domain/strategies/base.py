@@ -204,14 +204,45 @@ class BaseStrategy(ABC):
             6. Skip orders where delta == 0 or ticker missing from context.prices
             7. Floor rounding (int cast) để chống over-buy khi budget edge
 
-        Notes
-        -----
-        - Không enforce lot size 100 (HOSE convention) ở MUST tier; defer
-          Sprint 12 RoundLotRefinement
-        - Price = context.prices[ticker] (close); future TWAP/VWAP execution
-          qua override _compute_orders ở subclass
-        - Short selling KHÔNG được tạo: current < target_sell → ValueError
-          in Portfolio.apply_orders (deferred to that layer, not caught here)
+        Precision contract (F-H1)
+        -------------------------
+        Mixing float (target_weight) with Decimal (prices, total_value) is
+        intentional and deterministic:
+
+        1. `target_weight: float` — portfolio weights are ratios in [0, 1],
+           not currency units, so NFR-R-07 Decimal constraint does not apply.
+           float provides sufficient precision for all realistic weights
+           (IEEE 754 double gives ~15 significant digits; human-readable
+           weights like 0.4 round-trip exactly against band_bps granularity
+           of 1 bps = 0.0001).
+
+        2. `Decimal(str(target_weight)) * total_value` — the `str()` detour
+           PREVENTS binary float artifacts from entering currency math:
+               Decimal(0.1)       # -> Decimal('0.1000000000000000055511...')
+               Decimal(str(0.1))  # -> Decimal('0.1')  (exact)
+           Downstream multiplication by total_value, division by price, and
+           int() truncation stay bit-identical across platforms.
+
+        3. `int(target_capital / price)` — floor rounding in the Decimal
+           domain, not float. Decimal.__truediv__ returns Decimal; int()
+           truncates toward zero (equivalent to floor for non-negative
+           operands guaranteed by target_weight >= 0 and total_value >= 0
+           invariants). Same inputs always produce the same share count.
+
+        Reproducibility guarantee (NFR-R-07): identical (portfolio, target,
+        prices) tuples always yield identical orders. Covered by
+        property-based tests in Day 2
+        (test_portfolio_apply_orders_vwap_hypothesis).
+
+        Other notes
+        -----------
+        - Does NOT enforce HOSE lot-size of 100; deferred to Sprint 12
+          RoundLotRefinement.
+        - Price = context.prices[ticker] (close). Future TWAP/VWAP execution
+          would be plugged in by subclass overriding _compute_orders.
+        - Short selling is never emitted: current < target_sell raises
+          ValueError inside Portfolio.apply_orders (deferred to that layer,
+          not caught here).
 
         Returns
         -------

@@ -176,6 +176,39 @@ class TestComputeOrders:
         assert sides["VCB"] == "SELL"
         assert sides["FPT"] == "BUY"
 
+    def test_under_weighted_triggers_buy_to_top_up(
+        self, calc: CostCalculator, ctx: RebalanceContext
+    ) -> None:
+        """F-H2: VCB under-weight -> BUY to top up to target.
+
+        Mirror case for test_over_weighted_triggers_sell. Verifies that the
+        strategy emits BUY orders when the current position is below the
+        target weight (critical path for fresh buys AND drift-down
+        corrections, not only fresh-portfolio allocation).
+        """
+        # Portfolio ~100M total; VCB 20M (20%), FPT ~80M (80%) - inverse of 50/50 target
+        p = Portfolio(cash=Decimal("100"), target_weights={"VCB": 0.5, "FPT": 0.5})
+        p.holdings["VCB"] = Holding("VCB", 160, Decimal("125000"))  # 20M value
+        p.holdings["FPT"] = Holding("FPT", 842, Decimal("95000"))  # 79.99M value
+        tracker = _CallTracker(calc, target={"VCB": 0.5, "FPT": 0.5}, trigger=True)
+        decision = tracker.rebalance(p, ctx)
+
+        sides = {o.ticker: o.side.value for o in decision.orders}
+        shares_by_ticker = {o.ticker: o.shares for o in decision.orders}
+
+        # VCB under-weight -> BUY
+        assert sides["VCB"] == "BUY"
+        # FPT over-weight -> SELL (symmetry check)
+        assert sides["FPT"] == "SELL"
+
+        # Verify BUY size matches delta to target.
+        # Total value = 100 + 160*125,000 + 842*95,000 = 99,990,100 VND
+        # Target VCB value = 50% -> 49,995,050; floor(/125,000) = 399 shares
+        # Delta = 399 - 160 = +239 shares BUY
+        assert shares_by_ticker["VCB"] == 239
+        # Decision is action, not no_action
+        assert decision.is_action
+
     def test_delta_zero_skips_order(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
         """Khi current_shares == target_shares → no order for that ticker."""
         # VCB already at target exactly
@@ -269,6 +302,16 @@ class TestThresholdBandStrategy:
         decision = s.rebalance(p, ctx)
         assert decision.is_action
         assert decision.reason == "band_drift"
+
+    def test_drift_under_band_triggers(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
+        """F-H2 complement: drift DOWNWARD past band triggers rebalance (not only upward)."""
+        s = ThresholdBandStrategy(calc, band_bps=500)  # 5% band
+        # VCB target 50%, current 20% -> drift -30% > 5% band -> trigger
+        p = Portfolio(cash=Decimal("100"), target_weights={"VCB": 0.5, "FPT": 0.5})
+        p.holdings["VCB"] = Holding("VCB", 160, Decimal("125000"))
+        p.holdings["FPT"] = Holding("FPT", 842, Decimal("95000"))
+        target = {"VCB": 0.5, "FPT": 0.5}
+        assert s.should_trigger(p, target, ctx) is True
 
 
 # =====================================================================
