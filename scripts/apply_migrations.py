@@ -93,7 +93,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: migrations directory not found: {MIGRATIONS_DIR}", file=sys.stderr)
         return 2
 
-    sql_files = sorted(MIGRATIONS_DIR.glob("*.sql"))
+    sql_files = sorted(
+        f for f in MIGRATIONS_DIR.glob("*.sql") if not f.name.endswith("_rollback.sql")
+    )
     if not sql_files:
         print(f"No .sql files found in {MIGRATIONS_DIR}")
         return 0

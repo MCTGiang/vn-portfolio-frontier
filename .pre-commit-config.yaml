@@ -46,3 +46,13 @@ repos:
     rev: v8.24.0
     hooks:
       - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: lint-imports
+        name: lint-imports (Hexagonal boundaries per ADR-015)
+        entry: lint-imports --config importlinter.ini
+        language: system
+        pass_filenames: false
+        files: ^(src/vn_portfolio_frontier/.*\.py|importlinter\.ini)$
+        require_serial: true
