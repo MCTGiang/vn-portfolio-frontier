@@ -92,7 +92,7 @@ class TestFetchFundamentalsOrchestrator:
     def test_default_uses_all_universe(self, mock_connect, mock_sync):
         mock_sync.return_value = (0, 0)
         result = fetch_fundamentals(dry_run=True)
-        assert result["api_calls"] == 129  # 43 × 3
+        assert result["api_calls"] == 129  # 43 * 3
         assert result["tickers_processed"] == 43
 
 

@@ -1,7 +1,7 @@
 """Unit tests for domain entities (Sprint 11 Day 2).
 
 Covers all 6 entity files in src/vn_portfolio_frontier/domain/entities/.
-Tests isolate from Neon + external APIs — pure in-memory computation only.
+Tests isolate from Neon + external APIs - pure in-memory computation only.
 
 Test organization:
     - One class per entity

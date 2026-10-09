@@ -4,9 +4,9 @@
 -- Context: Migration 005 (Sprint 10 Task 4b) created simulation.rebalance_run
 -- as scenario header per ADR-012 cost model. Sprint 11 Feature 2 MUST tier
 -- adds:
---   1. simulation.rebalance_decision  — 1 row per trigger event in a run
---   2. simulation.sensitivity_grid    — header per parameter sweep (UC-F2-02)
---   3. simulation.sensitivity_point   — grid cell linking to a rebalance_run
+--   1. simulation.rebalance_decision  - 1 row per trigger event in a run
+--   2. simulation.sensitivity_grid    - header per parameter sweep (UC-F2-02)
+--   3. simulation.sensitivity_point   - grid cell linking to a rebalance_run
 --
 -- Also extends rebalance_run with execution tracking:
 --   - status VARCHAR(20) DEFAULT 'completed'
@@ -48,7 +48,7 @@ COMMENT ON COLUMN simulation.rebalance_run.error_message IS
 
 
 -- ----------------------------------------------------------------------------
--- Part 2: simulation.rebalance_decision — per-trigger event audit
+-- Part 2: simulation.rebalance_decision - per-trigger event audit
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS simulation.rebalance_decision (
@@ -100,7 +100,7 @@ CREATE INDEX IF NOT EXISTS idx_decision_trigger_date
     ON simulation.rebalance_decision (trigger_date);
 
 COMMENT ON TABLE simulation.rebalance_decision IS
-    '1 row per trigger event in a rebalance_run. ADR-015 §2.3 Template Method writes RebalanceDecision here.';
+    '1 row per trigger event in a rebalance_run. ADR-015 section 2.3 Template Method writes RebalanceDecision here.';
 
 COMMENT ON COLUMN simulation.rebalance_decision.reason IS
     'Why trigger fired. band_drift (ThresholdBand), calendar (CalendarMonthly), window (FixedWindow), hybrid, or manual.';
@@ -113,7 +113,7 @@ COMMENT ON COLUMN simulation.rebalance_decision.orders_json IS
 
 
 -- ----------------------------------------------------------------------------
--- Part 3: simulation.sensitivity_grid — sweep header
+-- Part 3: simulation.sensitivity_grid - sweep header
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS simulation.sensitivity_grid (
@@ -158,7 +158,7 @@ COMMENT ON COLUMN simulation.sensitivity_grid.param_grid_json IS
 
 
 -- ----------------------------------------------------------------------------
--- Part 4: simulation.sensitivity_point — grid cell
+-- Part 4: simulation.sensitivity_point - grid cell
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS simulation.sensitivity_point (

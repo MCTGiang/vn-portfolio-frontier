@@ -63,7 +63,7 @@ class TestIntegration:
     def test_14_banks(self, conn):
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT COUNT(*) FROM fundamentals.vn30_constituent " "WHERE sector='Ngân hàng'"
+                "SELECT COUNT(*) FROM fundamentals.vn30_constituent " "WHERE sector='Banking'"
             )
             assert cur.fetchone()[0] == 14
 

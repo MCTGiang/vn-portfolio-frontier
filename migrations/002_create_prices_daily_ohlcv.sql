@@ -5,7 +5,7 @@
 --
 -- Grain:   1 row per (ticker, trade_date).
 -- Volume:  29 tickers x ~1400 trading days (Project 1 window)  ~= 40K rows.
--- Query:   Time-range slicing per ticker is the dominant read pattern —
+-- Query:   Time-range slicing per ticker is the dominant read pattern -
 --          hence the composite PK and separate index on trade_date.
 --
 -- See docs/architecture.md ADR-009 for design rationale.
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS prices.daily_ohlcv (
         CHECK (source IN ('vnstock', 'yfinance', 'sqlite_project1'))
 );
 
--- Time-range queries ("prices for VCB in 2026") are common — index accordingly.
+-- Time-range queries ("prices for VCB in 2026") are common - index accordingly.
 CREATE INDEX IF NOT EXISTS idx_daily_ohlcv_date
     ON prices.daily_ohlcv (trade_date);
 

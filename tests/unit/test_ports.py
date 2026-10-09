@@ -8,8 +8,8 @@ Verifies:
     5. Validation errors (list_recent limit, out-of-order date ranges)
 
 Why contract tests separate from implementation tests:
-    - Day 7+ sẽ add Neon implementations — same contract tests should pass
-      against both Fake AND Neon (via parametrize) để prove swap-ability
+    - Day 7+ will add Neon implementations - same contract tests should pass
+      against both Fake AND Neon (via parametrize) to prove swap-ability
     - For Day 4 scope: just Fake contract pass. Neon tests added Day 7.
 """
 
@@ -317,7 +317,7 @@ class TestFakeRebalanceDecisionRepository:
     def test_save_batch_not_idempotent(
         self, decision_repo: FakeRebalanceDecisionRepository
     ) -> None:
-        """save_batch với same decisions twice doubles the stored count (per Protocol)."""
+        """save_batch with same decisions twice doubles the stored count (per Protocol)."""
         d = self._make_decision(date(2026, 1, 15))
         decision_repo.save_batch(1, [d])
         decision_repo.save_batch(1, [d])  # intentional double

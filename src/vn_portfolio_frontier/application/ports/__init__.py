@@ -1,6 +1,6 @@
 """Application ports (Protocol interfaces) per ADR-015 Hexagonal Architecture.
 
-Ports là contracts giữa Application core và Infrastructure adapters. Application
+Ports are contracts between the Application core and Infrastructure adapters. Application
 services (RebalanceSimulator Day 6+) depend on these abstractions, never on
 concrete Neon/vnstock implementations.
 
@@ -11,7 +11,7 @@ Public exports:
     - RunRecord: DTO for RebalanceRunRepository.save() input + find_by_id() output
     - RunSummary: lightweight DTO for RebalanceRunRepository.list_recent()
 
-Example — DI pattern (Factory wiring Day 6):
+Example - DI pattern (Factory wiring Day 6):
     >>> from vn_portfolio_frontier.application.ports import PriceRepository
     >>> def consume_repo(repo: PriceRepository) -> None:  # type-hint on Protocol
     ...     bars = repo.get_ohlcv("VCB", start, end)

@@ -1,8 +1,8 @@
-"""Rebalance strategies cho Feature 2 (ADR-015 §2.2 Strategy Pattern).
+"""Rebalance strategies for Feature 2 (ADR-015 section 2.2 Strategy Pattern).
 
 Public exports:
     - BaseStrategy: abstract Template Method base (`rebalance` is the template)
-    - ThresholdBandStrategy: concrete — trigger when max drift > band_bps
+    - ThresholdBandStrategy: concrete - trigger when max drift > band_bps
 
 Future strategies (Sprint 12):
     - CalendarMonthlyStrategy: trigger first trading day of each month
