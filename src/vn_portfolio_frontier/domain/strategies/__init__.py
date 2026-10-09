@@ -1,4 +1,4 @@
-"""Rebalance strategies cho Feature 2 (ADR-015 §2.2 Strategy Pattern).
+"""Rebalance strategies for Feature 2 (ADR-015 section 2.2 Strategy Pattern).
 
 Public exports:
     - BaseStrategy: abstract Template Method base (`rebalance` is the template)

@@ -16,7 +16,7 @@ Design decisions:
       when vnstock Silver supplies it, else NULL. Downstream Strategy
       should fall back to close if adj_close is None.
     - source string: tracks data provider (KBS / VCI cascade per ADR-012
-      §2.4 B.3 lock) for audit when prices differ between sources.
+      section 2.4 B.3 lock) for audit when prices differ between sources.
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ class DailyPrice:
         Dividend-and-split adjusted close for return calculations. None
         when provider did not supply.
     source : str, default "KBS"
-        Data provider. One of "KBS", "VCI" per ADR-012 §2.4 cascade.
+        Data provider. One of "KBS", "VCI" per ADR-012 section 2.4 cascade.
 
     Raises
     ------

@@ -1,4 +1,4 @@
-"""CostCalculator - compute TradingCost cho một tập Order per ADR-012.
+"""CostCalculator - compute TradingCost for a batch of Orders per ADR-012.
 
 Cost model theo ADR-012 (user-parameterized, cost-agnostic framework):
 
@@ -24,13 +24,13 @@ line-by-line.
     --------------------+-----------------------+-----------------+------------+------------------------------
     Broker commission   | brokerage_pct         | user-input      | BUY + SELL | VCBS 0.0015, SSI 0.0025 (2026)
     Market impact       | market_impact_bps     | 10 bps          | BUY + SELL | VN30 Amihud illiq proxy
-    Transfer tax        | tax_pct               | Decimal("0.001")| SELL only  | Circular 111/2013/TT-BTC §12
+    Transfer tax        | tax_pct               | Decimal("0.001")| SELL only  | Circular 111/2013/TT-BTC section 12
     (seller only)       |                       |                 |            |
-    Gross trade value   | order.gross_amount()  | shares x price  | per order  | ADR-012 §3.1 definition
+    Gross trade value   | order.gross_amount()  | shares x price  | per order  | ADR-012 section 3.1 definition
     Settlement precision| NUMERIC(20, 2)        | VND quantum 0.01| final sum  | Migration 005 schema +
                         |                       |                 |            | NFR-R-07 Decimal invariant
 
-ADR-012 formula (§3.2) in matching Python shape:
+ADR-012 formula (section 3.2) in matching Python shape:
 
     brokerage = SUM_{o in orders}      gross_amount(o) * brokerage_pct
     slippage  = SUM_{o in orders}      gross_amount(o) * market_impact_bps / 10_000
@@ -75,14 +75,14 @@ _MAX_TAX_PCT = Decimal("0.01")  # 1% ceiling (regulation changes future-proof)
 
 
 class CostCalculator:
-    """Compute execution cost breakdown cho một tập Order.
+    """Compute execution cost breakdown for a batch of Orders.
 
     Parameters
     ----------
     brokerage_pct : Decimal
         User-input broker commission rate (0.0015 = 0.15% of gross).
         Must be in [0, 0.01] range. Zero valid cho zero-fee brokers (DNSE,
-        Pinetree) but system still adds phí sở HSX minimum via Simulator-level
+        Pinetree) but system still adds the HSX exchange minimum fee via Simulator-level
         patch, not here.
     market_impact_bps : int, default 10
         Market-impact assumption in basis points. VN30 liquid tickers default
@@ -141,7 +141,7 @@ class CostCalculator:
         self.tax_pct = tax_pct
 
     def compute(self, orders: Iterable[Order]) -> TradingCost:
-        """Return the aggregated TradingCost cho một tập Order.
+        """Return the aggregated TradingCost for a batch of Orders.
 
         Parameters
         ----------

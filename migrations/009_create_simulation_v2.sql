@@ -100,7 +100,7 @@ CREATE INDEX IF NOT EXISTS idx_decision_trigger_date
     ON simulation.rebalance_decision (trigger_date);
 
 COMMENT ON TABLE simulation.rebalance_decision IS
-    '1 row per trigger event in a rebalance_run. ADR-015 §2.3 Template Method writes RebalanceDecision here.';
+    '1 row per trigger event in a rebalance_run. ADR-015 section 2.3 Template Method writes RebalanceDecision here.';
 
 COMMENT ON COLUMN simulation.rebalance_decision.reason IS
     'Why trigger fired. band_drift (ThresholdBand), calendar (CalendarMonthly), window (FixedWindow), hybrid, or manual.';

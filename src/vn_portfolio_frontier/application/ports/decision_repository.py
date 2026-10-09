@@ -1,6 +1,6 @@
 """RebalanceDecisionRepository Port - simulation.rebalance_decision access.
 
-Per ADR-015 §2.4 Repository Pattern. Decisions link to a Run via run_id FK;
+Per ADR-015 section 2.4 Repository Pattern. Decisions link to a Run via run_id FK;
 one Run can have 0-N Decisions (0 = all days were no-action within band).
 
 Serialization notes (Infrastructure impl responsibility, not Port):
@@ -13,8 +13,8 @@ Serialization notes (Infrastructure impl responsibility, not Port):
 
 Design:
     - Only 2 methods: save_batch + find_by_run - Sprint 11 scope doesn't
-      need find_by_id (per-decision lookup) hoặc delete (CASCADE từ parent)
-    - save_batch yêu cầu run_id tồn tại trước (FK) - caller flow phải
+      need find_by_id (per-decision lookup) or delete (CASCADE from parent)
+    - save_batch requires run_id to exist first (FK) - caller flow must
       RebalanceRunRepository.save() -> get run_id -> save_batch(run_id, ...)
 """
 
@@ -68,7 +68,7 @@ class RebalanceDecisionRepository(Protocol):
 
         Notes
         -----
-        - NOT idempotent cross-batch: calling save_batch twice với same
+        - NOT idempotent cross-batch: calling save_batch twice with same
           decisions inserts duplicates (no PK conflict since decision_id is
           BIGSERIAL). Caller responsibility: don't call twice per run.
         - Transactional per-batch: all N decisions commit together, or none
@@ -77,7 +77,7 @@ class RebalanceDecisionRepository(Protocol):
         ...
 
     def find_by_run(self, run_id: int) -> list[RebalanceDecision]:
-        """Return all decisions cho một run, ordered by trigger_date ASC.
+        """Return all decisions for one run, ordered by trigger_date ASC.
 
         Parameters
         ----------

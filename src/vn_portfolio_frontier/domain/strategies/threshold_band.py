@@ -1,30 +1,30 @@
-"""ThresholdBandStrategy - rebalance khi weight drift vượt ngưỡng band_bps.
+"""ThresholdBandStrategy - rebalance when weight drift exceeds the band_bps threshold.
 
-Concrete subclass của BaseStrategy. Target weights là static (Portfolio.target_weights
-set at init); trigger khi max absolute drift giữa current vs target > band_bps.
+Concrete subclass of BaseStrategy. Target weights are static (Portfolio.target_weights
+set at init); trigger when max absolute drift between current and target > band_bps.
 
 Example:
     - Target: VCB 50% + FPT 50% (set at Portfolio.target_weights)
     - Current (sau price move): VCB 55% + FPT 45%
     - Drift: VCB +500 bps, FPT -500 bps -> max drift 500 bps
-    - Band: 500 bps -> không trigger (<=band = hold)
+    - Band: 500 bps -> does not trigger (<=band = hold)
     - Band: 400 bps -> trigger (>band = rebalance back to 50/50)
 
 Design decisions:
-    - **Static target**: compute_target_weights trả về Portfolio.target_weights
-      không recompute. Alternative: recompute từ Markowitz covariance mỗi lần
+    - **Static target**: compute_target_weights returns Portfolio.target_weights
+      without recomputing. Alternative: recompute from Markowitz covariance each time
       -> defer Sprint 14 (adds complexity + requires FrontierOptimizer injection).
-    - **Max drift test** (not avg or median): defensive. 1 ticker lệch mạnh
-      đã đủ lý do rebalance; không đợi "nhiều ticker lệch cùng lúc".
-    - **band_bps as int** không Decimal: band comparison in bps domain,
+    - **Max drift test** (not avg or median): defensive. 1 ticker heavily off-target
+      is enough reason to rebalance; do not wait for "many tickers off at once".
+    - **band_bps as int** not Decimal: band comparison in bps domain,
       precision loss float eps << bps granularity. Faster.
-    - **Reason label "band_drift"**: match CHECK constraint trên
+    - **Reason label "band_drift"**: matches CHECK constraint on
       simulation.rebalance_decision.reason.
 
 Patterns considered + rejected cho F2 Sprint 11 MUST tier:
-    - Observer: không fit vì rebalance là explicit user action, không event-driven
-    - Chain of Responsibility: chỉ 1 strategy active, không cascade
-    - State: strategies không chuyển state, user chọn upfront
+    - Observer: does not fit because rebalance is an explicit user action, not event-driven
+    - Chain of Responsibility: only 1 strategy active, no cascade
+    - State: strategies do not transition state, user picks upfront
 """
 
 from __future__ import annotations
@@ -116,7 +116,7 @@ class ThresholdBandStrategy(BaseStrategy):
         target: dict[str, float],
         context: RebalanceContext,
     ) -> bool:
-        """Return True nếu max absolute weight drift > band_bps.
+        """Return True if max absolute weight drift > band_bps.
 
         Parameters
         ----------
@@ -125,21 +125,21 @@ class ThresholdBandStrategy(BaseStrategy):
         target : dict[str, float]
             Target weights (output of compute_target_weights).
         context : RebalanceContext
-            Market snapshot - used để tính current weights từ prices.
+            Market snapshot - used to compute current weights from prices.
 
         Returns
         -------
         bool
-            True nếu ANY ticker in target has |current_weight - target| * 10000
+            True if ANY ticker in target has |current_weight - target| * 10000
             > band_bps; else False.
 
         Notes
         -----
-        - Current weight for ticker không trong Portfolio.holdings = 0.0
+        - Current weight for a ticker not in Portfolio.holdings = 0.0
           (treated as flat position with full drift to fund it)
-        - Target weights for ticker không trong Portfolio = fully "below band"
-          nếu target == 0 (no action needed on missing-untarget tickers)
-        - Max drift test (not avg): defensive, 1 ticker đủ lý do rebalance
+        - Target weights for a ticker not in Portfolio = fully "below band"
+          if target == 0 (no action needed on missing-untarget tickers)
+        - Max drift test (not avg): defensive, 1 ticker is enough reason to rebalance
         """
         current_weights = current.get_weights(context.prices)
 

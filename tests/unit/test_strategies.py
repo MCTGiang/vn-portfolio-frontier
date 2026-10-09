@@ -51,7 +51,7 @@ def ctx() -> RebalanceContext:
 
 class TestBaseStrategyAbstract:
     def test_cannot_instantiate_abstract(self, calc: CostCalculator) -> None:
-        """BaseStrategy không có concrete impl of 2 hooks -> TypeError."""
+        """BaseStrategy has no concrete impl of 2 hooks -> TypeError."""
         with pytest.raises(TypeError, match="abstract"):
             BaseStrategy(calc)  # type: ignore[abstract]
 
@@ -222,7 +222,7 @@ class TestComputeOrders:
         assert decision.reason == "zero_shares_after_rounding"
 
     def test_missing_price_skips_ticker(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
-        """Ticker trong target nhưng không trong context.prices -> skip."""
+        """Ticker in target but not in context.prices -> skip."""
         p = Portfolio(cash=Decimal("100000000"), target_weights={"VCB": 0.5, "MSFT": 0.5})
         # ctx only has VCB + FPT, no MSFT
         tracker = _CallTracker(calc, target={"VCB": 0.5, "MSFT": 0.5}, trigger=True)

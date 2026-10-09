@@ -32,7 +32,7 @@ SOURCE_TAG = "sqlite_project1"
 BATCH_SIZE = 5000
 
 EXPECTED_TICKER_COUNT = 29
-EXPECTED_ROW_COUNT = 40661  # verified 2026-09-25 during Cụm 1 discovery
+EXPECTED_ROW_COUNT = 40661  # verified 2026-09-25 during Cluster 1 discovery
 
 
 def load_p1_prices(sqlite_path: Path) -> list[tuple]:

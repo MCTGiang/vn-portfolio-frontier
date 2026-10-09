@@ -12,7 +12,7 @@ Design decisions:
     - shares as int: whole lots convention (HOSE lot size 100 is enforced
       at the strategy / cost calculator level, not here).
     - avg_cost as Decimal: carried for Vietnam tax calculation
-      (chi phí vốn determines capital gain basis). Not used in Sprint 11
+      (cost basis determines capital gain basis). Not used in Sprint 11
       MUST tier (no tax beyond flat 0.1% per Circular 111/2013/TT-BTC),
       but ready for Sprint 12+ when short-term vs long-term distinction
       is added.

@@ -1,7 +1,7 @@
-"""Domain services cho Feature 2 (ADR-015 §2.1).
+"""Domain services for Feature 2 (ADR-015 section 2.1).
 
 Services differ from entities in that they contain business logic that
-doesn't belong to a single entity (e.g., CostCalculator processes a tập
+doesn't belong to a single entity (e.g., CostCalculator processes a batch
 Order and returns an aggregated TradingCost - neither Order nor TradingCost
 owns that computation).
 

@@ -6,7 +6,7 @@ Inserts long-form rows into fundamentals.metric_snapshot.
 Idempotency via UNIQUE constraint (ticker, period, statement_type, metric_id).
 ON CONFLICT DO NOTHING preserves earliest ingested_at timestamp.
 
-Rate limit: Silver tier 300 req/min > 43 × 3 = 129 calls needed. No throttle required.
+Rate limit: Silver tier 300 req/min > 43 * 3 = 129 calls needed. No throttle required.
 
 Usage:
     python scripts/fetch_fundamentals.py --dry-run
@@ -99,11 +99,11 @@ VN30_UNIVERSE: list[str] = [
 ]
 
 
-# Statement types → vnstock_data equity method names
+# Statement types -> vnstock_data equity method names
 STATEMENT_METHODS: dict[str, str] = {
-    "income": "income_statement",  # 26 items × 34 periods
-    "ratio": "ratio",  # 60 items × 33 periods (P/E, P/B, ROE, ROA)
-    "cash_flow": "cash_flow",  # 51 items × 34 periods
+    "income": "income_statement",  # 26 items * 34 periods
+    "ratio": "ratio",  # 60 items * 33 periods (P/E, P/B, ROE, ROA)
+    "cash_flow": "cash_flow",  # 51 items * 34 periods
 }
 
 
@@ -196,7 +196,7 @@ def fetch_fundamentals(
     statement_types: list[str] | None = None,
     dry_run: bool = False,
 ) -> dict:
-    """Public API: fetch fundamentals for tickers × statement_types.
+    """Public API: fetch fundamentals for tickers * statement_types.
 
     Args:
         tickers: subset of VN30_UNIVERSE, None = all 43

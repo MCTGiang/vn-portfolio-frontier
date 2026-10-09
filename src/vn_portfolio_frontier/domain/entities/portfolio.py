@@ -7,9 +7,9 @@ The RebalanceSimulator (application layer) is the single caller that may
 mutate a Portfolio by invoking `apply_orders()` after a strategy returns
 an actionable RebalanceDecision.
 
-Design decisions (ADR-015 §2.1 Hexagonal + §2.3 Template Method):
+Design decisions (ADR-015 section 2.1 Hexagonal + section 2.3 Template Method):
     - **Mutable aggregate root**, unlike the value objects in this module.
-      This matches both the Design Class Diagram (chương 7) and the
+      This matches both the Design Class Diagram (chapter 7) and the
       Streamlit usage pattern (st.session_state.portfolio mutates in
       place as the user interacts). Alternative - immutable with
       `apply_orders` returning a new Portfolio - considered and

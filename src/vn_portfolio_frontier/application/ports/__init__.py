@@ -1,6 +1,6 @@
 """Application ports (Protocol interfaces) per ADR-015 Hexagonal Architecture.
 
-Ports là contracts giữa Application core và Infrastructure adapters. Application
+Ports are contracts between the Application core and Infrastructure adapters. Application
 services (RebalanceSimulator Day 6+) depend on these abstractions, never on
 concrete Neon/vnstock implementations.
 

@@ -46,7 +46,7 @@ shares = st.integers(min_value=1, max_value=100_000)
 
 class TestCostCalculatorMath:
     def test_mixed_buy_sell_all_components(self) -> None:
-        """BUY 100 VCB @ 125000 + SELL 50 FPT @ 95000 với default params."""
+        """BUY 100 VCB @ 125000 + SELL 50 FPT @ 95000 with default params."""
         calc = CostCalculator(brokerage_pct=Decimal("0.0015"))
         orders = [
             Order("VCB", OrderSide.BUY, 100, Decimal("125000")),
@@ -78,7 +78,7 @@ class TestCostCalculatorMath:
         assert cost.tax == Decimal("0.00")
 
     def test_zero_fee_broker(self) -> None:
-        """DNSE / Pinetree 0% brokers (phí sở HSX minimum applied Simulator-level)."""
+        """DNSE / Pinetree 0% brokers (HSX exchange minimum fee applied at Simulator level)."""
         calc = CostCalculator(
             brokerage_pct=Decimal("0"),
             market_impact_bps=0,
@@ -88,7 +88,7 @@ class TestCostCalculatorMath:
         assert cost.total() == Decimal("0.00")
 
     def test_market_impact_bps_scaling(self) -> None:
-        """50 bps = 5x cao hơn default 10 bps."""
+        """50 bps = 5x higher than default 10 bps."""
         default_calc = CostCalculator(brokerage_pct=Decimal("0"), market_impact_bps=10)
         high_calc = CostCalculator(brokerage_pct=Decimal("0"), market_impact_bps=50)
         orders = [Order("VCB", OrderSide.BUY, 100, Decimal("100000"))]  # gross 10M
@@ -98,8 +98,8 @@ class TestCostCalculatorMath:
         assert high_cost.slippage == Decimal("50000.00")  # 10M * 50/10000
 
     def test_quantization_rounds_half_up(self) -> None:
-        """Fractional VND round HALF_UP tới 2 decimal places."""
-        # gross * brokerage_pct có fractional thousandths
+        """Fractional VND rounds HALF_UP to 2 decimal places."""
+        # gross * brokerage_pct has fractional thousandths
         calc = CostCalculator(brokerage_pct=Decimal("0.0001"))  # 0.01%
         # 1 share * 12345 VND * 0.0001 = 1.2345 -> quantize HALF_UP -> 1.23
         orders = [Order("VCB", OrderSide.BUY, 1, Decimal("12345"))]

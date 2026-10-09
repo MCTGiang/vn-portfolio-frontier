@@ -4,7 +4,7 @@ Populates fundamentals.vn30_constituent with static metadata:
 - ticker, listing_date, exchange, sector (from company_type field)
 - is_current: derived from vn30_membership_snapshot latest (2026-07)
 
-company_name_vi/en left NULL — vnstock_data overview() does not expose
+company_name_vi/en left NULL - vnstock_data overview() does not expose
 canonical company names. Sprint 11 follow-up: enrich from HOSE ticker
 directory or vnstock Listing() API.
 
@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_dd_mm_yyyy(s) -> date | None:
-    """Parse '30/06/2009' → date(2009, 6, 30). Return None on failure."""
+    """Parse '30/06/2009' -> date(2009, 6, 30). Return None on failure."""
     if not s or not isinstance(s, str):
         return None
     try:

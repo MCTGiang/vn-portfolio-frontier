@@ -1,6 +1,6 @@
 """RebalanceRunRepository Port + supporting DTOs.
 
-Per ADR-015 §2.4 Repository Pattern. Application layer (RebalanceSimulator,
+Per ADR-015 section 2.4 Repository Pattern. Application layer (RebalanceSimulator,
 Day 6) depends on this Protocol; infrastructure (NeonRebalanceRunRepository)
 implements it.
 
@@ -13,18 +13,18 @@ Shape maps to Migration 005 + 009 simulation.rebalance_run columns:
     - Status (Migration 009): status, error_message
 
 Design decisions:
-    - **RunRecord** là frozen DTO: input + output fields together. Outputs
-      Optional (None lúc chạy). Caller dùng `dataclasses.replace` để fill
+    - **RunRecord** is a frozen DTO: input + output fields together. Outputs
+      Optional (None at run start). Caller uses `dataclasses.replace` to fill
       sau khi backtest xong. 1 save() = 1 INSERT (no UPDATE needed), match
       ADR-012 "every row = one scenario" semantics.
-    - **RunSummary** separate DTO cho list_recent(): nhẹ hơn RunRecord
-      (chỉ fields cần cho history UI table). Avoid pulling full
-      strategy_params + target_weights JSONB khi chỉ list 20 recent runs.
+    - **RunSummary** separate DTO for list_recent(): lighter than RunRecord
+      (only fields needed for history UI table). Avoid pulling full
+      strategy_params + target_weights JSONB when just listing 20 recent runs.
     - **save() returns int** (not UUID): Migration 005 uses BIGSERIAL run_id
       (not UUID). PK generation stays DB-side.
     - **git_commit_sha + code_version** required fields: NFR-R-07
-      reproducibility story - committee hỏi "làm sao biết run này từ code
-      nào" -> answer rõ qua git_commit_sha column.
+      reproducibility story - committee asks "how do we know which code
+      version this run came from" -> answered clearly via git_commit_sha column.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ class RunRecord:
     """Snapshot cho simulation.rebalance_run row.
 
     Input fields are required at construction. Output fields default None
-    (unknown lúc INSERT initial). Use `dataclasses.replace(record, **outputs)`
+    (unknown at initial INSERT). Use `dataclasses.replace(record, **outputs)`
     to produce the final record after backtest completes.
 
     Parameters
@@ -70,7 +70,7 @@ class RunRecord:
     code_version : str
         Short semver / tag label (e.g. "v2.0-sprint11").
     initial_capital : Decimal
-        Starting capital for backtest (VNĐ).
+        Starting capital for backtest (VND).
     sharpe_before_cost : Decimal | None, default None
         Sharpe ratio of gross returns (no cost drag).
     sharpe_after_cost : Decimal | None, default None
@@ -155,7 +155,7 @@ class RunSummary:
     strategy_name : str
         For display + filter.
     sharpe_after_cost : Decimal | None
-        KPI shown in list (None nếu run chưa complete).
+        KPI shown in list (None if run has not completed).
     status : str
         For badge color (running = yellow, completed = green, failed = red).
     """

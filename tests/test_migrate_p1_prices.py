@@ -137,7 +137,7 @@ def test_neon_date_range(db_conn):
 @pytest.mark.integration
 @requires_neon
 def test_neon_sample_ohlcv_present(db_conn):
-    """Spot-check ACB 2021-01-04 row (known first-row values from Cụm 3 dry-run)."""
+    """Spot-check ACB 2021-01-04 row (known first-row values from Cluster 3 dry-run)."""
     with db_conn.cursor() as cur:
         cur.execute(
             "SELECT open_price, high_price, low_price, close_price, volume "
