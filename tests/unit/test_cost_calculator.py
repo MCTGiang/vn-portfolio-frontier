@@ -1,9 +1,9 @@
 """Unit tests for CostCalculator (Sprint 11 Day 3).
 
 Covers ADR-012 cost model:
-    - brokerage = sum(order.gross × brokerage_pct) [both BUY+SELL]
-    - slippage  = sum(order.gross × market_impact_bps / 10000) [both sides]
-    - tax       = sum(order.gross × tax_pct for SELL only)
+    - brokerage = sum(order.gross * brokerage_pct) [both BUY+SELL]
+    - slippage  = sum(order.gross * market_impact_bps / 10000) [both sides]
+    - tax       = sum(order.gross * tax_pct for SELL only)
 
 Test categories:
     - Happy path math (brokerage/slippage/tax exact values)
@@ -54,20 +54,20 @@ class TestCostCalculatorMath:
         ]
         cost = calc.compute(orders)
         # gross: VCB 12,500,000 + FPT 4,750,000 = 17,250,000
-        assert cost.brokerage == Decimal("25875.00")  # 17.25M × 0.0015
-        assert cost.slippage == Decimal("17250.00")  # 17.25M × 10/10000
-        assert cost.tax == Decimal("4750.00")  # 4.75M × 0.001 (SELL only)
+        assert cost.brokerage == Decimal("25875.00")  # 17.25M * 0.0015
+        assert cost.slippage == Decimal("17250.00")  # 17.25M * 10/10000
+        assert cost.tax == Decimal("4750.00")  # 4.75M * 0.001 (SELL only)
 
     def test_buy_only_has_zero_tax(self) -> None:
         calc = CostCalculator(brokerage_pct=Decimal("0.001"))
         cost = calc.compute([Order("VCB", OrderSide.BUY, 100, Decimal("100000"))])
         assert cost.tax == Decimal("0.00")
-        assert cost.brokerage == Decimal("10000.00")  # 10M × 0.001
+        assert cost.brokerage == Decimal("10000.00")  # 10M * 0.001
 
     def test_sell_only_includes_tax(self) -> None:
         calc = CostCalculator(brokerage_pct=Decimal("0.001"))
         cost = calc.compute([Order("VCB", OrderSide.SELL, 100, Decimal("100000"))])
-        assert cost.tax == Decimal("10000.00")  # 10M × 0.001 (seller tax)
+        assert cost.tax == Decimal("10000.00")  # 10M * 0.001 (seller tax)
 
     def test_empty_orders_returns_zero(self) -> None:
         calc = CostCalculator(brokerage_pct=Decimal("0.0015"))
@@ -94,23 +94,23 @@ class TestCostCalculatorMath:
         orders = [Order("VCB", OrderSide.BUY, 100, Decimal("100000"))]  # gross 10M
         default_cost = default_calc.compute(orders)
         high_cost = high_calc.compute(orders)
-        assert default_cost.slippage == Decimal("10000.00")  # 10M × 10/10000
-        assert high_cost.slippage == Decimal("50000.00")  # 10M × 50/10000
+        assert default_cost.slippage == Decimal("10000.00")  # 10M * 10/10000
+        assert high_cost.slippage == Decimal("50000.00")  # 10M * 50/10000
 
     def test_quantization_rounds_half_up(self) -> None:
         """Fractional VND round HALF_UP tới 2 decimal places."""
-        # gross × brokerage_pct có fractional thousandths
+        # gross * brokerage_pct có fractional thousandths
         calc = CostCalculator(brokerage_pct=Decimal("0.0001"))  # 0.01%
-        # 1 share × 12345 VND × 0.0001 = 1.2345 → quantize HALF_UP → 1.23
+        # 1 share * 12345 VND * 0.0001 = 1.2345 -> quantize HALF_UP -> 1.23
         orders = [Order("VCB", OrderSide.BUY, 1, Decimal("12345"))]
         cost = calc.compute(orders)
         assert cost.brokerage == Decimal("1.23")  # HALF_UP from 1.2345
 
     def test_quantization_rounds_up_at_half(self) -> None:
-        """0.005 → HALF_UP → 0.01, not 0.00."""
+        """0.005 -> HALF_UP -> 0.01, not 0.00."""
         calc = CostCalculator(brokerage_pct=Decimal("0.0001"))
         # Need a case where fractional = 0.005 exactly
-        # 1 × 500 × 0.0001 = 0.05 (no fractional) — easy case
+        # 1 * 500 * 0.0001 = 0.05 (no fractional) - easy case
         orders = [Order("VCB", OrderSide.BUY, 1, Decimal("500"))]
         cost = calc.compute(orders)
         assert cost.brokerage == Decimal("0.05")
@@ -183,7 +183,7 @@ class TestCostCalculatorProperties:
 
     @given(ticker=tickers, n=shares, price=prices)
     def test_sell_tax_is_tax_pct_times_gross(self, ticker: str, n: int, price: Decimal) -> None:
-        """SELL-only orders: tax = tax_pct × gross (quantized to VND)."""
+        """SELL-only orders: tax = tax_pct * gross (quantized to VND)."""
         from decimal import ROUND_HALF_UP
 
         calc = CostCalculator(

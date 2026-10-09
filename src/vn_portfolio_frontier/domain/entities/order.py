@@ -2,7 +2,7 @@
 
 An Order represents a single buy/sell instruction produced by a
 RebalanceStrategy at a trigger event. Orders are immutable value objects
-with no identity of their own — they live inside a RebalanceDecision.
+with no identity of their own - they live inside a RebalanceDecision.
 
 Design decisions (ADR-015 §2):
     - Frozen dataclass: enforces immutability at runtime (FrozenInstanceError

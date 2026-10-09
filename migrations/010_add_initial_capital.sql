@@ -1,6 +1,6 @@
 -- Migration 010: Add initial_capital column to simulation.rebalance_run
 --
--- Context: F-H3 Day 5 review finding — RunRecord DTO (Day 4) + Portfolio
+-- Context: F-H3 Day 5 review finding - RunRecord DTO (Day 4) + Portfolio
 -- aggregate root (Day 2) need an initial_capital value to instantiate
 -- Portfolio(cash=initial_capital) at Simulator start (Day 6+). The column
 -- was missing from Migration 005 which created the base rebalance_run table.

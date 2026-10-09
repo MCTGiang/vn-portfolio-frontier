@@ -1,4 +1,4 @@
-"""DailyPrice value object — one trading day OHLCV bar for a ticker.
+"""DailyPrice value object - one trading day OHLCV bar for a ticker.
 
 Represents the price action of a single ticker on a single trading date.
 This is the fundamental unit consumed by RebalanceStrategy.should_trigger()

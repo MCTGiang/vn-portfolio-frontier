@@ -11,7 +11,7 @@ Public exports:
     - RunRecord: DTO for RebalanceRunRepository.save() input + find_by_id() output
     - RunSummary: lightweight DTO for RebalanceRunRepository.list_recent()
 
-Example — DI pattern (Factory wiring Day 6):
+Example - DI pattern (Factory wiring Day 6):
     >>> from vn_portfolio_frontier.application.ports import PriceRepository
     >>> def consume_repo(repo: PriceRepository) -> None:  # type-hint on Protocol
     ...     bars = repo.get_ohlcv("VCB", start, end)

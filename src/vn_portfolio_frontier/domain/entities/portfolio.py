@@ -1,4 +1,4 @@
-"""Portfolio aggregate root — mutable holder of ticker holdings + cash.
+"""Portfolio aggregate root - mutable holder of ticker holdings + cash.
 
 Portfolio is the sole aggregate root of the Feature 2 domain. All holding
 and cash state changes flow through its methods; strategies read portfolio
@@ -11,8 +11,8 @@ Design decisions (ADR-015 §2.1 Hexagonal + §2.3 Template Method):
     - **Mutable aggregate root**, unlike the value objects in this module.
       This matches both the Design Class Diagram (chương 7) and the
       Streamlit usage pattern (st.session_state.portfolio mutates in
-      place as the user interacts). Alternative — immutable with
-      `apply_orders` returning a new Portfolio — considered and
+      place as the user interacts). Alternative - immutable with
+      `apply_orders` returning a new Portfolio - considered and
       rejected: memory cost over a 5-year daily backtest + awkward
       session_state wiring.
     - **Cash accounting**: BUY debits cash by gross_amount; SELL credits
@@ -22,7 +22,7 @@ Design decisions (ADR-015 §2.1 Hexagonal + §2.3 Template Method):
     - **Volume-weighted average cost on BUY**: when adding to an existing
       position, avg_cost is recomputed as the share-weighted average.
       Needed for Sprint 12+ realised P&L accounting (short-term vs
-      long-term distinction per Thông tư 111/2013/TT-BTC).
+      long-term distinction per Circular 111/2013/TT-BTC).
     - **SELL preserves avg_cost**: residual shares keep the pre-SELL
       avg_cost. Realised P&L on sold shares = (sell_price - avg_cost) *
       shares_sold, computed outside Portfolio (ReturnDecomposer in
@@ -30,7 +30,7 @@ Design decisions (ADR-015 §2.1 Hexagonal + §2.3 Template Method):
       avg_cost resets to 0 (empty-holding convention).
     - **No short selling in Sprint 11 MUST tier**: SELL more shares than
       held raises ValueError. Shorting would require signed shares and
-      margin accounting — out of scope.
+      margin accounting - out of scope.
     - **No negative cash**: `apply_orders` validates that resulting cash
       is non-negative. If a strategy produces orders exceeding available
       budget, the caller must either scale down orders or skip the
@@ -107,7 +107,7 @@ class Portfolio:
         prices : Mapping[str, Decimal]
             Ticker to current price. Missing tickers are treated as
             having zero value in the sum (silent skip rather than raise
-            — allows partial-universe pricing during data outages).
+            - allows partial-universe pricing during data outages).
 
         Returns
         -------
@@ -180,7 +180,7 @@ class Portfolio:
 
         Notes
         -----
-        This method is NOT transactional in the strict sense — a failure
+        This method is NOT transactional in the strict sense - a failure
         mid-sequence may leave the portfolio in a partially-applied
         state. For NFR-R-02 strict atomicity, callers should snapshot
         the portfolio before calling and restore on exception. The

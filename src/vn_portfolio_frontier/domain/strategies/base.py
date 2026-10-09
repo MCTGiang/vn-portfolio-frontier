@@ -1,4 +1,4 @@
-"""BaseStrategy — abstract Template Method cho rebalance strategies.
+"""BaseStrategy - abstract Template Method cho rebalance strategies.
 
 Pattern: Template Method (GoF Behavioral) kết hợp Strategy (GoF Behavioral).
 Base class `BaseStrategy` định nghĩa common flow `rebalance()` không được
@@ -16,7 +16,7 @@ Flow (per ADR-015 §2.3):
 Why Template Method here:
     - 4 strategies trong Sprint 11-12 (ThresholdBand, CalendarMonthly,
       FixedWindow, Hybrid) share identical steps 3-5. Nếu copy-paste
-      logic đó 4 lần → maintenance nightmare + bugs khi fix orders logic
+      logic đó 4 lần -> maintenance nightmare + bugs khi fix orders logic
       ở 1 place but not others.
     - Steps 1-2 là strategy-specific (band drift vs calendar date), nên
       tách thành hooks để subclass override.
@@ -25,11 +25,11 @@ Why Template Method here:
 
 Patterns considered + rejected:
     - **Strategy pattern alone** (không Template Method): mỗi strategy
-      implement cả flow + specific logic → copy-paste steps 3-5. Rejected.
-    - **Chain of Responsibility**: không fit — chỉ 1 strategy active per
+      implement cả flow + specific logic -> copy-paste steps 3-5. Rejected.
+    - **Chain of Responsibility**: không fit - chỉ 1 strategy active per
       run, không có "pass to next handler" semantics.
     - **State pattern**: strategies không chuyển state giữa chúng, user
-      chọn upfront → overkill.
+      chọn upfront -> overkill.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ from vn_portfolio_frontier.domain.services.cost_calculator import CostCalculator
 
 
 class BaseStrategy(ABC):
-    """Abstract base cho mọi rebalance strategy — Template Method pattern.
+    """Abstract base cho mọi rebalance strategy - Template Method pattern.
 
     Parameters
     ----------
@@ -65,7 +65,7 @@ class BaseStrategy(ABC):
     - Subclass MUST set `self.name` trong __init__
     - Subclass MUST implement `compute_target_weights` + `should_trigger`
     - Subclass MAY override `_reason()` để customize decision.reason label
-    - Subclass should NOT override `rebalance()` — breaks Template Method
+    - Subclass should NOT override `rebalance()` - breaks Template Method
     """
 
     name: str = ""
@@ -80,7 +80,7 @@ class BaseStrategy(ABC):
     ) -> RebalanceDecision:
         """Evaluate strategy at `context.as_of` and return a RebalanceDecision.
 
-        Template Method — DO NOT override in subclass.
+        Template Method - DO NOT override in subclass.
 
         Parameters
         ----------
@@ -137,7 +137,7 @@ class BaseStrategy(ABC):
         )
 
     # ------------------------------------------------------------------
-    # Abstract hooks — subclass MUST override
+    # Abstract hooks - subclass MUST override
     # ------------------------------------------------------------------
 
     @abstractmethod
@@ -155,7 +155,7 @@ class BaseStrategy(ABC):
         Returns
         -------
         dict[str, float]
-            Ticker → target weight (0.0-1.0). Should sum to ~1.0; strategy
+            Ticker -> target weight (0.0-1.0). Should sum to ~1.0; strategy
             is responsible for normalization.
         """
 
@@ -180,11 +180,11 @@ class BaseStrategy(ABC):
         Returns
         -------
         bool
-            True → fire rebalance (steps 3-5 run); False → no-action decision.
+            True -> fire rebalance (steps 3-5 run); False -> no-action decision.
         """
 
     # ------------------------------------------------------------------
-    # Shared base logic — subclass MAY override cautiously
+    # Shared base logic - subclass MAY override cautiously
     # ------------------------------------------------------------------
 
     def _compute_orders(
@@ -193,14 +193,14 @@ class BaseStrategy(ABC):
         target: dict[str, float],
         context: RebalanceContext,
     ) -> list[Order]:
-        """Convert weight delta → BUY/SELL orders using current prices.
+        """Convert weight delta -> BUY/SELL orders using current prices.
 
         Logic:
             1. Compute total_value cho Portfolio ở context.prices
-            2. For each ticker trong target: target_shares = int(target_weight × total_value / price)
+            2. For each ticker trong target: target_shares = int(target_weight * total_value / price)
             3. delta_shares = target_shares - current_shares (0 nếu không trong Portfolio)
-            4. delta > 0 → BUY delta shares at close price
-            5. delta < 0 → SELL abs(delta) shares at close price
+            4. delta > 0 -> BUY delta shares at close price
+            5. delta < 0 -> SELL abs(delta) shares at close price
             6. Skip orders where delta == 0 or ticker missing from context.prices
             7. Floor rounding (int cast) để chống over-buy khi budget edge
 
@@ -209,21 +209,21 @@ class BaseStrategy(ABC):
         Mixing float (target_weight) with Decimal (prices, total_value) is
         intentional and deterministic:
 
-        1. `target_weight: float` — portfolio weights are ratios in [0, 1],
+        1. `target_weight: float` - portfolio weights are ratios in [0, 1],
            not currency units, so NFR-R-07 Decimal constraint does not apply.
            float provides sufficient precision for all realistic weights
            (IEEE 754 double gives ~15 significant digits; human-readable
            weights like 0.4 round-trip exactly against band_bps granularity
            of 1 bps = 0.0001).
 
-        2. `Decimal(str(target_weight)) * total_value` — the `str()` detour
+        2. `Decimal(str(target_weight)) * total_value` - the `str()` detour
            PREVENTS binary float artifacts from entering currency math:
                Decimal(0.1)       # -> Decimal('0.1000000000000000055511...')
                Decimal(str(0.1))  # -> Decimal('0.1')  (exact)
            Downstream multiplication by total_value, division by price, and
            int() truncation stay bit-identical across platforms.
 
-        3. `int(target_capital / price)` — floor rounding in the Decimal
+        3. `int(target_capital / price)` - floor rounding in the Decimal
            domain, not float. Decimal.__truediv__ returns Decimal; int()
            truncates toward zero (equivalent to floor for non-negative
            operands guaranteed by target_weight >= 0 and total_value >= 0

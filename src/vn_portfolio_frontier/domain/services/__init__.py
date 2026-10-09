@@ -2,7 +2,7 @@
 
 Services differ from entities in that they contain business logic that
 doesn't belong to a single entity (e.g., CostCalculator processes a tập
-Order and returns an aggregated TradingCost — neither Order nor TradingCost
+Order and returns an aggregated TradingCost - neither Order nor TradingCost
 owns that computation).
 
 Public exports:

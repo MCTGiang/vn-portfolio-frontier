@@ -61,7 +61,7 @@ class FakePriceRepository:
                 self._data[key] = record
         return len(self._data) - before
 
-    # Test helpers (NOT part of Protocol — convenience for arranging test state)
+    # Test helpers (NOT part of Protocol - convenience for arranging test state)
 
     def seed(self, records: list[DailyPrice]) -> None:
         """Shortcut cho arranging initial test state. Equivalent to batch_insert."""
@@ -120,8 +120,8 @@ class FakeRebalanceRunRepository:
 class FakeRebalanceDecisionRepository:
     """Dict-backed RebalanceDecisionRepository cho unit tests.
 
-    Keys by run_id → list[RebalanceDecision]. find_by_run returns
-    chronologically-sorted copy (defensive — caller can't mutate internal).
+    Keys by run_id -> list[RebalanceDecision]. find_by_run returns
+    chronologically-sorted copy (defensive - caller can't mutate internal).
     """
 
     def __init__(self) -> None:

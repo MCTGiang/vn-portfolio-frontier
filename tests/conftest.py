@@ -1,7 +1,7 @@
 """Shared pytest fixtures for vn-portfolio-frontier.
 
-Following Project 1 lesson (ScopeMismatch): read-only fixtures — constants,
-tickers, date windows — must be session-scoped so higher-scope consumers can
+Following Project 1 lesson (ScopeMismatch): read-only fixtures - constants,
+tickers, date windows - must be session-scoped so higher-scope consumers can
 depend on them without pytest raising ScopeMismatch.
 """
 
@@ -32,5 +32,5 @@ def data_window() -> tuple[date, date]:
 
 @pytest.fixture(scope="session")
 def project_root() -> Path:
-    """Repository root — one level up from the tests/ directory."""
+    """Repository root - one level up from the tests/ directory."""
     return Path(__file__).parent.parent

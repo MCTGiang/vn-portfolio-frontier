@@ -1,12 +1,12 @@
 -- ============================================================================
--- Migration 003: fundamentals domain — vn30_constituent + financial_report
+-- Migration 003: fundamentals domain - vn30_constituent + financial_report
 -- ============================================================================
 -- Scope-driven design (see ADR-009 refactor evaluation):
 -- - vn30_constituent: static ticker registry, serves sentiment extraction's
 --   ticker-validation needs + supports historical VN30 corpus for defense.
 -- - financial_report: minimal time series (revenue, net_income, EPS) for
 --   sentiment context enrichment. Derived ratios (PE, PB, ROE) intentionally
---   excluded — computable at query time from prices + fundamentals inputs.
+--   excluded - computable at query time from prices + fundamentals inputs.
 --
 -- Two-table shape (metadata vs quarterly time series) is what makes this a
 -- genuinely heterogeneous second data source vs prices.daily_ohlcv.
@@ -48,7 +48,7 @@ CREATE INDEX IF NOT EXISTS idx_vn30_constituent_current
     WHERE is_current = true;
 
 COMMENT ON TABLE fundamentals.vn30_constituent IS
-    'VN30 ticker registry — current constituents + historical ex-members. Used by sentiment extraction for ticker validation and by dashboards for sector grouping.';
+    'VN30 ticker registry - current constituents + historical ex-members. Used by sentiment extraction for ticker validation and by dashboards for sector grouping.';
 
 COMMENT ON COLUMN fundamentals.vn30_constituent.sector IS
     'Free-text sector label (banking, real_estate, retail, materials, etc.). Not constrained to enable evolution as VN market classification changes.';

@@ -51,7 +51,7 @@ def ctx() -> RebalanceContext:
 
 class TestBaseStrategyAbstract:
     def test_cannot_instantiate_abstract(self, calc: CostCalculator) -> None:
-        """BaseStrategy không có concrete impl of 2 hooks → TypeError."""
+        """BaseStrategy không có concrete impl of 2 hooks -> TypeError."""
         with pytest.raises(TypeError, match="abstract"):
             BaseStrategy(calc)  # type: ignore[abstract]
 
@@ -98,7 +98,7 @@ class TestTemplateMethodFlow:
     def test_hooks_called_in_order_when_trigger_true(
         self, calc: CostCalculator, ctx: RebalanceContext
     ) -> None:
-        """compute_target_weights → should_trigger → (orders+cost built)."""
+        """compute_target_weights -> should_trigger -> (orders+cost built)."""
         p = Portfolio(cash=Decimal("100000000"), target_weights={"VCB": 0.5, "FPT": 0.5})
         tracker = _CallTracker(calc, target={"VCB": 0.5, "FPT": 0.5}, trigger=True)
         decision = tracker.rebalance(p, ctx)
@@ -118,7 +118,7 @@ class TestTemplateMethodFlow:
     def test_zero_shares_after_rounding_no_action(
         self, calc: CostCalculator, ctx: RebalanceContext
     ) -> None:
-        """Tiny weight × tiny cash → floor to 0 shares → no_action."""
+        """Tiny weight * tiny cash -> floor to 0 shares -> no_action."""
         p = Portfolio(cash=Decimal("100"), target_weights={"VCB": 0.0001})
         tracker = _CallTracker(calc, target={"VCB": 0.0001}, trigger=True)
         decision = tracker.rebalance(p, ctx)
@@ -155,7 +155,7 @@ class TestTemplateMethodFlow:
 
 class TestComputeOrders:
     def test_fresh_portfolio_all_buys(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
-        """100M cash + 50/50 target → BUY both tickers."""
+        """100M cash + 50/50 target -> BUY both tickers."""
         p = Portfolio(cash=Decimal("100000000"), target_weights={"VCB": 0.5, "FPT": 0.5})
         tracker = _CallTracker(calc, target={"VCB": 0.5, "FPT": 0.5}, trigger=True)
         decision = tracker.rebalance(p, ctx)
@@ -166,7 +166,7 @@ class TestComputeOrders:
         assert vcb_order.shares == 400
 
     def test_over_weighted_triggers_sell(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
-        """VCB over-weight → SELL to bring back to target."""
+        """VCB over-weight -> SELL to bring back to target."""
         p = Portfolio(cash=Decimal("100"), target_weights={"VCB": 0.5, "FPT": 0.5})
         p.holdings["VCB"] = Holding("VCB", 560, Decimal("125000"))  # 70M
         p.holdings["FPT"] = Holding("FPT", 316, Decimal("95000"))  # 30.02M
@@ -210,19 +210,19 @@ class TestComputeOrders:
         assert decision.is_action
 
     def test_delta_zero_skips_order(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
-        """Khi current_shares == target_shares → no order for that ticker."""
+        """Khi current_shares == target_shares -> no order for that ticker."""
         # VCB already at target exactly
         p = Portfolio(cash=Decimal("100"), target_weights={"VCB": 1.0})
-        # Total value = 100 + 100*125000 = 12,500,100 → target 100% → shares = int(12500100/125000) = 100
+        # Total value = 100 + 100*125000 = 12,500,100 -> target 100% -> shares = int(12500100/125000) = 100
         p.holdings["VCB"] = Holding("VCB", 100, Decimal("125000"))
         tracker = _CallTracker(calc, target={"VCB": 1.0}, trigger=True)
         decision = tracker.rebalance(p, ctx)
-        # VCB delta = 100 - 100 = 0 → no VCB order → total order_count == 0 → no_action
+        # VCB delta = 100 - 100 = 0 -> no VCB order -> total order_count == 0 -> no_action
         assert not decision.is_action
         assert decision.reason == "zero_shares_after_rounding"
 
     def test_missing_price_skips_ticker(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
-        """Ticker trong target nhưng không trong context.prices → skip."""
+        """Ticker trong target nhưng không trong context.prices -> skip."""
         p = Portfolio(cash=Decimal("100000000"), target_weights={"VCB": 0.5, "MSFT": 0.5})
         # ctx only has VCB + FPT, no MSFT
         tracker = _CallTracker(calc, target={"VCB": 0.5, "MSFT": 0.5}, trigger=True)
@@ -265,7 +265,7 @@ class TestThresholdBandStrategy:
         assert p.target_weights["VCB"] == 0.5
 
     def test_fresh_portfolio_triggers(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
-        """Fresh portfolio: 0% weights vs 50% target → 5000 bps drift → trigger."""
+        """Fresh portfolio: 0% weights vs 50% target -> 5000 bps drift -> trigger."""
         s = ThresholdBandStrategy(calc, band_bps=500)
         p = Portfolio(cash=Decimal("100000000"), target_weights={"VCB": 0.5, "FPT": 0.5})
         decision = s.rebalance(p, ctx)
@@ -273,7 +273,7 @@ class TestThresholdBandStrategy:
         assert decision.reason == "band_drift"
 
     def test_balanced_no_trigger(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
-        """Portfolio balanced at target → 0 bps drift → no trigger."""
+        """Portfolio balanced at target -> 0 bps drift -> no trigger."""
         s = ThresholdBandStrategy(calc, band_bps=500)
         p = Portfolio(cash=Decimal("100"), target_weights={"VCB": 0.5, "FPT": 0.5})
         p.holdings["VCB"] = Holding("VCB", 400, Decimal("125000"))
@@ -288,12 +288,12 @@ class TestThresholdBandStrategy:
         # Simpler: use a wide band (10000) and verify any drift stays under
         s = ThresholdBandStrategy(calc, band_bps=10000)  # 100% band
         p = Portfolio(cash=Decimal("100000000"), target_weights={"VCB": 0.5, "FPT": 0.5})
-        # Fresh portfolio = 5000 bps drift < 10000 band → no trigger
+        # Fresh portfolio = 5000 bps drift < 10000 band -> no trigger
         decision = s.rebalance(p, ctx)
         assert not decision.is_action
 
     def test_drift_over_band_triggers(self, calc: CostCalculator, ctx: RebalanceContext) -> None:
-        """Drift 600 bps > band 500 → trigger."""
+        """Drift 600 bps > band 500 -> trigger."""
         s = ThresholdBandStrategy(calc, band_bps=500)
         p = Portfolio(cash=Decimal("100"), target_weights={"VCB": 0.5, "FPT": 0.5})
         # 56% VCB = 500+ bps drift from 50% target
@@ -315,7 +315,7 @@ class TestThresholdBandStrategy:
 
 
 # =====================================================================
-# Integration — Strategy + CostCalculator produces consistent Decision
+# Integration - Strategy + CostCalculator produces consistent Decision
 # =====================================================================
 
 

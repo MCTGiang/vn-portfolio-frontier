@@ -1,21 +1,21 @@
-"""RebalanceDecisionRepository Port — simulation.rebalance_decision access.
+"""RebalanceDecisionRepository Port - simulation.rebalance_decision access.
 
 Per ADR-015 §2.4 Repository Pattern. Decisions link to a Run via run_id FK;
 one Run can have 0-N Decisions (0 = all days were no-action within band).
 
 Serialization notes (Infrastructure impl responsibility, not Port):
-    - RebalanceDecision.orders: tuple[Order, ...] → JSONB array per decision
+    - RebalanceDecision.orders: tuple[Order, ...] -> JSONB array per decision
       Example: [{"ticker":"VCB","side":"BUY","shares":100,"est_price":125000}, ...]
-    - RebalanceDecision.costs: TradingCost → flatten to 3 cost_* columns
+    - RebalanceDecision.costs: TradingCost -> flatten to 3 cost_* columns
       (cost_brokerage + cost_slippage + cost_tax + cost_total derived)
-    - RebalanceDecision.weights_before/after: dict[str, float] → JSONB
-    - Order.est_price Decimal → NUMERIC(20,2) with HALF_UP quantize
+    - RebalanceDecision.weights_before/after: dict[str, float] -> JSONB
+    - Order.est_price Decimal -> NUMERIC(20,2) with HALF_UP quantize
 
 Design:
-    - Only 2 methods: save_batch + find_by_run — Sprint 11 scope doesn't
+    - Only 2 methods: save_batch + find_by_run - Sprint 11 scope doesn't
       need find_by_id (per-decision lookup) hoặc delete (CASCADE từ parent)
-    - save_batch yêu cầu run_id tồn tại trước (FK) — caller flow phải
-      RebalanceRunRepository.save() → get run_id → save_batch(run_id, ...)
+    - save_batch yêu cầu run_id tồn tại trước (FK) - caller flow phải
+      RebalanceRunRepository.save() -> get run_id -> save_batch(run_id, ...)
 """
 
 from __future__ import annotations
@@ -57,7 +57,7 @@ class RebalanceDecisionRepository(Protocol):
         -------
         int
             Count of rows inserted. Equals `len(decisions)` on happy path.
-            Returns 0 for empty input (not an error — all-no-action runs are
+            Returns 0 for empty input (not an error - all-no-action runs are
             common when band is wide).
 
         Raises
@@ -89,7 +89,7 @@ class RebalanceDecisionRepository(Protocol):
         list[RebalanceDecision]
             Decisions chronologically ordered. Empty list if run_id has no
             decisions (all-no-action case) OR if run_id doesn't exist (same
-            empty return — caller must verify run existence via
+            empty return - caller must verify run existence via
             RebalanceRunRepository.find_by_id if distinction matters).
 
         Notes
@@ -97,6 +97,6 @@ class RebalanceDecisionRepository(Protocol):
         - Each returned RebalanceDecision reconstructs orders tuple +
           TradingCost + weights dicts from JSONB columns + cost_* columns
         - decision_id BIGSERIAL is NOT exposed in RebalanceDecision (domain
-          entity has no identity field) — Repository drops it after fetch
+          entity has no identity field) - Repository drops it after fetch
         """
         ...

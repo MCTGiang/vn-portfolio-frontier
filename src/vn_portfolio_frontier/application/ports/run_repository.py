@@ -23,8 +23,8 @@ Design decisions:
     - **save() returns int** (not UUID): Migration 005 uses BIGSERIAL run_id
       (not UUID). PK generation stays DB-side.
     - **git_commit_sha + code_version** required fields: NFR-R-07
-      reproducibility story — committee hỏi "làm sao biết run này từ code
-      nào" → answer rõ qua git_commit_sha column.
+      reproducibility story - committee hỏi "làm sao biết run này từ code
+      nào" -> answer rõ qua git_commit_sha column.
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ class RunRecord:
     brokerage_pct : Decimal
         ADR-012 user-input broker commission rate.
     tax_pct : Decimal
-        Vietnam seller tax (0.001 = 0.1% default per Thông tư 111/2013/TT-BTC).
+        Vietnam seller tax (0.001 = 0.1% default per Circular 111/2013/TT-BTC).
     market_impact_bps : int
         Market-impact assumption in basis points.
     strategy_name : str
@@ -193,13 +193,13 @@ class RebalanceRunRepository(Protocol):
         -------
         int
             BIGSERIAL run_id assigned by DB. Caller uses this to persist
-            associated RebalanceDecision rows (which have FK → run_id).
+            associated RebalanceDecision rows (which have FK -> run_id).
 
         Raises
         ------
         ValueError
             If record violates DB CHECK constraints (strategy_name unknown,
-            brokerage_pct out of range, etc.) — caller sees DB error wrapped
+            brokerage_pct out of range, etc.) - caller sees DB error wrapped
             as ValueError.
         """
         ...

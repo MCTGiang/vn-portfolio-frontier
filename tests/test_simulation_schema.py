@@ -83,7 +83,7 @@ def test_rebalance_run_has_expected_columns() -> None:
 
 
 def _valid_insert_kwargs() -> dict:
-    """Baseline valid row — reused by CHECK tests via mutation."""
+    """Baseline valid row - reused by CHECK tests via mutation."""
     return {
         "brokerage_pct": 0.15,
         "tax_pct": 0.10,

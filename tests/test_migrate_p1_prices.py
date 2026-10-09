@@ -1,4 +1,4 @@
-"""Tests for P1 SQLite → Neon migration (Task 5A B.2).
+"""Tests for P1 SQLite -> Neon migration (Task 5A B.2).
 
 Two tiers:
 - unit: pure logic on SQLite (no Neon), CI-safe.
@@ -64,7 +64,7 @@ def test_load_date_range(p1_rows):
 
 @pytest.mark.unit
 def test_no_null_close_prices(p1_rows):
-    """Neon close_price is NOT NULL — verify source has no nulls."""
+    """Neon close_price is NOT NULL - verify source has no nulls."""
     nulls = [row for row in p1_rows if row[5] is None]
     assert not nulls, f"Found {len(nulls)} rows with NULL close price"
 

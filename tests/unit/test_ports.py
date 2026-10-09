@@ -8,7 +8,7 @@ Verifies:
     5. Validation errors (list_recent limit, out-of-order date ranges)
 
 Why contract tests separate from implementation tests:
-    - Day 7+ sẽ add Neon implementations — same contract tests should pass
+    - Day 7+ sẽ add Neon implementations - same contract tests should pass
       against both Fake AND Neon (via parametrize) để prove swap-ability
     - For Day 4 scope: just Fake contract pass. Neon tests added Day 7.
 """

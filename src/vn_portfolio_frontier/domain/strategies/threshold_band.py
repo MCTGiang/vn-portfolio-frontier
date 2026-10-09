@@ -1,4 +1,4 @@
-"""ThresholdBandStrategy — rebalance khi weight drift vượt ngưỡng band_bps.
+"""ThresholdBandStrategy - rebalance khi weight drift vượt ngưỡng band_bps.
 
 Concrete subclass của BaseStrategy. Target weights là static (Portfolio.target_weights
 set at init); trigger khi max absolute drift giữa current vs target > band_bps.
@@ -6,14 +6,14 @@ set at init); trigger khi max absolute drift giữa current vs target > band_bps
 Example:
     - Target: VCB 50% + FPT 50% (set at Portfolio.target_weights)
     - Current (sau price move): VCB 55% + FPT 45%
-    - Drift: VCB +500 bps, FPT -500 bps → max drift 500 bps
-    - Band: 500 bps → không trigger (<=band = hold)
-    - Band: 400 bps → trigger (>band = rebalance back to 50/50)
+    - Drift: VCB +500 bps, FPT -500 bps -> max drift 500 bps
+    - Band: 500 bps -> không trigger (<=band = hold)
+    - Band: 400 bps -> trigger (>band = rebalance back to 50/50)
 
 Design decisions:
     - **Static target**: compute_target_weights trả về Portfolio.target_weights
       không recompute. Alternative: recompute từ Markowitz covariance mỗi lần
-      → defer Sprint 14 (adds complexity + requires FrontierOptimizer injection).
+      -> defer Sprint 14 (adds complexity + requires FrontierOptimizer injection).
     - **Max drift test** (not avg or median): defensive. 1 ticker lệch mạnh
       đã đủ lý do rebalance; không đợi "nhiều ticker lệch cùng lúc".
     - **band_bps as int** không Decimal: band comparison in bps domain,
@@ -125,12 +125,12 @@ class ThresholdBandStrategy(BaseStrategy):
         target : dict[str, float]
             Target weights (output of compute_target_weights).
         context : RebalanceContext
-            Market snapshot — used để tính current weights từ prices.
+            Market snapshot - used để tính current weights từ prices.
 
         Returns
         -------
         bool
-            True nếu ANY ticker in target has |current_weight - target| × 10000
+            True nếu ANY ticker in target has |current_weight - target| * 10000
             > band_bps; else False.
 
         Notes
