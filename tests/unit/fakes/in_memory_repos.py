@@ -22,7 +22,9 @@ Usage trong test code:
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import replace
 from datetime import UTC, date, datetime
+from typing import Any
 
 from vn_portfolio_frontier.application.ports.run_repository import RunRecord, RunSummary
 from vn_portfolio_frontier.domain.entities.daily_price import DailyPrice
@@ -108,6 +110,32 @@ class FakeRebalanceRunRepository:
             )
             for rid in sorted_ids
         ]
+
+    def update_status(
+        self,
+        run_id: int,
+        status: str,
+        error_message: str | None = None,
+        kpis: dict[str, Any] | None = None,
+    ) -> None:
+        if run_id not in self._records:
+            raise ValueError(f"update_status: unknown run_id {run_id}")
+        existing = self._records[run_id]
+        updates: dict[str, Any] = {"status": status}
+        if error_message is not None:
+            updates["error_message"] = error_message
+        if kpis:
+            allowed = {
+                "n_rebalances",
+                "total_cost_bps",
+                "turnover_avg_pct",
+                "sharpe_before_cost",
+                "sharpe_after_cost",
+            }
+            for key, value in kpis.items():
+                if key in allowed:
+                    updates[key] = value
+        self._records[run_id] = replace(existing, **updates)
 
     # Test helpers
 

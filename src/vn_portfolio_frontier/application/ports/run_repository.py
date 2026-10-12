@@ -239,3 +239,50 @@ class RebalanceRunRepository(Protocol):
             If limit <= 0.
         """
         ...
+
+    def update_status(
+        self,
+        run_id: int,
+        status: str,
+        error_message: str | None = None,
+        kpis: dict[str, Any] | None = None,
+    ) -> None:
+        """Transition run status and optionally fill output KPIs.
+
+        Config fields (brokerage_pct, strategy_name, target_weights, etc.)
+        are IMMUTABLE after save() per NFR-R-07 Reproducibility. Only status,
+        error_message, and output KPIs may be mutated through this method.
+
+        Parameters
+        ----------
+        run_id : int
+            Existing run (must exist, else ValueError).
+        status : str
+            Target status in {"running", "completed", "failed"} per
+            Migration 009 CHECK constraint.
+        error_message : str, optional
+            Required when status="failed", ignored otherwise.
+        kpis : dict[str, Any], optional
+            Output KPIs to persist. Supported keys (unknown keys silently
+            ignored for forward compatibility):
+                - n_rebalances: int
+                - total_cost_bps: int
+                - turnover_avg_pct: Decimal
+                - sharpe_before_cost: Decimal
+                - sharpe_after_cost: Decimal
+
+        Raises
+        ------
+        ValueError
+            When run_id does not exist.
+
+        Notes
+        -----
+        - completed_at should be auto-stamped by the Infrastructure
+          implementation when status transitions to "completed" or "failed"
+          (DB NOW() default or trigger).
+        - Caller should not retry update_status with inconsistent payloads
+          (e.g., status="completed" + error_message=non-None) - behaviour
+          undefined at Port level, each Infrastructure impl may normalise.
+        """
+        ...
