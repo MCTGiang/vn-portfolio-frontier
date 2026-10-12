@@ -363,3 +363,59 @@ class TestRunRecordValidation:
                 code_version="v2.0-sprint11",
                 initial_capital=Decimal("-100"),  # invalid
             )
+
+
+# =====================================================================
+# RebalanceRunRepository.update_status contract
+# =====================================================================
+
+
+class TestRunRepositoryUpdateStatus:
+    def test_transitions_running_to_completed_with_kpis(self, run_repo, sample_run_record) -> None:
+        run_id = run_repo.save(sample_run_record)
+        run_repo.update_status(
+            run_id,
+            status="completed",
+            kpis={
+                "n_rebalances": 5,
+                "total_cost_bps": 25,
+                "turnover_avg_pct": Decimal("0.08"),
+                "sharpe_before_cost": Decimal("1.42"),
+                "sharpe_after_cost": Decimal("1.18"),
+            },
+        )
+        record = run_repo.find_by_id(run_id)
+        assert record.status == "completed"
+        assert record.n_rebalances == 5
+        assert record.total_cost_bps == 25
+        assert record.sharpe_before_cost == Decimal("1.42")
+        assert record.sharpe_after_cost == Decimal("1.18")
+
+    def test_failed_captures_error_message(self, run_repo, sample_run_record) -> None:
+        run_id = run_repo.save(sample_run_record)
+        run_repo.update_status(
+            run_id,
+            status="failed",
+            error_message="Strategy raised at 2024-01-15: band_bps out of range",
+        )
+        record = run_repo.find_by_id(run_id)
+        assert record.status == "failed"
+        assert "Strategy raised" in record.error_message
+
+    def test_rejects_unknown_run_id(self, run_repo) -> None:
+        with pytest.raises(ValueError, match="unknown run_id"):
+            run_repo.update_status(999, status="completed")
+
+    def test_ignores_unknown_kpi_keys(self, run_repo, sample_run_record) -> None:
+        """Forward compatibility: unknown keys in kpis dict silently ignored."""
+        run_id = run_repo.save(sample_run_record)
+        run_repo.update_status(
+            run_id,
+            status="completed",
+            kpis={
+                "n_rebalances": 3,
+                "future_metric_v2": "should_be_ignored",
+            },
+        )
+        record = run_repo.find_by_id(run_id)
+        assert record.n_rebalances == 3
