@@ -5,7 +5,7 @@ Assumes migrations have already been applied to the Neon database:
     python scripts/apply_migrations.py
 
 Tests inspect information_schema to verify structural state. They do not
-apply migrations themselves — that would risk running production DDL from
+apply migrations themselves - that would risk running production DDL from
 a test suite.
 
 Skipped when NEON_DATABASE_URL is not configured (fresh clones, CI).

@@ -1,4 +1,4 @@
-"""RebalanceContext value object — world state at a trigger evaluation.
+"""RebalanceContext value object - world state at a trigger evaluation.
 
 A RebalanceContext bundles the snapshot a RebalanceStrategy needs to
 answer `should_trigger()` and `compute_target_weights()` at one trading

@@ -1,4 +1,4 @@
-"""Domain entities for Feature 2 Rebalancing Simulator (ADR-015 §2.1).
+"""Domain entities for Feature 2 Rebalancing Simulator (ADR-015 section 2.1).
 
 This package exports the full set of domain-level entities and value
 objects that strategies, services, and repositories work with. The

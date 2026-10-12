@@ -18,8 +18,8 @@ CREATE TABLE fundamentals.metric_snapshot (
     metric_name TEXT NOT NULL,            -- Vietnamese name from vnstock_data
     metric_order SMALLINT,
     metric_level SMALLINT,
-    unit VARCHAR(20),                     -- 'VNĐ', '%', 'lần', 'tỷ VNĐ'
-    value NUMERIC(28, 6),                 -- large enough for tỷ VND values
+    unit VARCHAR(20),                     -- 'VND', '%', 'ratio', 'billion VND'
+    value NUMERIC(28, 6),                 -- large enough for billion-VND values
     source VARCHAR(20) NOT NULL DEFAULT 'vnstock_data',
     ingested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (ticker, period, statement_type, metric_id),

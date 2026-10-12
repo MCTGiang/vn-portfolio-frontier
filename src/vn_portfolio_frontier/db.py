@@ -59,7 +59,7 @@ def get_connection() -> psycopg2.extensions.connection:
 def connection_scope() -> Iterator[psycopg2.extensions.connection]:
     """Context manager yielding a psycopg2 connection, closed on exit.
 
-    Preferred over bare `get_connection()` — ensures the connection is
+    Preferred over bare `get_connection()` - ensures the connection is
     released even if the caller raises.
     """
     conn = get_connection()

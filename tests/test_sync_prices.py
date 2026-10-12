@@ -1,4 +1,4 @@
-"""Tests for scripts/sync_prices.py — universe-aware VN30 price sync.
+"""Tests for scripts/sync_prices.py - universe-aware VN30 price sync.
 
 Coverage:
 - Unit tests (fast, no external deps): constants, cascade logic, skip logic,

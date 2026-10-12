@@ -305,7 +305,7 @@ def main() -> int:
         logger.info("vnstock tier: Community (API key configured, 60 req/min)")
     else:
         logger.warning(
-            "vnstock tier: Guest (no API key, 20 req/min limit) — "
+            "vnstock tier: Guest (no API key, 20 req/min limit) - "
             "fetch of full VN30 universe will hit rate limit"
         )
 

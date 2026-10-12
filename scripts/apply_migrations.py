@@ -17,7 +17,7 @@ Design notes
   Any failure rolls the whole batch back. Postgres DDL (CREATE SCHEMA,
   CREATE TABLE, CREATE INDEX) is transactional in modern versions, so
   this is safe.
-- The migration runner is itself idempotent — running it again on a fully
+- The migration runner is itself idempotent - running it again on a fully
   applied database is a no-op.
 - Checksum drift detection guards against silent edits to already-applied
   migration files. If a file needs to change after being applied, create a
@@ -133,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {path.name}")
 
         if args.dry_run:
-            print("\nDry run — nothing applied.")
+            print("\nDry run - nothing applied.")
             return 0
 
         try:

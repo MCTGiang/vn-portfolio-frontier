@@ -1,4 +1,4 @@
-"""vn-portfolio-frontier — Efficient Frontier extension with sentiment signals.
+"""vn-portfolio-frontier - Efficient Frontier extension with sentiment signals.
 
 Successor to vn-portfolio-optimizer (Project 1). See README.md for details.
 """

@@ -227,7 +227,7 @@ def test_seeded_row_counts(db_conn):
 @pytest.mark.integration
 @requires_neon
 def test_point_in_time_query(db_conn):
-    """VN30 as of 2022-08-01 (kỳ 7/2022): includes VIB, excludes PNJ, still has KDH."""
+    """VN30 as of 2022-08-01 (period 7/2022): includes VIB, excludes PNJ, still has KDH."""
     with db_conn.cursor() as cur:
         cur.execute("""
             SELECT ticker FROM fundamentals.vn30_membership_snapshot

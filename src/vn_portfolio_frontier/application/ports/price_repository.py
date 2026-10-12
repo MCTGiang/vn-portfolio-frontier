@@ -1,20 +1,20 @@
-"""PriceRepository Port — abstraction cho daily_ohlcv access.
+"""PriceRepository Port - abstraction cho daily_ohlcv access.
 
-Per ADR-015 §2.4 Repository Pattern + Hexagonal Dependency Inversion.
+Per ADR-015 section 2.4 Repository Pattern + Hexagonal Dependency Inversion.
 Application services (RebalanceSimulator Day 6+) depend on this Protocol,
 NOT on concrete `NeonPriceRepository` from infrastructure. Factory wires
 the Neon implementation at runtime; tests inject Fake implementations.
 
-Protocol vs ABC decision (ADR-015 §2.4):
+Protocol vs ABC decision (ADR-015 section 2.4):
     - Protocol = structural typing (duck typing + mypy static check)
     - ABC = nominal typing (explicit inheritance required)
-    - Chosen: Protocol → NeonPriceRepository doesn't need to inherit; just
+    - Chosen: Protocol -> NeonPriceRepository doesn't need to inherit; just
       match method signatures. mypy catches missing methods at CI time.
     - @runtime_checkable: enables `isinstance(obj, PriceRepository)` at
       Factory wire-time cho fail-fast on misconfigured deps.
 
 Alternative rejected: 2 Repositories (ReadPriceRepository + WritePriceRepository
-in CQRS style). Over-engineering for Sprint 11 MUST tier — same object does
+in CQRS style). Over-engineering for Sprint 11 MUST tier - same object does
 both read + write. Can split later if scale requires separate caching layer.
 """
 
@@ -31,13 +31,13 @@ class PriceRepository(Protocol):
     """Port cho prices.daily_ohlcv access.
 
     Methods:
-        - get_ohlcv: read bars cho một ticker trong date range
-        - get_latest_dates: dict of ticker → max(trade_date) cho delta sync
+        - get_ohlcv: read bars for one ticker within a date range
+        - get_latest_dates: dict of ticker -> max(trade_date) cho delta sync
         - batch_insert: idempotent upsert cho sync pipeline
 
     Concrete implementations (Sprint 11+):
-        - NeonPriceRepository (infrastructure/repositories/) — SQL via psycopg2
-        - FakePriceRepository (tests/unit/fakes/) — in-memory dict for unit tests
+        - NeonPriceRepository (infrastructure/repositories/) - SQL via psycopg2
+        - FakePriceRepository (tests/unit/fakes/) - in-memory dict for unit tests
 
     Example
     -------
@@ -78,7 +78,7 @@ class PriceRepository(Protocol):
         ...
 
     def get_latest_dates(self) -> dict[str, date]:
-        """Return dict of ticker → max(trade_date) across all tickers.
+        """Return dict of ticker -> max(trade_date) across all tickers.
 
         Used by sync_prices.py for incremental delta fetch:
         `fetch_from = latest_dates[ticker] + 1 day`.
@@ -109,7 +109,7 @@ class PriceRepository(Protocol):
 
         Notes
         -----
-        - Idempotent: safe to retry — duplicates don't raise, just skip
+        - Idempotent: safe to retry - duplicates don't raise, just skip
         - Not transactional across tickers: a batch of 100 may partially
           commit if DB connection fails mid-batch; caller should re-run
           to backfill missing rows

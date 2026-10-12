@@ -8,7 +8,7 @@ sequence of RebalanceDecisions, persisted to simulation.rebalance_decision.
 Design decisions:
     - TradingCost: frozen dataclass with 3 Decimal cost components
       (brokerage per ADR-012 user-input, slippage from market_impact_bps,
-      tax from Thông tư 111/2013/TT-BTC seller-only 0.1%). Non-negative
+      tax from Circular 111/2013/TT-BTC seller-only 0.1%). Non-negative
       invariants. `total()` sums; `zero()` factory for no-action.
     - RebalanceDecision as frozen dataclass: although conceptually an
       "entity" (has identity in simulation.rebalance_decision via
@@ -48,7 +48,7 @@ class TradingCost:
         Market-impact cost in VND. Default model: `market_impact_bps`
         times gross trade value / 10000. Non-negative.
     tax : Decimal
-        Vietnam seller tax (Thông tư 111/2013/TT-BTC) in VND. 0.1% of
+        Vietnam seller tax (Circular 111/2013/TT-BTC) in VND. 0.1% of
         gross SELL proceeds; zero for pure-BUY decisions. Non-negative.
 
     Raises
@@ -193,7 +193,7 @@ class RebalanceDecision:
             raise ValueError("RebalanceDecision.reason must not be empty")
         if self.orders and self.costs.total() == 0:
             raise ValueError(
-                "RebalanceDecision has orders but zero total cost — "
+                "RebalanceDecision has orders but zero total cost - "
                 "CostCalculator upstream likely has a bug (brokerage_pct=0 "
                 "+ slippage_bps=0 + no SELL leg?). Use no_action() for "
                 "intentional zero-order decisions."

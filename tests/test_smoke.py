@@ -1,4 +1,4 @@
-"""Smoke tests — verify package infrastructure is wired correctly.
+"""Smoke tests - verify package infrastructure is wired correctly.
 
 These tests give CI something to run before feature code lands. All are
 tagged 'unit' and complete in milliseconds. Once real modules exist, this

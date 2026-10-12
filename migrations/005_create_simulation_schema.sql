@@ -1,5 +1,5 @@
 -- ============================================================================
--- Migration 005: simulation domain — rebalance_run
+-- Migration 005: simulation domain - rebalance_run
 -- ============================================================================
 -- Persistent storage for Feature 2 (Auto-rebalancing simulator) runs per
 -- ADR-012 (user-parameterized cost, cost-agnostic framework).
@@ -14,11 +14,11 @@
 --   self-contained; existing schemas prices/fundamentals/news_sentiment
 --   remain untouched.
 -- - strategy_params + target_weights as JSONB for flexible strategy types
---   (periodic vs threshold_band vs hybrid) — see ADR-012 for locked API.
+--   (periodic vs threshold_band vs hybrid) - see ADR-012 for locked API.
 -- - CHECK constraints enforce ADR-012 validation rules at DB level:
---     * brokerage_pct in [0, 1.0]  (unit trap — reject 15 = "meant 15 bps")
+--     * brokerage_pct in [0, 1.0]  (unit trap - reject 15 = "meant 15 bps")
 --       (double defense: NUMERIC(5,4) type also caps at 9.9999)
---     * tax_pct default 0.10 (Thông tư 111/2013/TT-BTC)
+--     * tax_pct default 0.10 (Circular 111/2013/TT-BTC)
 --     * market_impact_bps non-negative
 --     * strategy_name in known set (extend when new strategy added)
 --     * backtest_end >= backtest_start
@@ -96,10 +96,10 @@ COMMENT ON TABLE simulation.rebalance_run IS
     'Persistent record of Feature 2 rebalancing simulator runs. Every row = one scenario. Enables reproducibility and sensitivity analysis (ADR-012).';
 
 COMMENT ON COLUMN simulation.rebalance_run.brokerage_pct IS
-    'User-input broker fee % (0.15 = 0.15%). Framework cost-agnostic per ADR-012 — no broker-specific presets.';
+    'User-input broker fee % (0.15 = 0.15%). Framework cost-agnostic per ADR-012 - no broker-specific presets.';
 
 COMMENT ON COLUMN simulation.rebalance_run.tax_pct IS
-    'Vietnam seller tax rate. Default 0.10% per Thông tư 111/2013/TT-BTC. Overridable for fund exemptions.';
+    'Vietnam seller tax rate. Default 0.10% per Circular 111/2013/TT-BTC. Overridable for fund exemptions.';
 
 COMMENT ON COLUMN simulation.rebalance_run.market_impact_bps IS
     'Market impact assumption in basis points. Default 10 for VN30 liquid; override for small-cap.';
@@ -111,4 +111,4 @@ COMMENT ON COLUMN simulation.rebalance_run.target_weights IS
     'Target portfolio weights as JSONB. Format: {"TICKER": weight_fraction}. Example: {"VCB": 0.15, "VNM": 0.12}.';
 
 COMMENT ON COLUMN simulation.rebalance_run.git_commit_sha IS
-    'Git commit SHA at time of run — enables reproducibility. Populated by application code, not defaulted.';
+    'Git commit SHA at time of run - enables reproducibility. Populated by application code, not defaulted.';

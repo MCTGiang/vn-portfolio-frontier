@@ -56,3 +56,9 @@ repos:
         pass_filenames: false
         files: ^(src/vn_portfolio_frontier/.*\.py|importlinter\.ini)$
         require_serial: true
+      - id: check-ascii
+        name: check-ascii (English-only convention per CONTRIBUTING.md)
+        entry: python scripts/check_ascii.py
+        language: system
+        files: \.(py|sql)$
+        pass_filenames: true

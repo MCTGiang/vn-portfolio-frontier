@@ -1,13 +1,13 @@
 """In-memory Fake implementations of application.ports Protocol interfaces.
 
-Lives in `tests/` không `src/` vì chỉ test dependency. Dict-backed cho
+Lives in `tests/` not `src/` because it is a test-only dependency. Dict-backed for
 unit tests: fast (no network), deterministic (no clock skew), explicit
 (see all state in-memory).
 
-Pattern per ADR-015 §2.4 Repository Pattern:
+Pattern per ADR-015 section 2.4 Repository Pattern:
     - Each Fake duck-types to its corresponding Protocol
     - isinstance(fake, SomeRepository) returns True (verified in test_ports.py)
-    - Unit tests inject Fake directly (bypass Factory) để avoid DB setup
+    - Unit tests inject Fake directly (bypass Factory) to avoid DB setup
 
 Usage trong test code:
     >>> from tests.unit.fakes.in_memory_repos import (
@@ -61,14 +61,14 @@ class FakePriceRepository:
                 self._data[key] = record
         return len(self._data) - before
 
-    # Test helpers (NOT part of Protocol — convenience for arranging test state)
+    # Test helpers (NOT part of Protocol - convenience for arranging test state)
 
     def seed(self, records: list[DailyPrice]) -> None:
         """Shortcut cho arranging initial test state. Equivalent to batch_insert."""
         self.batch_insert(records)
 
     def clear(self) -> None:
-        """Reset state giữa test cases."""
+        """Reset state between test cases."""
         self._data.clear()
 
 
@@ -120,8 +120,8 @@ class FakeRebalanceRunRepository:
 class FakeRebalanceDecisionRepository:
     """Dict-backed RebalanceDecisionRepository cho unit tests.
 
-    Keys by run_id → list[RebalanceDecision]. find_by_run returns
-    chronologically-sorted copy (defensive — caller can't mutate internal).
+    Keys by run_id -> list[RebalanceDecision]. find_by_run returns
+    chronologically-sorted copy (defensive - caller can't mutate internal).
     """
 
     def __init__(self) -> None:

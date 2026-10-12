@@ -1,79 +1,140 @@
 # Contributing to vn-portfolio-frontier
 
-Thanks for considering a contribution. This project is part of an HUST second-bachelor's degree programme (2025-2027) and follows conventions carried over from its predecessor [`vn-portfolio-optimizer`](https://github.com/MCTGiang/vn-portfolio-optimizer).
+This project is a HUST undergraduate thesis implementation (Project 2 - Efficient
+Frontier Portfolio Optimization with Vietnamese Financial News Sentiment Signals).
+It is public on GitHub. The guidelines below apply to any change that lands on
+`main`.
 
-## Development setup
+## Language convention
 
-**Prerequisites:** Python 3.11+, Git, Docker Desktop, a [Neon Cloud](https://neon.tech) Postgres project (region `ap-southeast-1`), and (recommended) [DBeaver](https://dbeaver.io/) for schema inspection.
+All code artifacts in this repository use **English only**:
+
+- Python docstrings and inline comments
+- SQL comments and column descriptions
+- Variable, function, class, and module names
+- Commit messages and PR titles / bodies
+- Documentation files (`README.md`, `docs/*`, `CONTRIBUTING.md`)
+
+Vietnamese is reserved for two places outside this repo:
+
+- The thesis report (`vn-p2-report`, local-only until defense)
+- Interactive discussion between contributors (chat, meetings)
+
+Vietnamese data **values** stored in the database (sector names, company names
+from vnstock, Vietnamese news headlines in `news_sentiment`) are legitimate
+content and remain in Vietnamese - the ASCII convention applies to *source
+code* that developers read, not to runtime data.
+
+### ASCII enforcement
+
+A pre-commit hook (`check-ascii`) scans every `.py` and `.sql` file in a diff
+and fails the commit if non-ASCII characters appear outside of SQL/Python
+string literals. Common cases the hook catches:
+
+- Em-dashes `-` (use ASCII hyphen `-`)
+- Unicode arrows `->` (use `->`)
+- Smart quotes `" "` or `' '` (use straight `"` or `'`)
+- Vietnamese narrative in docstrings or comments
+
+Rules of thumb:
+
+- Section references: write `ADR-015 section 2.4`, not `ADR-015 2.4`
+- Multiplication in formulas: `shares * price`, not `shares x price`
+- Comparisons in docstrings: `>=` / `<=`, not `>=` / `<=`
+
+To check locally before committing:
 
 ```bash
-git clone https://github.com/MCTGiang/vn-portfolio-frontier.git
-cd vn-portfolio-frontier
-
-python -m venv .venv
-source .venv/Scripts/activate      # Windows Git Bash
-# source .venv/bin/activate        # macOS / Linux
-
-pip install --upgrade pip
-pip install -e ".[dev]"
-cp .env.example .env               # then fill in your Neon connection string
-
-pytest -v                           # smoke-test the install
+pre-commit run check-ascii --all-files
 ```
 
-## Branch conventions
+## Commit messages
 
-Semantic prefixes required — the CI matrix and PR template rely on them:
-
-| Prefix       | Use for                                    |
-|--------------|--------------------------------------------|
-| `feat/`      | New user-facing feature                    |
-| `fix/`       | Bug fix                                    |
-| `docs/`      | Documentation only                         |
-| `test/`      | Adding or modifying tests                  |
-| `refactor/`  | Code cleanup without behavior change       |
-| `chore/`     | Tooling, config, dependencies              |
-| `ci/`        | CI/CD or GitHub Actions changes            |
-| `infra/`     | Docker, Neon, dbt, or deployment infra     |
-| `polish/`    | Small quality-of-life improvements         |
-
-Descriptive slugs: `test/pytest-fixture-scoping`, **not** `test/day6`.
-Delete branches after merge.
-
-## Commit conventions
-
-[Conventional Commits](https://www.conventionalcommits.org):
+Follow Conventional Commits:
 
 ```
-<type>: <imperative subject, no trailing period>
+<type>(<scope>): <subject>
 
-<optional body — the "why", not the "what">
-
-<optional footer — refs, breaking changes, co-authors>
+<body>
 ```
 
-Types mirror the branch prefixes above. Multi-line commits with `git commit -F- << 'EOF' ... EOF` are the norm.
+Allowed `<type>` values:
 
-## Pull request workflow
+| Type       | Use for                                                      |
+|------------|--------------------------------------------------------------|
+| `feat`     | New feature                                                  |
+| `fix`      | Bug fix                                                      |
+| `docs`     | Documentation only (README, ADRs, CONTRIBUTING)              |
+| `test`     | Adding or correcting tests                                   |
+| `refactor` | Code change that neither fixes a bug nor adds a feature      |
+| `chore`    | Build config, tooling, dependencies, formatting, admin       |
+| `ci`       | CI pipeline changes                                          |
+| `infra`    | Database migrations, deployment, infrastructure              |
+| `polish`   | Minor UI / wording / cosmetic adjustments                    |
 
-1. Feature branch off `main`
-2. Small atomic commits, each Conventional Commits format
-3. Verify locally: `pytest -v`, `black --check .`, `ruff check .`
-4. Push and open PR: `gh pr create --fill`
-5. CI must be green before merge
-6. Squash-merge to `main`; `--delete-branch` cleans up
+Scope should name the sprint (`sprint11`, `sprint12`) or the feature area
+(`f2`, `cost-model`) when relevant.
 
-Small doc-only or config changes may go direct to `main`.
+**Subject**: imperative mood, no trailing period, under 72 characters.
 
-## Verification discipline
+**Body**: optional. Explain *why* over *what*; the diff shows what. Use blank
+line between subject and body, hard-wrap at 72 characters.
 
-Carried over from Project 1 — hard-won lessons:
+## Branch naming
 
-- **Never** claim `X tests pass` in a commit message without a fresh `pytest -v`
-- **Never** claim coverage percentages without actual `--cov` output
-- **Never** assume an API signature — `grep '^def ' src/module.py` first
-- Verify all metrics with evidence before writing to git
+Prefix branches by their commit type, slash-separated:
 
-## License
+- `feat/sprint11-day6-simulator`
+- `fix/sprint11-day4.5-review`
+- `docs/adr-016-testing`
+- `chore/day1-4-english-translation`
 
-By contributing, you agree that your contributions will be licensed under the [MIT License](./LICENSE) covering this project.
+## Pull requests
+
+1. Branch from `main`. Keep PRs focused: one logical change per PR.
+2. Open the PR against `main`. All five CI checks must pass before merge
+   (lint + Python 3.11 / 3.12 / 3.13 matrix + pip-audit).
+3. Use squash-merge to keep `main` history linear. Delete the branch after
+   merge.
+4. Include a brief test plan in the PR body (what you ran, what the counts /
+   coverage are).
+
+## Testing
+
+- Unit tests live in `tests/unit/`; integration tests in `tests/`.
+- Target coverage: 85%+ on domain and application layers.
+- `hypothesis` property-based tests are encouraged for domain invariants
+  (NFR-R-07 Deterministic Reproducibility, VWAP math).
+- Integration tests requiring Neon skip cleanly on CI (no
+  `NEON_DATABASE_URL` set). Run locally with the env var exported.
+
+Full suite:
+
+```bash
+pytest tests/ -q
+ruff check src/ tests/
+lint-imports --config importlinter.ini
+```
+
+## Architecture
+
+Follow ADR-015 Hexagonal boundaries:
+
+- `domain/` must not import from `application/`, `infrastructure/`, or
+  `interface/`.
+- `application/services/` must depend on `application/ports/` Protocols, never
+  on concrete Neon implementations.
+- `application/ports/` must not import from `infrastructure/`.
+
+The `import-linter` hook enforces these on every commit.
+
+## Secrets
+
+Never commit real credentials. All configuration goes through Pydantic
+`BaseSettings` with `SecretStr` fields (see `src/vn_portfolio_frontier/
+config.py`). Use `.env` for local development (gitignored). The `gitleaks`
+hook scans every commit for high-entropy strings.
+
+## Questions
+
+Open an issue or discussion thread in the GitHub repository.

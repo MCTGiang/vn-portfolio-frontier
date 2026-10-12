@@ -1,8 +1,8 @@
 -- ============================================================================
--- Migration 004: news_sentiment domain — article + extracted_signal
+-- Migration 004: news_sentiment domain - article + extracted_signal
 -- ============================================================================
 -- Core schema for Feature 3 (structured sentiment extraction) per ADR-006:
--- outputs {ticker, event_type, sentiment_score, entities} — NOT return
+-- outputs {ticker, event_type, sentiment_score, entities} - NOT return
 -- prediction claims.
 --
 -- Design:
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS news_sentiment.article (
         CHECK (source IN ('vnexpress', 'cafef', 'vietstock', 'manual'))
 );
 
--- Recent-news queries dominate — index accordingly.
+-- Recent-news queries dominate - index accordingly.
 CREATE INDEX IF NOT EXISTS idx_article_published_at
     ON news_sentiment.article (published_at DESC);
 

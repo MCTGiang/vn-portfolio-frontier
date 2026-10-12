@@ -1,12 +1,12 @@
-"""BaseStrategy — abstract Template Method cho rebalance strategies.
+"""BaseStrategy - abstract Template Method cho rebalance strategies.
 
-Pattern: Template Method (GoF Behavioral) kết hợp Strategy (GoF Behavioral).
-Base class `BaseStrategy` định nghĩa common flow `rebalance()` không được
-override; concrete subclasses chỉ fill 2 hook methods: `compute_target_weights`
-và `should_trigger`. Shared logic `_compute_orders` + `_cost_calculator.compute`
-sống ở base.
+Pattern: Template Method (GoF Behavioral) combined with Strategy (GoF Behavioral).
+Base class `BaseStrategy` defines the common `rebalance()` flow that must not be
+overridden; concrete subclasses only fill 2 hook methods: `compute_target_weights`
+and `should_trigger`. Shared logic `_compute_orders` + `_cost_calculator.compute`
+lives in the base class.
 
-Flow (per ADR-015 §2.3):
+Flow (per ADR-015 section 2.3):
     1. target = compute_target_weights()         [subclass hook]
     2. if not should_trigger(): no_action        [subclass hook]
     3. orders = _compute_orders(target)          [shared base logic]
@@ -15,21 +15,21 @@ Flow (per ADR-015 §2.3):
 
 Why Template Method here:
     - 4 strategies trong Sprint 11-12 (ThresholdBand, CalendarMonthly,
-      FixedWindow, Hybrid) share identical steps 3-5. Nếu copy-paste
-      logic đó 4 lần → maintenance nightmare + bugs khi fix orders logic
-      ở 1 place but not others.
-    - Steps 1-2 là strategy-specific (band drift vs calendar date), nên
-      tách thành hooks để subclass override.
+      FixedWindow, Hybrid) share identical steps 3-5. Copy-pasting
+      that logic 4 times -> maintenance nightmare + bugs when fixing orders logic
+      in 1 place but not others.
+    - Steps 1-2 are strategy-specific (band drift vs calendar date), so
+      they are split into hooks for subclasses to override.
     - Zero-cost at runtime (just Python method dispatch), unlike visitor
       pattern alternatives.
 
 Patterns considered + rejected:
-    - **Strategy pattern alone** (không Template Method): mỗi strategy
-      implement cả flow + specific logic → copy-paste steps 3-5. Rejected.
-    - **Chain of Responsibility**: không fit — chỉ 1 strategy active per
-      run, không có "pass to next handler" semantics.
-    - **State pattern**: strategies không chuyển state giữa chúng, user
-      chọn upfront → overkill.
+    - **Strategy pattern alone** (no Template Method): each strategy
+      implements both flow + specific logic -> copy-paste steps 3-5. Rejected.
+    - **Chain of Responsibility**: does not fit - only 1 strategy is active per
+      run, no "pass to next handler" semantics.
+    - **State pattern**: strategies do not transition state between themselves, the user
+      picks one upfront -> overkill.
 """
 
 from __future__ import annotations
@@ -45,27 +45,27 @@ from vn_portfolio_frontier.domain.services.cost_calculator import CostCalculator
 
 
 class BaseStrategy(ABC):
-    """Abstract base cho mọi rebalance strategy — Template Method pattern.
+    """Abstract base for every rebalance strategy - Template Method pattern.
 
     Parameters
     ----------
     cost_calculator : CostCalculator
-        Injected service tính TradingCost cho orders. Dependency injection
-        pattern: strategy không construct CostCalculator mà nhận qua
-        constructor, cho phép Factory wire + test inject fake.
+        Injected service that computes TradingCost for orders. Dependency injection
+        pattern: strategy does not construct CostCalculator but receives it via
+        constructor, allowing Factory wiring + tests injecting a fake.
 
     Attributes
     ----------
     name : str
-        Subclass đặt tên strategy ("threshold_band", "calendar_monthly", etc.).
-        Must match CHECK constraint trên simulation.rebalance_run.strategy_name.
+        Subclass sets the strategy name ("threshold_band", "calendar_monthly", etc.).
+        Must match CHECK constraint on simulation.rebalance_run.strategy_name.
 
     Notes
     -----
     - Subclass MUST set `self.name` trong __init__
     - Subclass MUST implement `compute_target_weights` + `should_trigger`
-    - Subclass MAY override `_reason()` để customize decision.reason label
-    - Subclass should NOT override `rebalance()` — breaks Template Method
+    - Subclass MAY override `_reason()` to customize the decision.reason label
+    - Subclass should NOT override `rebalance()` - breaks Template Method
     """
 
     name: str = ""
@@ -80,13 +80,13 @@ class BaseStrategy(ABC):
     ) -> RebalanceDecision:
         """Evaluate strategy at `context.as_of` and return a RebalanceDecision.
 
-        Template Method — DO NOT override in subclass.
+        Template Method - DO NOT override in subclass.
 
         Parameters
         ----------
         current : Portfolio
             Portfolio before potential rebalance. Read-only from strategy's
-            perspective (strategy không mutate; Simulator calls `apply_orders`
+            perspective (strategy does not mutate; Simulator calls `apply_orders`
             downstream if decision.is_action).
         context : RebalanceContext
             Snapshot of market + portfolio surroundings at `as_of` date.
@@ -137,7 +137,7 @@ class BaseStrategy(ABC):
         )
 
     # ------------------------------------------------------------------
-    # Abstract hooks — subclass MUST override
+    # Abstract hooks - subclass MUST override
     # ------------------------------------------------------------------
 
     @abstractmethod
@@ -155,7 +155,7 @@ class BaseStrategy(ABC):
         Returns
         -------
         dict[str, float]
-            Ticker → target weight (0.0-1.0). Should sum to ~1.0; strategy
+            Ticker -> target weight (0.0-1.0). Should sum to ~1.0; strategy
             is responsible for normalization.
         """
 
@@ -180,11 +180,11 @@ class BaseStrategy(ABC):
         Returns
         -------
         bool
-            True → fire rebalance (steps 3-5 run); False → no-action decision.
+            True -> fire rebalance (steps 3-5 run); False -> no-action decision.
         """
 
     # ------------------------------------------------------------------
-    # Shared base logic — subclass MAY override cautiously
+    # Shared base logic - subclass MAY override cautiously
     # ------------------------------------------------------------------
 
     def _compute_orders(
@@ -193,37 +193,37 @@ class BaseStrategy(ABC):
         target: dict[str, float],
         context: RebalanceContext,
     ) -> list[Order]:
-        """Convert weight delta → BUY/SELL orders using current prices.
+        """Convert weight delta -> BUY/SELL orders using current prices.
 
         Logic:
-            1. Compute total_value cho Portfolio ở context.prices
-            2. For each ticker trong target: target_shares = int(target_weight × total_value / price)
-            3. delta_shares = target_shares - current_shares (0 nếu không trong Portfolio)
-            4. delta > 0 → BUY delta shares at close price
-            5. delta < 0 → SELL abs(delta) shares at close price
+            1. Compute total_value for the Portfolio at context.prices
+            2. For each ticker trong target: target_shares = int(target_weight * total_value / price)
+            3. delta_shares = target_shares - current_shares (0 if not in Portfolio)
+            4. delta > 0 -> BUY delta shares at close price
+            5. delta < 0 -> SELL abs(delta) shares at close price
             6. Skip orders where delta == 0 or ticker missing from context.prices
-            7. Floor rounding (int cast) để chống over-buy khi budget edge
+            7. Floor rounding (int cast) to prevent over-buy at the budget edge
 
         Precision contract (F-H1)
         -------------------------
         Mixing float (target_weight) with Decimal (prices, total_value) is
         intentional and deterministic:
 
-        1. `target_weight: float` — portfolio weights are ratios in [0, 1],
+        1. `target_weight: float` - portfolio weights are ratios in [0, 1],
            not currency units, so NFR-R-07 Decimal constraint does not apply.
            float provides sufficient precision for all realistic weights
            (IEEE 754 double gives ~15 significant digits; human-readable
            weights like 0.4 round-trip exactly against band_bps granularity
            of 1 bps = 0.0001).
 
-        2. `Decimal(str(target_weight)) * total_value` — the `str()` detour
+        2. `Decimal(str(target_weight)) * total_value` - the `str()` detour
            PREVENTS binary float artifacts from entering currency math:
                Decimal(0.1)       # -> Decimal('0.1000000000000000055511...')
                Decimal(str(0.1))  # -> Decimal('0.1')  (exact)
            Downstream multiplication by total_value, division by price, and
            int() truncation stay bit-identical across platforms.
 
-        3. `int(target_capital / price)` — floor rounding in the Decimal
+        3. `int(target_capital / price)` - floor rounding in the Decimal
            domain, not float. Decimal.__truediv__ returns Decimal; int()
            truncates toward zero (equivalent to floor for non-negative
            operands guaranteed by target_weight >= 0 and total_value >= 0

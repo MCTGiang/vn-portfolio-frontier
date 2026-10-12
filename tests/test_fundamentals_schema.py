@@ -22,7 +22,7 @@ pytestmark = [
 
 
 @pytest.mark.skip(
-    reason="ADR-014 Sprint 10 Task 5B Migration 007 refactored financial_report from base table (2-table design) → VIEW on metric_snapshot (bronze/silver). Column expectations stale. Rewrite in Sprint 11.5 cleanup."
+    reason="ADR-014 Sprint 10 Task 5B Migration 007 refactored financial_report from base table (2-table design) -> VIEW on metric_snapshot (bronze/silver). Column expectations stale. Rewrite in Sprint 11.5 cleanup."
 )
 def test_fundamentals_has_both_tables() -> None:
     """Migration 003 created vn30_constituent + financial_report."""
@@ -44,7 +44,7 @@ def test_migration_003_recorded() -> None:
 
 
 @pytest.mark.skip(
-    reason="ADR-014 Sprint 10 Task 5B Migration 007 refactored financial_report from base table (2-table design) → VIEW on metric_snapshot (bronze/silver). Column expectations stale. Rewrite in Sprint 11.5 cleanup."
+    reason="ADR-014 Sprint 10 Task 5B Migration 007 refactored financial_report from base table (2-table design) -> VIEW on metric_snapshot (bronze/silver). Column expectations stale. Rewrite in Sprint 11.5 cleanup."
 )
 def test_vn30_constituent_has_expected_columns() -> None:
     """vn30_constituent has bilingual name + sector + historical tracking columns."""
@@ -83,7 +83,7 @@ def test_vn30_constituent_has_expected_columns() -> None:
 
 
 @pytest.mark.skip(
-    reason="ADR-014 Sprint 10 Task 5B Migration 007 refactored financial_report from base table (2-table design) → VIEW on metric_snapshot (bronze/silver). Column expectations stale. Rewrite in Sprint 11.5 cleanup."
+    reason="ADR-014 Sprint 10 Task 5B Migration 007 refactored financial_report from base table (2-table design) -> VIEW on metric_snapshot (bronze/silver). Column expectations stale. Rewrite in Sprint 11.5 cleanup."
 )
 def test_financial_report_has_expected_columns() -> None:
     """financial_report has minimal scope: revenue + net_income + EPS + metadata."""
@@ -114,14 +114,14 @@ def test_financial_report_has_expected_columns() -> None:
             actual_type == expected_type
         ), f"Column {name}: expected {expected_type}, got {actual_type}"
 
-    # Ratios (PE, PB, ROE) intentionally NOT present — see ADR-009 evaluation.
+    # Ratios (PE, PB, ROE) intentionally NOT present - see ADR-009 evaluation.
     assert "pe_ratio" not in columns, "pe_ratio should not be in schema"
     assert "pb_ratio" not in columns, "pb_ratio should not be in schema"
     assert "roe_percent" not in columns, "roe_percent should not be in schema"
 
 
 @pytest.mark.skip(
-    reason="ADR-014 Sprint 10 Task 5B Migration 007 refactored financial_report from base table (2-table design) → VIEW on metric_snapshot (bronze/silver). Column expectations stale. Rewrite in Sprint 11.5 cleanup."
+    reason="ADR-014 Sprint 10 Task 5B Migration 007 refactored financial_report from base table (2-table design) -> VIEW on metric_snapshot (bronze/silver). Column expectations stale. Rewrite in Sprint 11.5 cleanup."
 )
 def test_financial_report_has_fk_to_vn30_constituent() -> None:
     """financial_report.ticker has FK to vn30_constituent.ticker."""

@@ -106,7 +106,7 @@ def test_extracted_signal_has_expected_columns() -> None:
 
 
 def test_signal_fk_to_article_uses_cascade() -> None:
-    """extracted_signal.article_id → article.article_id must use ON DELETE CASCADE."""
+    """extracted_signal.article_id -> article.article_id must use ON DELETE CASCADE."""
     with connection_scope() as conn, conn.cursor() as cur:
         cur.execute("""
             SELECT rc.delete_rule, kcu.column_name, ccu.table_name, ccu.column_name

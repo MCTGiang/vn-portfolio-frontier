@@ -1,7 +1,7 @@
 """Smoke tests for Neon PostgreSQL connectivity.
 
 Require a live NEON_DATABASE_URL in `.env` (or the environment). Tagged
-`@pytest.mark.integration` — the whole module is skipped when credentials
+`@pytest.mark.integration` - the whole module is skipped when credentials
 aren't configured, so `pytest` still passes on a fresh clone or in CI
 without secrets.
 
