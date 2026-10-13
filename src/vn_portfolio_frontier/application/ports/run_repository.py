@@ -111,6 +111,9 @@ class RunRecord:
     total_cost_bps: int | None = None
     turnover_avg_pct: Decimal | None = None
     n_rebalances: int | None = None
+    # Day 8 v3 risk KPIs (Migration 011)
+    max_drawdown_pct: Decimal | None = None
+    volatility_annualized_pct: Decimal | None = None
 
     # Status
     status: str = "completed"

@@ -4,12 +4,13 @@ Per ADR-015 section 2.4. Implements save (INSERT RETURNING run_id),
 find_by_id, list_recent (RunSummary projection), and update_status
 (partial UPDATE for status + output KPIs).
 
-Schema notes (Migration 005 + 009 + 010):
-    - 11 required input fields + 7 nullable output fields + status/completed_at/error_message
+Schema notes (Migration 005 + 009 + 010 + 011):
+    - 11 required input fields + 9 nullable output fields + status/completed_at/error_message
     - strategy_params and target_weights are JSONB (serialised via psycopg2 Json wrapper)
     - run_timestamp defaults to NOW() at save time
     - update_status stamps completed_at = NOW() when status transitions to
       completed or failed (matches the behaviour the Fake implements in-memory)
+    - Day 8 (Migration 011) added max_drawdown_pct + volatility_annualized_pct
 """
 
 from __future__ import annotations
@@ -29,7 +30,7 @@ ConnectionFactory = Callable[[], "psycopg2.extensions.connection"]
 
 # KPI keys the port contract declares as updatable through update_status.
 # Unknown keys are silently ignored for forward compatibility with future
-# metrics (e.g., when F1 Efficient Frontier adds max_drawdown_pct).
+# metrics (e.g., when F1 Efficient Frontier adds additional risk metrics).
 _ALLOWED_KPI_KEYS = frozenset(
     {
         "n_rebalances",
@@ -37,6 +38,8 @@ _ALLOWED_KPI_KEYS = frozenset(
         "turnover_avg_pct",
         "sharpe_before_cost",
         "sharpe_after_cost",
+        "max_drawdown_pct",  # Day 8 v3 (Migration 011)
+        "volatility_annualized_pct",  # Day 8 v3 (Migration 011)
     }
 )
 
@@ -69,11 +72,13 @@ class NeonRebalanceRunRepository:
                 total_cost_bps,
                 turnover_avg_pct,
                 n_rebalances,
+                max_drawdown_pct,
+                volatility_annualized_pct,
                 status,
                 error_message
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
             RETURNING run_id
         """
@@ -97,6 +102,8 @@ class NeonRebalanceRunRepository:
                     record.total_cost_bps,
                     record.turnover_avg_pct,
                     record.n_rebalances,
+                    record.max_drawdown_pct,
+                    record.volatility_annualized_pct,
                     record.status,
                     record.error_message,
                 ),
@@ -113,7 +120,9 @@ class NeonRebalanceRunRepository:
                 backtest_start, backtest_end,
                 git_commit_sha, code_version, initial_capital,
                 sharpe_before_cost, sharpe_after_cost, total_cost_bps,
-                turnover_avg_pct, n_rebalances, status, error_message
+                turnover_avg_pct, n_rebalances,
+                max_drawdown_pct, volatility_annualized_pct,
+                status, error_message
             FROM simulation.rebalance_run
             WHERE run_id = %s
         """
@@ -205,6 +214,8 @@ class NeonRebalanceRunRepository:
             total_cost_bps,
             turnover_avg_pct,
             n_rebalances,
+            max_drawdown_pct,
+            volatility_annualized_pct,
             status,
             error_message,
         ) = row
@@ -232,6 +243,8 @@ class NeonRebalanceRunRepository:
             total_cost_bps=int(total_cost_bps) if total_cost_bps is not None else None,
             turnover_avg_pct=turnover_avg_pct,
             n_rebalances=int(n_rebalances) if n_rebalances is not None else None,
+            max_drawdown_pct=max_drawdown_pct,
+            volatility_annualized_pct=volatility_annualized_pct,
             status=status,
             error_message=error_message,
         )

@@ -162,13 +162,13 @@ class TestSimulateRequestValidation:
 
 class TestSimulateHappyPath:
     def test_returns_positive_run_id(self, simulator, basic_request, seed_prices_10_days):
-        run_id = simulator.simulate(basic_request)
+        run_id = simulator.simulate(basic_request).run_id
         assert run_id >= 1
 
     def test_persists_run_record_with_input_fields(
         self, simulator, run_repo, basic_request, seed_prices_10_days
     ):
-        run_id = simulator.simulate(basic_request)
+        run_id = simulator.simulate(basic_request).run_id
         record = run_repo.find_by_id(run_id)
         assert record is not None
         assert record.brokerage_pct == basic_request.brokerage_pct
@@ -179,22 +179,28 @@ class TestSimulateHappyPath:
     def test_run_completes_without_error(
         self, simulator, run_repo, basic_request, seed_prices_10_days
     ):
-        run_id = simulator.simulate(basic_request)
+        run_id = simulator.simulate(basic_request).run_id
         record = run_repo.find_by_id(run_id)
         assert record.status == "completed"
         assert record.error_message is None
 
-    def test_persists_decisions_for_each_trading_day(
+    def test_persists_only_actionable_rebalances(
         self, simulator, decision_repo, basic_request, seed_prices_10_days
     ):
-        run_id = simulator.simulate(basic_request)
+        """Only actual rebalance events persist; 'no_trigger' days are filtered.
+        DB CHECK constraint chk_decision_reason_known rejects 'no_trigger'
+        reason. Daily portfolio values flow through SimulateResult DTO instead
+        of the decisions table.
+        """
+        run_id = simulator.simulate(basic_request).run_id
         decisions = decision_repo.find_by_run(run_id)
-        assert len(decisions) == 10
+        assert len(decisions) >= 1, "fresh portfolio must trigger at least once"
+        assert all(d.reason != "no_trigger" for d in decisions)
 
     def test_captures_rebalance_count(
         self, simulator, run_repo, basic_request, seed_prices_10_days
     ):
-        run_id = simulator.simulate(basic_request)
+        run_id = simulator.simulate(basic_request).run_id
         record = run_repo.find_by_id(run_id)
         assert record.n_rebalances is not None
         assert record.n_rebalances >= 0
@@ -202,7 +208,7 @@ class TestSimulateHappyPath:
     def test_captures_cost_kpi_non_negative(
         self, simulator, run_repo, basic_request, seed_prices_10_days
     ):
-        run_id = simulator.simulate(basic_request)
+        run_id = simulator.simulate(basic_request).run_id
         record = run_repo.find_by_id(run_id)
         assert record.total_cost_bps is not None
         assert record.total_cost_bps >= 0
@@ -212,7 +218,7 @@ class TestSimulateHappyPath:
     ):
         """Day 1 fresh portfolio has 100% cash, 0% in each ticker, 50% target
         drift -> any band < 10000 bps triggers at least once."""
-        run_id = simulator.simulate(basic_request)
+        run_id = simulator.simulate(basic_request).run_id
         record = run_repo.find_by_id(run_id)
         assert record.n_rebalances >= 1
 
@@ -284,7 +290,7 @@ class TestSimulateEdgeCases:
             ]
         )
         request = _make_request(backtest_start=day, backtest_end=day)
-        run_id = simulator.simulate(request)
+        run_id = simulator.simulate(request).run_id
         record = run_repo.find_by_id(run_id)
         assert record.status == "completed"
         # Single day -> only 1 daily value -> Sharpe cannot be computed
@@ -296,7 +302,7 @@ class TestSimulateEdgeCases:
     ):
         """band_bps=10000 (100%) exceeds fresh-portfolio drift (50%) -> no trigger."""
         wide = _make_request(strategy_params={"band_bps": 10000})
-        run_id = simulator.simulate(wide)
+        run_id = simulator.simulate(wide).run_id
         record = run_repo.find_by_id(run_id)
         assert record.n_rebalances == 0
         assert record.total_cost_bps == 0
@@ -321,13 +327,13 @@ class TestSimulateEdgeCases:
             backtest_start=day,
             backtest_end=day,
         )
-        run_id = simulator.simulate(request)
+        run_id = simulator.simulate(request).run_id
         assert run_repo.find_by_id(run_id).status == "completed"
 
     def test_decisions_persisted_in_chronological_order(
         self, simulator, decision_repo, basic_request, seed_prices_10_days
     ):
-        run_id = simulator.simulate(basic_request)
+        run_id = simulator.simulate(basic_request).run_id
         decisions = decision_repo.find_by_run(run_id)
         for i in range(1, len(decisions)):
             assert decisions[i].triggered_at >= decisions[i - 1].triggered_at
@@ -355,7 +361,7 @@ class TestSimulateProgressCallback:
     def test_callback_defaults_to_none_runs_cleanly(
         self, simulator, run_repo, basic_request, seed_prices_10_days
     ):
-        run_id = simulator.simulate(basic_request, on_progress=None)
+        run_id = simulator.simulate(basic_request, on_progress=None).run_id
         assert run_repo.find_by_id(run_id).status == "completed"
 
 
@@ -382,7 +388,7 @@ class TestSimulateSharpe:
             strategy_params={"band_bps": 1},
             brokerage_pct=Decimal("0.005"),
         )
-        run_id = simulator.simulate(narrow_high_cost)
+        run_id = simulator.simulate(narrow_high_cost).run_id
         record = run_repo.find_by_id(run_id)
         assert record.sharpe_before_cost is not None
         assert record.sharpe_after_cost is not None
@@ -394,8 +400,47 @@ class TestSimulateSharpe:
     def test_sharpe_quantised_to_four_decimals(
         self, simulator, run_repo, basic_request, seed_prices_10_days
     ):
-        run_id = simulator.simulate(basic_request)
+        run_id = simulator.simulate(basic_request).run_id
         record = run_repo.find_by_id(run_id)
         if record.sharpe_after_cost is not None:
             # Decimal exponent is -4 for quantise("0.0001")
             assert record.sharpe_after_cost.as_tuple().exponent == -4
+
+    def test_result_includes_trading_days_and_values(
+        self, simulator, basic_request, seed_prices_10_days
+    ):
+        """SimulateResult DTO exposes trading_days + daily values for UI charts."""
+        result = simulator.simulate(basic_request)
+        assert len(result.trading_days) == 10
+        assert len(result.daily_values_after_cost) == 10
+        assert len(result.daily_values_before_cost) == 10
+
+    def test_max_drawdown_computed(self, simulator, run_repo, basic_request, seed_prices_10_days):
+        """MDD >= 0 and <= 100 after a happy-path run."""
+        run_id = simulator.simulate(basic_request).run_id
+        record = run_repo.find_by_id(run_id)
+        assert record.max_drawdown_pct is not None
+        assert Decimal("0") <= record.max_drawdown_pct <= Decimal("100")
+
+    def test_volatility_computed(self, simulator, run_repo, basic_request, seed_prices_10_days):
+        """Annualised vol > 0 when prices move at all."""
+        run_id = simulator.simulate(basic_request).run_id
+        record = run_repo.find_by_id(run_id)
+        assert record.volatility_annualized_pct is not None
+        assert record.volatility_annualized_pct > Decimal("0")
+
+    def test_buy_and_hold_series_length_matches_trading_days(
+        self, simulator, basic_request, seed_prices_10_days
+    ):
+        result = simulator.simulate(basic_request)
+        assert len(result.daily_values_buy_and_hold) == len(result.trading_days)
+        assert all(v > 0 for v in result.daily_values_buy_and_hold)
+
+    def test_buy_and_hold_day_zero_approximately_initial_capital(
+        self, simulator, basic_request, seed_prices_10_days
+    ):
+        """Day 0 B&H value should equal initial_capital (fractional shares, no rounding loss)."""
+        result = simulator.simulate(basic_request)
+        assert abs(result.daily_values_buy_and_hold[0] - basic_request.initial_capital) < Decimal(
+            "1"
+        )
