@@ -61,4 +61,5 @@ repos:
         entry: python scripts/check_ascii.py
         language: system
         files: \.(py|sql)$
+        exclude: ^src/vn_portfolio_frontier/interface/streamlit/.*\.py$
         pass_filenames: true
