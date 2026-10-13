@@ -7,6 +7,7 @@ depend on ports and are the natural seam for Factory DI wiring.
 Public exports:
     - RebalanceSimulator: orchestrator for end-to-end backtest + persistence
     - SimulateRequest: frozen DTO input contract
+    - SimulateResult: frozen DTO return contract (run_id + daily values)
     - StrategyFactory, ProgressCallback: type aliases exposed for callers
       building the Simulator (AppFactory, tests)
 """
@@ -15,6 +16,7 @@ from vn_portfolio_frontier.application.services.rebalance_simulator import (
     ProgressCallback,
     RebalanceSimulator,
     SimulateRequest,
+    SimulateResult,
     StrategyFactory,
 )
 
@@ -22,5 +24,6 @@ __all__ = [
     "ProgressCallback",
     "RebalanceSimulator",
     "SimulateRequest",
+    "SimulateResult",
     "StrategyFactory",
 ]

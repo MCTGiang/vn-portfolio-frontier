@@ -13,10 +13,12 @@ Flow summary:
     4. Daily loop: build RebalanceContext -> strategy.rebalance() ->
        apply_orders. Collect decisions + daily portfolio values.
     5. Compute KPIs (n_rebalances, total_cost_bps, turnover_avg_pct,
-       sharpe_before_cost, sharpe_after_cost)
+       sharpe_before_cost, sharpe_after_cost, max_drawdown_pct,
+       volatility_annualized_pct)
     6. Update RunRecord with status=completed + KPIs
-    7. Batch save all decisions
-    8. Return run_id
+    7. Batch save only actionable decisions (filter no_trigger)
+    8. Compute buy-and-hold baseline series
+    9. Return SimulateResult DTO with run_id + 3 daily value series
 
 Error paths mark the Run with status=failed and error_message before raising
 to preserve audit trail.
@@ -24,8 +26,8 @@ to preserve audit trail.
 Example usage (Day 7 AppFactory wiring):
     >>> factory = AppFactory(settings)
     >>> simulator = factory.rebalance_simulator()
-    >>> run_id = simulator.simulate(request)
-    >>> record = factory.run_repo().find_by_id(run_id)
+    >>> result = simulator.simulate(request)
+    >>> record = factory.run_repo().find_by_id(result.run_id)
 """
 
 from __future__ import annotations
@@ -114,6 +116,26 @@ class SimulateRequest:
             )
 
 
+@dataclass(frozen=True)
+class SimulateResult:
+    """Return contract for RebalanceSimulator.simulate().
+
+    Carries the persisted run_id plus 3 daily portfolio-value series:
+        - after_cost: realised value with transaction costs applied
+        - before_cost: hypothetical value without cost drag
+        - buy_and_hold: passive baseline (initial allocation, no rebalance)
+
+    Allows callers (Streamlit, CLI) to render time-series charts and run
+    strategy-vs-baseline comparisons without re-reading the DB.
+    """
+
+    run_id: int
+    trading_days: list[date]
+    daily_values_before_cost: list[Decimal]
+    daily_values_after_cost: list[Decimal]
+    daily_values_buy_and_hold: list[Decimal]
+
+
 class RebalanceSimulator:
     """Orchestrator for Feature 2 end-to-end backtest with cost modeling.
 
@@ -150,8 +172,8 @@ class RebalanceSimulator:
         self,
         request: SimulateRequest,
         on_progress: ProgressCallback | None = None,
-    ) -> int:
-        """Execute backtest end-to-end, persist Run + Decisions, return run_id.
+    ) -> SimulateResult:
+        """Execute backtest end-to-end, persist Run + Decisions, return result DTO.
 
         Parameters
         ----------
@@ -163,10 +185,9 @@ class RebalanceSimulator:
 
         Returns
         -------
-        int
-            BIGSERIAL run_id. Caller retrieves the full record via
-            `run_repo.find_by_id(run_id)` and the decisions via
-            `decision_repo.find_by_run(run_id)`.
+        SimulateResult
+            DTO carrying run_id, trading_days, and 3 daily value series
+            (after_cost, before_cost, buy_and_hold).
 
         Raises
         ------
@@ -227,8 +248,29 @@ class RebalanceSimulator:
         )
 
         self._run_repo.update_status(run_id, status="completed", kpis=kpis)
-        self._decision_repo.save_batch(run_id, decisions)
-        return run_id
+
+        # Only persist actionable rebalances - 'no_trigger' days are non-events;
+        # daily values are returned via SimulateResult DTO (Day 8 refactor) so
+        # the decisions table need not hold daily snapshots.
+        actionable_decisions = [d for d in decisions if d.reason != "no_trigger"]
+        self._decision_repo.save_batch(run_id, actionable_decisions)
+
+        # Day 8 v3: passive buy-and-hold baseline for strategy comparison.
+        # Computed from the same price_history already in memory - no I/O.
+        buy_and_hold_series = self._compute_buy_and_hold_series(
+            trading_days=trading_days,
+            price_history=price_history,
+            target_weights=request.target_weights,
+            initial_capital=request.initial_capital,
+        )
+
+        return SimulateResult(
+            run_id=run_id,
+            trading_days=trading_days,
+            daily_values_before_cost=daily_values_before,
+            daily_values_after_cost=daily_values_after,
+            daily_values_buy_and_hold=buy_and_hold_series,
+        )
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -359,6 +401,8 @@ class RebalanceSimulator:
               expressed in basis points (bps). 0 when no rebalances.
             - turnover_avg_pct: mean of sum(|delta_weight|) across rebalances
             - sharpe_before_cost / sharpe_after_cost: see _sharpe() docstring
+            - max_drawdown_pct: max peak-to-trough drop as positive % [0, 100]
+            - volatility_annualized_pct: sqrt(252) * daily log-return std, as %
         """
         action_decisions = [d for d in decisions if d.is_action]
         n_rebalances = len(action_decisions)
@@ -392,7 +436,55 @@ class RebalanceSimulator:
             "turnover_avg_pct": turnover_avg_pct,
             "sharpe_before_cost": _sharpe(daily_values_before),
             "sharpe_after_cost": _sharpe(daily_values_after),
+            "max_drawdown_pct": _max_drawdown(daily_values_after),
+            "volatility_annualized_pct": _annualized_volatility(daily_values_after),
         }
+
+    @staticmethod
+    def _compute_buy_and_hold_series(
+        *,
+        trading_days: list[date],
+        price_history: dict[str, dict[date, Decimal]],
+        target_weights: dict[str, float],
+        initial_capital: Decimal,
+    ) -> list[Decimal]:
+        """Passive buy-and-hold baseline - allocate once at day 0, never rebalance.
+
+        Uses fractional shares (reference line, not executable). Allocation uses
+        close prices from day 0; subsequent days mark-to-market with available
+        prices. Missing prices for a given day hold the previous valuation
+        (contribution of that ticker is 0 that day).
+
+        Returns an empty list when trading_days is empty. Length matches
+        trading_days when every day has at least one priced ticker.
+        """
+        if not trading_days:
+            return []
+
+        day0 = trading_days[0]
+        shares: dict[str, Decimal] = {}
+        for ticker, weight in target_weights.items():
+            px0 = price_history.get(ticker, {}).get(day0)
+            if px0 is None or px0 <= 0:
+                shares[ticker] = Decimal("0")
+                continue
+            allocation = initial_capital * Decimal(str(weight))
+            shares[ticker] = allocation / px0
+
+        series: list[Decimal] = []
+        for day in trading_days:
+            total = Decimal("0")
+            for ticker, qty in shares.items():
+                px = price_history.get(ticker, {}).get(day)
+                if px is not None:
+                    total += qty * px
+            series.append(total)
+        return series
+
+
+# =====================================================================
+# Module-level KPI helpers (stateless, testable in isolation)
+# =====================================================================
 
 
 def _sharpe(values: list[Decimal]) -> Decimal | None:
@@ -421,3 +513,63 @@ def _sharpe(values: list[Decimal]) -> Decimal | None:
         return None
     sharpe_annualised = (mean / std) * math.sqrt(TRADING_DAYS_PER_YEAR)
     return Decimal(str(sharpe_annualised)).quantize(Decimal("0.0001"))
+
+
+def _max_drawdown(values: list[Decimal]) -> Decimal | None:
+    """Max peak-to-trough drawdown as non-negative percentage.
+
+    Returns Decimal in [0, 100]. 35.0000 means -35% drop from the running peak.
+    Returns None (-> NULL in DB) when the input has < 2 values.
+
+    Methodology (standard Van Tharp / RiskMetrics definition):
+        peak_i = max(V[0..i])
+        drawdown_i = (peak_i - V[i]) / peak_i
+        MDD = max(drawdown_i) * 100
+
+    Rationale: enduser risk assessment - complements Sharpe which hides
+    the depth of worst-case loss.
+    """
+    if len(values) < 2:
+        return None
+    peak = values[0]
+    max_dd = Decimal("0")
+    for v in values[1:]:
+        if v > peak:
+            peak = v
+        if peak > 0:
+            dd = (peak - v) / peak * Decimal("100")
+            if dd > max_dd:
+                max_dd = dd
+    return max_dd.quantize(Decimal("0.0001"))
+
+
+def _annualized_volatility(values: list[Decimal]) -> Decimal | None:
+    """Annualised standard deviation of daily log returns, as percentage.
+
+    Uses sqrt(252) trading-day scaling (industry standard). Returns None when
+    fewer than 2 usable log returns can be computed (e.g., 1-day backtest,
+    zero/negative value in series).
+
+    Methodology:
+        r_i = ln(V[i] / V[i-1])                     # daily log return
+        daily_std = sqrt(sample_variance(r))
+        annualized = daily_std * sqrt(252) * 100    # as percent per year
+
+    Log returns are preferred over simple returns for volatility measurement
+    because they're time-additive and symmetric around 0 (standard in Hull,
+    "Options, Futures, and Other Derivatives").
+    """
+    if len(values) < 2:
+        return None
+    log_returns: list[float] = []
+    for i in range(1, len(values)):
+        prev, curr = float(values[i - 1]), float(values[i])
+        if prev > 0 and curr > 0:
+            log_returns.append(math.log(curr / prev))
+    if len(log_returns) < 2:
+        return None
+    mean = sum(log_returns) / len(log_returns)
+    variance = sum((r - mean) ** 2 for r in log_returns) / (len(log_returns) - 1)
+    daily_std = math.sqrt(variance)
+    annualized = daily_std * math.sqrt(TRADING_DAYS_PER_YEAR) * 100
+    return Decimal(str(annualized)).quantize(Decimal("0.0001"))

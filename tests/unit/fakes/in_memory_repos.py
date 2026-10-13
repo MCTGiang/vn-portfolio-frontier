@@ -131,6 +131,8 @@ class FakeRebalanceRunRepository:
                 "turnover_avg_pct",
                 "sharpe_before_cost",
                 "sharpe_after_cost",
+                "max_drawdown_pct",
+                "volatility_annualized_pct",
             }
             for key, value in kpis.items():
                 if key in allowed:
