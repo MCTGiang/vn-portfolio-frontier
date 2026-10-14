@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
 from typing import Any
@@ -50,6 +50,7 @@ from vn_portfolio_frontier.domain.entities import (
     RebalanceContext,
     RebalanceDecision,
 )
+from vn_portfolio_frontier.domain.entities.lot_size import get_lot_size
 from vn_portfolio_frontier.domain.services import CostCalculator
 from vn_portfolio_frontier.domain.strategies import BaseStrategy
 
@@ -362,6 +363,11 @@ class RebalanceSimulator:
                 )
                 raise
 
+            # Lot size enforcement (NFR-R-02, ADR-012): round shares DOWN to
+            # HSX lot (100 from 2021-01-04). Orders below 1 lot are dropped.
+            # Strategy returns intent; this filter makes it market-feasible.
+            decision = self._enforce_lot_sizes(decision, day)
+
             if decision.is_action:
                 try:
                     portfolio.apply_orders(decision.orders)
@@ -386,6 +392,31 @@ class RebalanceSimulator:
                 on_progress(day, i + 1, total_days)
 
         return decisions, daily_values_after, daily_values_before
+
+    @staticmethod
+    def _enforce_lot_sizes(decision: RebalanceDecision, trade_date: date) -> RebalanceDecision:
+        """Round each order's shares DOWN to the HSX lot for trade_date.
+
+        Lot rules per ADR-012, NFR-R-02: 100 shares from 2021-01-04
+        (Quyet dinh 496/QD-SGDHCM), 10 shares before. Orders rounding to 0
+        lots are dropped (position too small). If all orders are already
+        lot-aligned the original decision is returned unchanged.
+
+        VN30 universe is 100% HSX. Multi-exchange extension (HNX/UPCoM)
+        deferred to thesis Phase 2 - would require per-order exchange tag.
+        """
+        if not decision.orders:
+            return decision
+        lot_size = get_lot_size("HSX", trade_date)
+        enforced: list = []
+        for raw_order in decision.orders:
+            kept = raw_order.enforce_lot_size(lot_size)
+            if kept is not None:
+                enforced.append(kept)
+        enforced_tuple = tuple(enforced)
+        if enforced_tuple == decision.orders:
+            return decision
+        return replace(decision, orders=enforced_tuple)
 
     @staticmethod
     def _compute_kpis(

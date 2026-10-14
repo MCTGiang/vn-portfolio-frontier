@@ -103,3 +103,45 @@ class Order:
         For a SELL, this is gross proceeds before costs are deducted.
         """
         return Decimal(self.shares) * self.est_price
+
+    def enforce_lot_size(self, lot_size: int) -> Order | None:
+        """Return a new Order with shares rounded DOWN to lot multiple, or None.
+
+        Round-down conservative per ADR-012: fractional/odd lots dropped
+        (not added back to cash) to prevent over-trade bias at trigger date.
+        Returns None if rounded shares < lot_size (position too small to open).
+
+        Parameters
+        ----------
+        lot_size : int
+            Positive integer lot size for the applicable exchange + date
+            (see vn_portfolio_frontier.domain.entities.lot_size.get_lot_size).
+
+        Returns
+        -------
+        Order | None
+            New Order with rounded shares if >= 1 lot; same Order instance if
+            already aligned; None if rounded below 1 lot.
+
+        Examples
+        --------
+        >>> from decimal import Decimal
+        >>> o = Order("VCB", OrderSide.BUY, 123, Decimal("125000"))
+        >>> o.enforce_lot_size(100).shares
+        100
+        >>> Order("VCB", OrderSide.BUY, 50, Decimal("125000")).enforce_lot_size(100) is None
+        True
+        """
+        from vn_portfolio_frontier.domain.entities.lot_size import round_to_lot
+
+        rounded = round_to_lot(Decimal(self.shares), lot_size)
+        if rounded == 0:
+            return None
+        if rounded == self.shares:
+            return self
+        return Order(
+            ticker=self.ticker,
+            side=self.side,
+            shares=rounded,
+            est_price=self.est_price,
+        )
