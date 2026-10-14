@@ -39,6 +39,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# vnstock Sponsor Silver tier activation (Day 9) - module-level
+# Must run BEFORE any vnstock API usage so session upgrades past Community.
+# ---------------------------------------------------------------------------
+import os as _os_vn  # noqa: E402
+
+_vn_api_key = _os_vn.environ.get("VNSTOCK_API_KEY")
+if _vn_api_key:
+    try:
+        import vnstock as _vns_login
+
+        _vns_login.login(_vn_api_key)
+    except Exception as _e:
+        import sys as _sys_vn
+
+        print(f"[warn] vnstock.login failed: {_e}", file=_sys_vn.stderr)
+
+
 # Full 43-ticker VN30 all-time universe (2021-2026 union per ADR-013 event-sourcing)
 VN30_UNIVERSE: list[str] = [
     "ACB",
@@ -107,7 +125,7 @@ def get_latest_dates(conn) -> dict[str, date | None]:
 
 def fetch_via_vnstock(ticker: str, start: date, end: date, source: str) -> list[tuple]:
     """Fetch OHLCV rows via vnstock Quote API. Returns list of insert tuples."""
-    from vnstock.api.quote import Quote
+    from vnstock import Quote
 
     q = Quote(symbol=ticker, source=source)
     df = q.history(start=str(start), end=str(end), interval="1D")
@@ -302,7 +320,18 @@ def main() -> int:
     # Log tier (sync_universe reads settings again silently)
     settings = get_settings()
     if settings.vnstock_api_key is not None:
-        logger.info("vnstock tier: Community (API key configured, 60 req/min)")
+        try:
+            import vnstock as _vns_status
+
+            _tier_info = _vns_status.status()
+            _tier_name = (
+                _tier_info.get("tier", "unknown")
+                if isinstance(_tier_info, dict)
+                else str(_tier_info)
+            )
+            logger.info(f"vnstock tier: {_tier_name} (API key active via login)")
+        except Exception as _status_err:
+            logger.info(f"vnstock tier: unknown (status query failed: {_status_err})")
     else:
         logger.warning(
             "vnstock tier: Guest (no API key, 20 req/min limit) - "

@@ -11,7 +11,15 @@ Day 8 v11: Final polish before ship
 
 from __future__ import annotations
 
+import contextlib as _contextlib_vn  # noqa: E402
 import html
+
+# ---------------------------------------------------------------------------
+# vnstock Sponsor Silver tier activation (Day 9) - Streamlit entrypoint
+# Streamlit Cloud: reads from st.secrets.VNSTOCK_API_KEY (secrets.toml)
+# Local dev:       falls back to os.environ.VNSTOCK_API_KEY (.env)
+# ---------------------------------------------------------------------------
+import os as _os_vn  # noqa: E402
 import subprocess
 import sys
 from datetime import date, datetime, timedelta
@@ -21,10 +29,23 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from vn_portfolio_frontier.application.services import (
+_vn_api_key = None
+with _contextlib_vn.suppress(Exception):
+    _vn_api_key = st.secrets.get("VNSTOCK_API_KEY")
+_vn_api_key = _vn_api_key or _os_vn.environ.get("VNSTOCK_API_KEY")
+if _vn_api_key:
+    try:
+        import vnstock as _vns_login
+
+        _vns_login.login(_vn_api_key)
+    except Exception:
+        pass
+
+
+from vn_portfolio_frontier.application.services import (  # noqa: E402
     SimulateRequest,
 )
-from vn_portfolio_frontier.infrastructure.factory import AppFactory
+from vn_portfolio_frontier.infrastructure.factory import AppFactory  # noqa: E402
 
 st.set_page_config(
     page_title="Mô phỏng tái cân bằng danh mục",
