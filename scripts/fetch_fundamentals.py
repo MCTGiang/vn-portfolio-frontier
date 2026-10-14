@@ -1,6 +1,6 @@
 """Fetch fundamentals data (income, ratio, cash_flow) for VN30 universe.
 
-Uses vnstock_data (Silver tier) for full 34-quarter historical depth.
+Uses vnstock (Silver tier) for full 34-quarter historical depth.
 Inserts long-form rows into fundamentals.metric_snapshot.
 
 Idempotency via UNIQUE constraint (ticker, period, statement_type, metric_id).
@@ -49,6 +49,23 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# vnstock Sponsor Silver tier activation (Day 9) - module-level
+# Must run BEFORE any vnstock API usage so session upgrades past Community.
+# ---------------------------------------------------------------------------
+import os as _os_vn  # noqa: E402
+
+_vn_api_key = _os_vn.environ.get("VNSTOCK_API_KEY")
+if _vn_api_key:
+    try:
+        import vnstock as _vns_login
+
+        _vns_login.login(_vn_api_key)
+    except Exception as _e:
+        import sys as _sys_vn
+
+        print(f"[warn] vnstock.login failed: {_e}", file=_sys_vn.stderr)
 
 
 # 43-ticker VN30 all-time universe (2021-2026)
@@ -99,7 +116,7 @@ VN30_UNIVERSE: list[str] = [
 ]
 
 
-# Statement types -> vnstock_data equity method names
+# Statement types -> vnstock equity method names
 STATEMENT_METHODS: dict[str, str] = {
     "income": "income_statement",  # 26 items * 34 periods
     "ratio": "ratio",  # 60 items * 33 periods (P/E, P/B, ROE, ROA)
@@ -124,7 +141,7 @@ def fetch_statement(ticker: str, statement_type: str) -> list[tuple]:
         (ticker, period, statement_type, metric_id, metric_name,
          metric_order, metric_level, unit, value, source)
     """
-    from vnstock_data import Fundamental
+    from vnstock import Fundamental
 
     method_name = STATEMENT_METHODS[statement_type]
     fa = Fundamental()
@@ -157,7 +174,7 @@ def fetch_statement(ticker: str, statement_type: str) -> list[tuple]:
                 int(row["level"]) if _is_valid_value(row.get("level")) else None,
                 str(unit),
                 float(value),
-                "vnstock_data",
+                "vnstock",
             )
         )
     return rows

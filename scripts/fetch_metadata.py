@@ -1,10 +1,10 @@
-"""Fetch VN30 company metadata from vnstock_data Company API.
+"""Fetch VN30 company metadata from vnstock Company API.
 
 Populates fundamentals.vn30_constituent with static metadata:
 - ticker, listing_date, exchange, sector (from company_type field)
 - is_current: derived from vn30_membership_snapshot latest (2026-07)
 
-company_name_vi/en left NULL - vnstock_data overview() does not expose
+company_name_vi/en left NULL - vnstock overview() does not expose
 canonical company names. Sprint 11 follow-up: enrich from HOSE ticker
 directory or vnstock Listing() API.
 
@@ -52,6 +52,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# vnstock Sponsor Silver tier activation (Day 9) - module-level
+# Must run BEFORE any vnstock API usage so session upgrades past Community.
+# ---------------------------------------------------------------------------
+import os as _os_vn  # noqa: E402
+
+_vn_api_key = _os_vn.environ.get("VNSTOCK_API_KEY")
+if _vn_api_key:
+    try:
+        import vnstock as _vns_login
+
+        _vns_login.login(_vn_api_key)
+    except Exception as _e:
+        import sys as _sys_vn
+
+        print(f"[warn] vnstock.login failed: {_e}", file=_sys_vn.stderr)
+
 
 def parse_dd_mm_yyyy(s) -> date | None:
     """Parse '30/06/2009' -> date(2009, 6, 30). Return None on failure."""
@@ -65,7 +82,7 @@ def parse_dd_mm_yyyy(s) -> date | None:
 
 def fetch_ticker_metadata(ticker: str) -> dict:
     """Fetch overview for one ticker. Returns dict with mapped fields."""
-    from vnstock_data import Company
+    from vnstock import Company
 
     c = Company(symbol=ticker)
     df = c.overview()
@@ -117,7 +134,7 @@ def upsert_constituent(conn, ticker: str, meta: dict, is_current: bool) -> None:
                 meta.get("exchange"),
                 meta.get("sector"),
                 is_current,
-                "vnstock_data",
+                "vnstock",
             ),
         )
 

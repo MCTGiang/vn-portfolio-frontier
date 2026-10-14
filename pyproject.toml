@@ -42,7 +42,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "pandas>=3.0",
+    "pandas>=2.3",
     "numpy>=2.0",
     "scipy>=1.14",
     "streamlit>=1.40",
@@ -67,7 +67,7 @@ dev = [
     "jupyterlab>=4.2",
 ]
 data = [
-    "vnstock>=4.0",
+    "vnstock>=5.0.1",
 ]
 
 [project.urls]

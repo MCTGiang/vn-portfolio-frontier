@@ -1,0 +1,4 @@
+# PyPI quarantine workaround for vnstock family
+# See https://vnstocks.com/docs for details on the vendor index
+--extra-index-url https://vnstocks.com/api/packages
+-e .
