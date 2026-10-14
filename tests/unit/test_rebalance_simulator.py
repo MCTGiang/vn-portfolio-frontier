@@ -69,8 +69,8 @@ def simulator(price_repo, run_repo, decision_repo) -> RebalanceSimulator:
 def seed_prices_10_days(price_repo) -> list[date]:
     """Seed 10 trading days of VCB + FPT with gentle divergent trends.
 
-    VCB rises ~0.08% per day, FPT falls ~0.05% per day. Over 10 days this
-    creates ~1.3% drift between tickers - enough to trigger narrow bands,
+    VCB rises ~0.4% per day, FPT falls ~0.26% per day. Over 10 days this
+    creates ~6.6% drift between tickers - enough to trigger narrow bands,
     not enough to trigger wide bands.
     """
     days = [date(2024, 1, d) for d in range(2, 12)]
@@ -80,10 +80,10 @@ def seed_prices_10_days(price_repo) -> list[date]:
             DailyPrice(
                 ticker="VCB",
                 trade_date=day,
-                open_price=Decimal(f"{125000 + i * 100}"),
-                high=Decimal(f"{126000 + i * 100}"),
-                low=Decimal(f"{124500 + i * 100}"),
-                close=Decimal(f"{125500 + i * 100}"),
+                open_price=Decimal(f"{125000 + i * 500}"),
+                high=Decimal(f"{126000 + i * 500}"),
+                low=Decimal(f"{124500 + i * 500}"),
+                close=Decimal(f"{125500 + i * 500}"),
                 volume=1_000_000,
             )
         )
@@ -91,10 +91,10 @@ def seed_prices_10_days(price_repo) -> list[date]:
             DailyPrice(
                 ticker="FPT",
                 trade_date=day,
-                open_price=Decimal(f"{95000 - i * 50}"),
-                high=Decimal(f"{96000 - i * 50}"),
-                low=Decimal(f"{94500 - i * 50}"),
-                close=Decimal(f"{95500 - i * 50}"),
+                open_price=Decimal(f"{95000 - i * 250}"),
+                high=Decimal(f"{96000 - i * 250}"),
+                low=Decimal(f"{94500 - i * 250}"),
+                close=Decimal(f"{95500 - i * 250}"),
                 volume=500_000,
             )
         )
