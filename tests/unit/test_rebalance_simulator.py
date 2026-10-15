@@ -444,3 +444,57 @@ class TestSimulateSharpe:
         assert abs(result.daily_values_buy_and_hold[0] - basic_request.initial_capital) < Decimal(
             "1"
         )
+
+
+class TestRfInjection:
+    """Rf source validation + _sharpe with configurable Rf (Day 9 Step B)."""
+
+    def test_rf_source_default_is_zero(self):
+        """Backward compat: SimulateRequest without rf_source defaults 'zero'."""
+        req = _make_request()
+        assert req.rf_source == "zero"
+
+    def test_rf_source_accepts_valid_values(self):
+        """All 4 valid rf_source values accepted."""
+        for source in ("zero", "vcb_13m_deposit", "sbv_refinance", "vn_bond_1y"):
+            req = _make_request(rf_source=source)
+            assert req.rf_source == source
+
+    def test_rf_source_rejects_invalid_value(self):
+        """Invalid rf_source raises ValueError at __post_init__."""
+        with pytest.raises(ValueError, match="rf_source must be one of"):
+            _make_request(rf_source="libor")
+
+    def test_sharpe_zero_rf_matches_default(self):
+        """Rf=0 default preserves pre-Day-9 _sharpe behaviour."""
+        from vn_portfolio_frontier.application.services.rebalance_simulator import _sharpe
+
+        values = [Decimal("1000000"), Decimal("1010000"), Decimal("1020000"), Decimal("1005000")]
+        sharpe_default = _sharpe(values)
+        sharpe_explicit_zero = _sharpe(values, rf_annual_pct=Decimal("0"))
+        assert sharpe_default == sharpe_explicit_zero
+
+    def test_sharpe_nonzero_rf_reduces_sharpe(self):
+        """Positive Rf subtracts daily_rf from excess return -> Sharpe lower."""
+        from vn_portfolio_frontier.application.services.rebalance_simulator import _sharpe
+
+        values = [Decimal("1000000"), Decimal("1010000"), Decimal("1020000"), Decimal("1015000")]
+        sharpe_zero_rf = _sharpe(values, rf_annual_pct=Decimal("0"))
+        sharpe_high_rf = _sharpe(values, rf_annual_pct=Decimal("10"))
+        assert sharpe_zero_rf is not None
+        assert sharpe_high_rf is not None
+        assert sharpe_high_rf < sharpe_zero_rf
+
+    def test_fetch_rf_zero_shortcircuits_without_query(self, simulator):
+        """Source='zero' returns Decimal(0) without hitting Neon."""
+        result = simulator._fetch_rf_annual_pct(
+            start=date(2024, 1, 2), end=date(2024, 1, 11), source="zero"
+        )
+        assert result == Decimal("0")
+
+    def test_fetch_rf_unknown_source_returns_zero(self, simulator):
+        """Unknown source returns Decimal(0) fail-safe (defensive)."""
+        result = simulator._fetch_rf_annual_pct(
+            start=date(2024, 1, 2), end=date(2024, 1, 11), source="unknown_source"
+        )
+        assert result == Decimal("0")
