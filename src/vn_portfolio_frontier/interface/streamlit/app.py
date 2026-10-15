@@ -63,6 +63,58 @@ MIN_RECOMMENDED_YEARS = 2.0
 
 _CSS = """
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
+
+:root {
+  --brand: #146026;
+  --tag: #80c433;
+  --text: #1F2937;
+  --muted: #6B7280;
+  --card-bg: #F9FAFB;
+  --border: #E5E7EB;
+  --up: #16A34A;
+  --down: #DC2626;
+}
+
+html, body, [class*="st-"], .stMarkdown, .stText {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* P1 ticker chip: lime bg, white text */
+span[data-baseweb="tag"] {
+    background-color: var(--tag) !important;
+    border-radius: 4px !important;
+    padding: 1px 8px !important;
+}
+span[data-baseweb="tag"] span {
+    color: #fff !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+/* P1 KPI tune: 28px bold value, 11px uppercase label */
+.kpi-value {
+    font-size: 28px !important;
+    letter-spacing: -0.5px !important;
+}
+.kpi-label {
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    color: var(--muted) !important;
+}
+
+/* Day 10 Step C: compliance info chip (Lot size + Rf) */
+.compliance-chip {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--brand);
+    background: #e8f3e8;
+    padding: 3px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--tag);
+    margin: 4px 0 2px 0;
+}
 .block-container { padding-top: 2rem !important; }
 
 /* v11: Aggressive sidebar collapse button pinning - fixed to viewport */
@@ -209,6 +261,45 @@ button[data-testid="stSidebarCollapseButton"],
 }
 
 .footer-caption { text-align: right; color: #9ca3af; font-size: 11px; margin-top: 24px; }
+/* Day 10 Step C: Material Symbols for Streamlit CSS-in-JS (emotion-cache) icons */
+.material-symbols-rounded,
+.material-symbols-outlined,
+.material-icons,
+[class*="material-symbols"],
+span[translate="no"],
+button[data-testid*="Collapse"] span,
+button[data-testid*="Icon"] span,
+button[data-testid*="Sidebar"] span,
+[data-testid*="stIconMaterial"],
+[class*="iconContainer"],
+[class*="IconContainer"],
+.stMarkdown span[class*="e1vmumty"],
+[class*="e1vmumty"],
+[class*="e1ocqwht"] {
+    font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons' !important;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Day 10 Step C: compact VI/EN toggle buttons (narrow 32px height) */
+button[kind="primary"][data-testid*="lang_"],
+button[kind="secondary"][data-testid*="lang_"] {
+    min-height: 32px !important;
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
 </style>
 """
 
@@ -226,7 +317,7 @@ TRANSLATIONS = {
         "lang_label": "Ngôn ngữ",
         "about_header": "ℹ️ Về công cụ này",
         "about_purpose_title": "🎯 Mục đích",
-        "about_purpose_body": "Giúp nhà đầu tư TEST chiến lược tái cân bằng danh mục trước khi đưa vốn thật vào thị trường, dựa trên dữ liệu lịch sử của 30 cổ phiếu VN30.",
+        "about_purpose_body": "Giúp nhà đầu tư kiểm thử chiến lược tái cân bằng danh mục trước khi đưa vốn thật vào thị trường, dựa trên dữ liệu lịch sử của 30 cổ phiếu VN30.",
         "about_value_title": "📚 Giá trị thực tiễn",
         "about_value_list": [
             "Hiểu chiến lược có hiệu quả không trong nhiều giai đoạn thị trường (tăng/giảm/đi ngang)",
@@ -243,15 +334,30 @@ TRANSLATIONS = {
             "Hiện tại cho phép mua lẻ cổ phiếu (fractional/odd shares) — thực tế HSX/HNX yêu cầu lô 100 shares; Day 9 sẽ fix compliance",
             "Khuyến nghị kết hợp với phân tích cơ bản và theo dõi diễn biến thị trường thực",
         ],
-        "sidebar_title": "Cấu hình",
+        "sidebar_title": "⚙️ Thiết lập mô phỏng",
         "capital_section": "💰 Tiền của tôi",
+        "capital_caption": "Nhập số vốn ban đầu bạn muốn dùng cho danh mục (VD: 100 triệu VND)",
+        "ticker_section_caption": "Chọn danh mục cổ phiếu và tỷ trọng mong muốn (tối đa 10 mã VN30)",
+        "range_section_caption": "Chọn khoảng thời gian lịch sử để kiểm thử chiến lược (dữ liệu từ 04/01/2021)",
         "capital_label": "Vốn ban đầu (triệu VND)",
         "update_prices_btn": "Cập nhật dữ liệu giá",
         "updating_prices": "Đang tải...",
         "update_success": "Đã cập nhật",
+        "update_success_fmt": "✓ Đã cập nhật đến {date}",
+        "lot_compliance_chip": "Lot: 100 cổ phiếu (HSX từ 04/01/2021)",
+        "lot_compliance_tooltip": "Theo QĐ 496/QĐ-SGDHCM: tất cả lệnh HSX phải là bội số của 100 kể từ 04/01/2021",
+        "rf_source_label": "Nguồn lãi suất phi rủi ro (Rf)",
+        "rf_source_help": "Rf dùng trong công thức Sharpe = (lãi suất portfolio − Rf) / độ lệch chuẩn. Giá trị thực = trung bình (AVG) qua khoảng thời gian backtest đã chọn, không phải giá trị cố định.",
+        "rf_vcb_13m": "VCB tiết kiệm 13 tháng (bán lẻ)",
+        "rf_vn_bond_1y": "Trái phiếu Chính phủ VN 1 năm (chuẩn học thuật)",
+        "rf_sbv_refinance": "Lãi suất tái cấp vốn SBV (chính sách)",
+        "rf_zero": "Không điều chỉnh Rf (Perold 1988)",
+        "rf_source_caption": "ℹ️ Giá trị thực tế hiển thị trong tab Chi tiết kỹ thuật sau khi chạy mô phỏng",
+        "rf_actual_fmt": "Rf thực tế dùng: {value}%/năm (trung bình qua giai đoạn backtest)",
         "update_failed": "Thất bại",
         "tickers_section": "📊 Danh mục của tôi",
         "ticker_scope_info": "📌 Scope: 30 cổ phiếu VN30 (HOSE) — dữ liệu từ {min_date} đến {max_date}",
+        "vn30_roster_info": "📊 Rổ VN30 áp dụng tại thời điểm {snapshot_date} (danh sách thay đổi mỗi quý theo quyết định HOSE)",
         "ticker_chip_empty": "Chưa chọn mã nào",
         # v10: text_input UX
         "ticker_input_label": "Gõ mã rồi Enter để thêm",
@@ -263,9 +369,14 @@ TRANSLATIONS = {
         "weight_label": "Tỷ trọng {ticker} (%)",
         "sum_ok": "Tổng: {sum:.1f}%",
         "sum_bad": "Tổng: {sum:.1f}% (phải = 100%)",
-        "equal_weight_btn": "Phân bổ đều",
-        "range_section": "📅 Giai đoạn test",
-        "range_period_rec": "💡 Khuyến nghị test tối thiểu {min_years:.0f}-3 năm để capture nhiều chu kỳ thị trường",
+        "equal_weight_btn": "📊 Phân bổ đều",
+        "manual_weight_btn": "✏️ Nhập tỷ trọng kỳ vọng",
+        "weight_mode_label": "Cách phân bổ tỷ trọng:",
+        "weight_mode_equal_help": "Chia đều 1/N cho mỗi mã",
+        "weight_mode_manual_help": "Nhập tỷ trọng kỳ vọng từng mã (tổng phải = 100%)",
+        "range_section": "📅 Giai đoạn kiểm thử chiến lược",
+        "range_period_rec": "💡 Dữ liệu có sẵn từ 04/01/2021. Khuyến nghị khoảng thời gian ≥ {min_years:.0f}-3 năm để kết quả phản ánh được nhiều chu kỳ thị trường",
+        "rec_header": "Khuyến nghị",
         "range_too_short": "⚠️ Giai đoạn quá ngắn ({years:.1f} năm) — kết quả có thể không đáng tin cậy. Khuyến nghị ≥ 2 năm.",
         "start_date_label": "Từ ngày",
         "end_date_label": "Đến ngày",
@@ -273,14 +384,14 @@ TRANSLATIONS = {
         "advanced_expander": "⚙️ Nâng cao (chiến lược + chi phí)",
         "strategy_info": "**Chiến lược:** Threshold Band - Hệ thống tự động cân đối lại danh mục khi tỷ trọng bất kỳ mã nào lệch quá ngưỡng cho phép.",
         "band_label": "Ngưỡng lệch cho phép (basis points)",
-        "band_help": "500 bps = 5%. Danh mục bị cân đối lại khi mã nào đó lệch quá ngưỡng này.",
-        "cost_subheader": "Chi phí giao dịch (ADR-012)",
+        "band_help": "Ngưỡng drift (độ lệch tỷ trọng) cho phép trước khi cân đối lại. 500 bps = 5%. Trade-off: ngưỡng rộng (1000 bps) = ít giao dịch + chi phí thấp + drift lớn; ngưỡng hẹp (100 bps) = nhiều giao dịch + chi phí cao + tỷ trọng sát target.",
+        "cost_subheader": "Chi phí giao dịch",
         "brokerage_label": "Phí môi giới (%)",
-        "brokerage_help": "0.15% là mức trung bình thị trường Việt Nam cho khách hàng cá nhân (2024-2026)",
+        "brokerage_help": "Phí môi giới CTCK (0.15% là trung bình thị trường VN cho khách cá nhân 2024-2026). Lưu ý: đã bao gồm phí sở (0.03% HSX/HNX); CTCK zero-fee (Pinetree, DNSE) thì tổng = 0.03%.",
         "tax_label": "Thuế TNCN bán (%)",
         "tax_help": "0.10% theo Thông tư 111/2013/TT-BTC (áp dụng khi bán)",
         "market_impact_label": "Tác động thị trường (basis points)",
-        "market_impact_help": "ADR-012 mục 2: mặc định 10 bps cho mã VN30 thanh khoản cao",
+        "market_impact_help": "Chi phí trượt giá khi vào/ra lệnh (giá thực tế lệch so với giá kỳ vọng). Mặc định 10 bps (0.1%) cho VN30 do thanh khoản cao; mã small-cap thường 20-50 bps.",
         "run_btn": "🚀 Chạy mô phỏng",
         "run_header": "Kết quả mô phỏng",
         "tab_overview": "📊 Tổng quan",
@@ -299,8 +410,7 @@ TRANSLATIONS = {
         # v10: FIXED risk warning showing peak + trough (not initial)
         "risk_warning": "⚠️ **Rủi ro:** Danh mục đã có lúc đạt đỉnh **{peak}** rồi sụt xuống **{trough}** (giảm {mdd:.0f}%)",
         "cost_summary": "💰 **{total_trades} giao dịch, phí tổng {cost_pct}** — {verdict}",
-        "savings_caveat": "_Benchmark với trái phiếu chính phủ VN kỳ hạn 1 năm sẽ bổ sung ở phase sau._",
-        "rec_header": "💡 Khuyến nghị",
+        "savings_caveat": "",
         "cost_verdict_negligible": "không đáng kể",
         "cost_verdict_moderate": "có ảnh hưởng vừa",
         "cost_verdict_significant": "cắn đáng kể",
@@ -312,7 +422,7 @@ TRANSLATIONS = {
         "rec_frequent_rebalance": "Tần suất {freq:.1f} lần/năm hơi cao — ngưỡng band hẹp dễ dẫn tới giao dịch quá nhiều",
         "chart_title": "Diễn biến giá trị danh mục",
         "chart_strategy": "Chiến lược của bạn",
-        "chart_before_cost": "Nếu không có phí",
+        "chart_before_cost": "Giả sử không có chi phí giao dịch",
         "chart_buy_and_hold": "Mua rồi giữ (không cân đối)",
         "chart_x_label": "",
         "chart_y_label": "Giá trị (VND)",
@@ -389,7 +499,7 @@ TRANSLATIONS = {
         "help_step4": "**Bước 4:** (Tùy chọn) Mở 'Nâng cao' để điều chỉnh ngưỡng và chi phí",
         "help_step5": "**Bước 5:** Nhấn 'Chạy mô phỏng'",
         "help_step6": "**Bước 6:** Xem Tổng quan — mở các tab khác nếu muốn chi tiết",
-        "idle_msg": "Cấu hình trong sidebar rồi nhấn Chạy mô phỏng",
+        "idle_msg": "Hoàn tất thiết lập ở sidebar bên trái rồi nhấn Chạy mô phỏng",
         "failed_msg": "Mô phỏng thất bại: {error}",
         "footer_meta": "Mô phỏng #{run_id} • {ts}",
         "csv_date": "Ngày",
@@ -405,7 +515,7 @@ TRANSLATIONS = {
         "lang_label": "Language",
         "about_header": "ℹ️ About this tool",
         "about_purpose_title": "🎯 Purpose",
-        "about_purpose_body": "Helps investors TEST a rebalancing strategy before deploying real capital, based on VN30 historical data.",
+        "about_purpose_body": "Helps investors backtest a rebalancing strategy before deploying real capital, based on VN30 historical data.",
         "about_value_title": "📚 Practical value",
         "about_value_list": [
             "Understand if a strategy is effective across market regimes (bull/bear/sideways)",
@@ -422,12 +532,27 @@ TRANSLATIONS = {
             "Currently allows fractional shares — HSX/HNX require 100-share lots; Day 9 will fix",
             "Combine with fundamental analysis and real market monitoring",
         ],
-        "sidebar_title": "Configuration",
+        "sidebar_title": "⚙️ Simulation setup",
         "capital_section": "💰 My capital",
+        "capital_caption": "Enter initial capital for your portfolio (e.g. 100M VND)",
+        "ticker_section_caption": "Select tickers and target weights (max 10 VN30 constituents)",
+        "range_section_caption": "Historical window to backtest the strategy (data from 04/01/2021)",
+        "vn30_roster_info": "📊 VN30 roster as of {snapshot_date} (list changes quarterly per HOSE decision)",
         "capital_label": "Initial capital (million VND)",
         "update_prices_btn": "Update price data",
         "updating_prices": "Loading...",
         "update_success": "Updated",
+        "update_success_fmt": "✓ Updated through {date}",
+        "lot_compliance_chip": "Lot: 100 shares (HSX since 04/01/2021)",
+        "lot_compliance_tooltip": "Per Decision 496/QĐ-SGDHCM: all HSX orders must be multiples of 100 since 04/01/2021",
+        "rf_source_label": "Risk-free rate source (Rf)",
+        "rf_source_help": "Rf used in Sharpe = (portfolio return − Rf) / standard deviation. Actual value = mean (AVG) across the selected backtest window, not a fixed constant.",
+        "rf_vcb_13m": "VCB 13-month deposit (retail)",
+        "rf_vn_bond_1y": "VN Government Bond 1-year (academic standard)",
+        "rf_sbv_refinance": "SBV refinance rate (policy)",
+        "rf_zero": "No Rf adjustment (Perold 1988)",
+        "rf_source_caption": "ℹ️ Actual value shown in Technical Details tab after simulation runs",
+        "rf_actual_fmt": "Actual Rf used: {value}%/year (mean across backtest period)",
         "update_failed": "Failed",
         "tickers_section": "📊 My portfolio",
         "ticker_scope_info": "📌 Scope: 30 VN30 constituents (HOSE) — data from {min_date} to {max_date}",
@@ -441,9 +566,13 @@ TRANSLATIONS = {
         "weight_label": "Weight {ticker} (%)",
         "sum_ok": "Sum: {sum:.1f}%",
         "sum_bad": "Sum: {sum:.1f}% (must = 100%)",
-        "equal_weight_btn": "Equal weight",
-        "range_section": "📅 Test period",
-        "range_period_rec": "💡 Recommend min {min_years:.0f}-3 years to capture multiple market cycles",
+        "equal_weight_btn": "📊 Equal weights",
+        "manual_weight_btn": "✏️ Custom weights",
+        "weight_mode_label": "Allocation mode:",
+        "weight_mode_equal_help": "Split 1/N across all tickers",
+        "weight_mode_manual_help": "Enter custom weights per ticker (must sum to 100%)",
+        "range_section": "📅 Strategy backtest period",
+        "range_period_rec": "💡 Data available from 04/01/2021. Recommended period ≥ {min_years:.0f}-3 years to capture multiple market cycles",
         "range_too_short": "⚠️ Period too short ({years:.1f} yr) — results may be unreliable. Recommend ≥ 2 years.",
         "start_date_label": "From",
         "end_date_label": "To",
@@ -451,14 +580,14 @@ TRANSLATIONS = {
         "advanced_expander": "⚙️ Advanced (strategy + costs)",
         "strategy_info": "**Strategy:** Threshold Band - Auto-rebalances when any ticker drifts beyond threshold.",
         "band_label": "Drift threshold (basis points)",
-        "band_help": "500 bps = 5%. Rebalances when any ticker drifts past this.",
-        "cost_subheader": "Transaction costs (ADR-012)",
+        "band_help": "Drift tolerance threshold before rebalancing. 500 bps = 5%. Trade-off: wider threshold (1000 bps) = fewer trades + lower cost + more drift; narrower (100 bps) = more trades + higher cost + closer to target.",
+        "cost_subheader": "Transaction costs",
         "brokerage_label": "Brokerage (%)",
-        "brokerage_help": "0.15% is VN market average for retail (2024-2026)",
+        "brokerage_help": "Broker commission (0.15% is VN retail market average 2024-2026). Note: already includes exchange fee (0.03% HSX/HNX); zero-fee brokers (Pinetree, DNSE) total = 0.03%.",
         "tax_label": "Sell tax (%)",
         "tax_help": "0.10% per Circular 111/2013/TT-BTC",
         "market_impact_label": "Market impact (basis points)",
-        "market_impact_help": "ADR-012: 10 bps default for liquid VN30",
+        "market_impact_help": "Slippage cost when entering/exiting positions. Default 10 bps (0.1%) for VN30 due to high liquidity; small-caps typically 20-50 bps.",
         "run_btn": "🚀 Run",
         "run_header": "Simulation result",
         "tab_overview": "📊 Overview",
@@ -476,8 +605,8 @@ TRANSLATIONS = {
         "verdict_savings_lose": "✗ **Below savings** (5-7%/yr) — {cagr:.1f}%/yr",
         "risk_warning": "⚠️ **Risk:** Portfolio once peaked at **{peak}** then dropped to **{trough}** (down {mdd:.0f}%)",
         "cost_summary": "💰 **{total_trades} transactions, total cost {cost_pct}** — {verdict}",
-        "savings_caveat": "_Benchmark with VN gov bond 1Y yield coming in next phase._",
-        "rec_header": "💡 Tips",
+        "savings_caveat": "",
+        "rec_header": "Tips",
         "cost_verdict_negligible": "negligible",
         "cost_verdict_moderate": "moderate",
         "cost_verdict_significant": "significant",
@@ -489,7 +618,7 @@ TRANSLATIONS = {
         "rec_frequent_rebalance": "Frequency {freq:.1f}/yr is high — may cause overtrading",
         "chart_title": "Portfolio value over time",
         "chart_strategy": "Your strategy",
-        "chart_before_cost": "If no cost",
+        "chart_before_cost": "Hypothetical no-cost scenario",
         "chart_buy_and_hold": "Buy & hold",
         "chart_x_label": "",
         "chart_y_label": "Value (VND)",
@@ -566,7 +695,7 @@ TRANSLATIONS = {
         "help_step4": "**Step 4:** (Optional) Open 'Advanced' to tweak threshold and costs",
         "help_step5": "**Step 5:** Click 'Run'",
         "help_step6": "**Step 6:** Read Overview — open other tabs for details",
-        "idle_msg": "Configure in sidebar then click Run",
+        "idle_msg": "Complete setup in the left sidebar then click Run Simulation",
         "failed_msg": "Simulation failed: {error}",
         "footer_meta": "Run #{run_id} • {ts}",
         "csv_date": "Date",
@@ -966,7 +1095,37 @@ def _render_portfolio_chips():
 def _render_sidebar():
     st.sidebar.title(_t("sidebar_title"))
 
+    # Day 10 Step C: compact language toggle VI/EN (SSOT — replaces main-area dropdown)
+    lang_cur = st.session_state.get("lang", "vi")
+    _tb_c1, _tb_c2, _tb_spacer = st.sidebar.columns([1, 1, 2])
+    with _tb_c1:
+        if st.button(
+            "VI",
+            key="lang_btn_vi",
+            use_container_width=True,
+            type="primary" if lang_cur == "vi" else "secondary",
+        ):
+            st.session_state["lang"] = "vi"
+            st.rerun()
+    with _tb_c2:
+        if st.button(
+            "EN",
+            key="lang_btn_en",
+            use_container_width=True,
+            type="primary" if lang_cur == "en" else "secondary",
+        ):
+            st.session_state["lang"] = "en"
+            st.rerun()
+
+    # Day 10 Step C: compliance chip (NFR-R-02 lot size) — i18n + diacritics
+    st.sidebar.markdown(
+        f'<span class="compliance-chip" title="{_t("lot_compliance_tooltip")}">'
+        f'{_t("lot_compliance_chip")}</span>',
+        unsafe_allow_html=True,
+    )
+
     st.sidebar.subheader(_t("capital_section"))
+    st.sidebar.caption(_t("capital_caption"))
     initial_capital_m = st.sidebar.number_input(
         _t("capital_label"),
         min_value=1.0,
@@ -980,13 +1139,21 @@ def _render_sidebar():
         with st.spinner(_t("updating_prices")):
             ok, msg = _run_sync_prices()
             if ok:
-                st.sidebar.success(_t("update_success"))
+                # Day 10 Step C: compact success chip (replaces oversized st.success box)
+                _update_date = datetime.now().strftime("%d/%m/%Y %H:%M")
+                st.sidebar.markdown(
+                    f'<div style="font-size:12px;color:#16A34A;padding:4px 8px;'
+                    f"background:#F0FDF4;border-left:3px solid #16A34A;border-radius:4px;"
+                    f'margin:6px 0;">{_t("update_success_fmt", date=_update_date)}</div>',
+                    unsafe_allow_html=True,
+                )
                 _get_available_tickers.clear()
             else:
                 st.sidebar.error(f"{_t('update_failed')}: {msg}")
 
     # v10: Ticker section with text_input + Enter form
     st.sidebar.subheader(_t("tickers_section"))
+    st.sidebar.caption(_t("ticker_section_caption"))
 
     # v11: scope info banner
     all_tickers = _get_available_tickers()
@@ -996,7 +1163,8 @@ def _render_sidebar():
     except Exception:
         max_date = date.today()
     st.sidebar.markdown(
-        f'<div class="scope-info">{_t("ticker_scope_info", min_date=DATA_MIN_DATE.strftime("%d/%m/%Y"), max_date=max_date.strftime("%d/%m/%Y"))}</div>',
+        f'<div class="scope-info">{_t("ticker_scope_info", min_date=DATA_MIN_DATE.strftime("%d/%m/%Y"), max_date=max_date.strftime("%d/%m/%Y"))}</div>'
+        f'<div class="scope-info" style="margin-top:4px;">{_t("vn30_roster_info", snapshot_date=max_date.strftime("%d/%m/%Y"))}</div>',
         unsafe_allow_html=True,
     )
 
@@ -1029,70 +1197,107 @@ def _render_sidebar():
     if st.session_state.get("ticker_add_error"):
         st.sidebar.warning(st.session_state.ticker_add_error)
 
-    # Weight inputs + remove buttons
+    # Weight inputs + remove buttons (Day 10 Step C Phase 2: mode toggle Option A)
     weights_pct = {}
     if st.session_state.selected_tickers:
-        for ticker in list(st.session_state.selected_tickers):
-            row_c1, row_c2 = st.sidebar.columns([5, 1])
-            with row_c1:
-                default_pct = st.session_state.weights_pct.get(
-                    ticker, 100.0 / max(len(st.session_state.selected_tickers), 1)
-                )
-                pct = st.number_input(
-                    _t("weight_label", ticker=ticker),
-                    min_value=0.0,
-                    max_value=100.0,
-                    value=float(default_pct),
-                    step=1.0,
-                    format="%.2f",
-                    key=f"weight_pct_{ticker}",
-                )
-                weights_pct[ticker] = pct
-                st.session_state.weights_pct[ticker] = pct
-            with row_c2:
-                st.markdown("<div style='padding-top:28px;'></div>", unsafe_allow_html=True)
-                if st.button(
-                    "✕",
-                    key=f"ticker_remove_{ticker}",
-                    help=_t("ticker_remove_tooltip", ticker=ticker),
-                ):
-                    st.session_state.selected_tickers.remove(ticker)
-                    if ticker in st.session_state.weights_pct:
-                        del st.session_state.weights_pct[ticker]
-                    if f"weight_pct_{ticker}" in st.session_state:
-                        del st.session_state[f"weight_pct_{ticker}"]
-                    st.rerun()
+        n = len(st.session_state.selected_tickers)
 
-        st.sidebar.button(
-            _t("equal_weight_btn"),
-            on_click=_apply_equal_weight,
-            args=(list(st.session_state.selected_tickers),),
-            use_container_width=True,
+        # Mode toggle: Phân bổ đều vs Nhập tỷ trọng kỳ vọng
+        weight_mode = st.sidebar.radio(
+            _t("weight_mode_label"),
+            options=["equal", "manual"],
+            format_func=lambda m: (
+                _t("equal_weight_btn") if m == "equal" else _t("manual_weight_btn")
+            ),
+            captions=[_t("weight_mode_equal_help"), _t("weight_mode_manual_help")],
+            horizontal=True,
+            index=0,
+            key="weight_mode",
         )
+
+        if weight_mode == "equal":
+            # Auto-distribute 1/N — preview chip, no editable inputs
+            equal_pct = 100.0 / n
+            for ticker in list(st.session_state.selected_tickers):
+                weights_pct[ticker] = equal_pct
+                st.session_state.weights_pct[ticker] = equal_pct
+                # Still allow remove with ✕
+                row_c1, row_c2 = st.sidebar.columns([5, 1])
+                with row_c1:
+                    st.markdown(
+                        f'<div style="padding:6px 10px;background:#F9FAFB;'
+                        f'border:1px solid #E5E7EB;border-radius:4px;font-size:13px;">'
+                        f"<b>{ticker}</b>: {equal_pct:.2f}%</div>",
+                        unsafe_allow_html=True,
+                    )
+                with row_c2:
+                    if st.button(
+                        "✕",
+                        key=f"ticker_remove_{ticker}",
+                        help=_t("ticker_remove_tooltip", ticker=ticker),
+                    ):
+                        st.session_state.selected_tickers.remove(ticker)
+                        if ticker in st.session_state.weights_pct:
+                            del st.session_state.weights_pct[ticker]
+                        st.rerun()
+            st.sidebar.info(f"✓ {_t('weight_mode_equal_help')}: {equal_pct:.2f}% × {n} mã")
+        else:
+            # Manual mode: per-ticker number inputs
+            for ticker in list(st.session_state.selected_tickers):
+                row_c1, row_c2 = st.sidebar.columns([5, 1])
+                with row_c1:
+                    default_pct = st.session_state.weights_pct.get(ticker, 100.0 / max(n, 1))
+                    pct = st.number_input(
+                        _t("weight_label", ticker=ticker),
+                        min_value=0.0,
+                        max_value=100.0,
+                        value=float(default_pct),
+                        step=1.0,
+                        format="%.2f",
+                        key=f"weight_pct_{ticker}",
+                    )
+                    weights_pct[ticker] = pct
+                    st.session_state.weights_pct[ticker] = pct
+                with row_c2:
+                    st.markdown("<div style='padding-top:28px;'></div>", unsafe_allow_html=True)
+                    if st.button(
+                        "✕",
+                        key=f"ticker_remove_{ticker}",
+                        help=_t("ticker_remove_tooltip", ticker=ticker),
+                    ):
+                        st.session_state.selected_tickers.remove(ticker)
+                        if ticker in st.session_state.weights_pct:
+                            del st.session_state.weights_pct[ticker]
+                        if f"weight_pct_{ticker}" in st.session_state:
+                            del st.session_state[f"weight_pct_{ticker}"]
+                        st.rerun()
 
     weight_sum = sum(weights_pct.values())
     target_weights = {t: p / 100.0 for t, p in weights_pct.items() if p > 0}
 
     st.sidebar.subheader(_t("range_section"))
+    st.sidebar.caption(_t("range_section_caption"))
+    # Day 10 Step C Phase 2: period recommendation shown BEFORE date pickers
+    st.sidebar.markdown(
+        f'<div class="period-rec">{_t("range_period_rec", min_years=MIN_RECOMMENDED_YEARS)}</div>',
+        unsafe_allow_html=True,
+    )
     today = date.today()
-    # v11: Default to 3 years (within data range) + min_value constrained
+    # Default to 3 years (within data range) + min_value constrained
     default_start = max(DATA_MIN_DATE, today - timedelta(days=365 * 3))
     backtest_start = st.sidebar.date_input(
         _t("start_date_label"),
         value=default_start,
         min_value=DATA_MIN_DATE,
         max_value=today,
+        format="DD/MM/YYYY",
     )
     backtest_end = st.sidebar.date_input(
         _t("end_date_label"),
         value=today,
         min_value=DATA_MIN_DATE,
         max_value=today,
-    )
-    # v11: period recommendation + warning
-    st.sidebar.markdown(
-        f'<div class="period-rec">{_t("range_period_rec", min_years=MIN_RECOMMENDED_YEARS)}</div>',
-        unsafe_allow_html=True,
+        format="DD/MM/YYYY",
     )
     if backtest_start <= backtest_end:
         test_years = (backtest_end - backtest_start).days / 365.25
@@ -1146,6 +1351,31 @@ def _render_sidebar():
     if not dates_ok:
         st.sidebar.error(_t("range_err"))
 
+    # Day 10 Step C: Rf source selector (Day 9 Step B feature wire-up)
+    # Day 10 Step C: Rf source selectbox (priority order per ADR-016 + i18n)
+    # Order: retail realistic (default) → academic standard → policy → baseline
+    rf_sources_order = [
+        "vcb_13m_deposit",  # DEFAULT: big-4 bank savings opportunity cost
+        "vn_bond_1y",  # Academic standard (Sharpe 1994 convention)
+        "sbv_refinance",  # Policy rate (less common for retail)
+        "zero",  # Baseline no-adjustment (Perold 1988)
+    ]
+    rf_label_key = {
+        "vcb_13m_deposit": "rf_vcb_13m",
+        "vn_bond_1y": "rf_vn_bond_1y",
+        "sbv_refinance": "rf_sbv_refinance",
+        "zero": "rf_zero",
+    }
+    rf_source = st.sidebar.selectbox(
+        _t("rf_source_label"),
+        options=rf_sources_order,
+        index=0,
+        format_func=lambda src: _t(rf_label_key[src]),
+        help=_t("rf_source_help"),
+        key="rf_source_select",
+    )
+    st.sidebar.caption(_t("rf_source_caption"))
+
     run_pressed = st.sidebar.button(
         _t("run_btn"),
         type="primary",
@@ -1165,6 +1395,7 @@ def _render_sidebar():
         "brokerage_pct": brokerage_pct,
         "tax_pct": tax_pct,
         "market_impact_bps": market_impact_bps,
+        "rf_source": rf_source,
     }
 
 
@@ -1190,6 +1421,7 @@ def _run_backtest(config):
             market_impact_bps=config["market_impact_bps"],
             git_commit_sha=_get_git_commit_sha(),
             code_version=PROJECT_VERSION,
+            rf_source=config["rf_source"],
         )
     except ValueError as exc:
         st.session_state.run_status = "failed"
@@ -1360,8 +1592,6 @@ def _render_hero_dense(result, record, config, decisions):
 
     with right_col:
         _render_chart_compact(result)
-
-    st.caption(_t("savings_caveat"))
 
 
 def _generate_recommendations(record, config, cagr, final, final_bh, years):
@@ -1804,6 +2034,17 @@ def _render_results(result, config):
 
     with tab_tech:
         _render_kpi_tiered(result, record)
+        # Day 10 Step C Phase B: display actual Rf used (period mean over backtest)
+        if hasattr(result, "rf_annual_pct"):
+            if result.rf_annual_pct > 0:
+                st.caption(
+                    _t(
+                        "rf_actual_fmt",
+                        value=f"{float(result.rf_annual_pct):.2f}",
+                    )
+                )
+            else:
+                st.caption(f"ℹ️ Rf = 0% ({_t('rf_zero')})")
 
     now_str = datetime.now().strftime("%H:%M %d/%m/%Y")
     st.markdown(
@@ -1833,27 +2074,15 @@ def _render_help():
 def main():
     st.markdown(_CSS, unsafe_allow_html=True)
 
-    h_col1, h_col2 = st.columns([8, 1])
-    with h_col1:
-        st.markdown(
-            f'<div class="combined-header">'
-            f'<h1>{html.escape(_t("page_title"))}</h1>'
-            f'<div class="subtitle">{html.escape(_t("page_subtitle"))}</div>'
-            f"</div>",
-            unsafe_allow_html=True,
-        )
-    with h_col2:
-        lang = st.selectbox(
-            _t("lang_label"),
-            options=["vi", "en"],
-            index=0 if st.session_state.lang == "vi" else 1,
-            format_func=lambda x: "🇻🇳 VI" if x == "vi" else "🇬🇧 EN",
-            label_visibility="collapsed",
-            key="lang_selector",
-        )
-        if lang != st.session_state.lang:
-            st.session_state.lang = lang
-            st.rerun()
+    # Day 10 Step C: removed main-area language selector (duplicate of sidebar
+    # VI/EN toggle). Sidebar is single source of truth for language choice.
+    st.markdown(
+        f'<div class="combined-header">'
+        f'<h1>{html.escape(_t("page_title"))}</h1>'
+        f'<div class="subtitle">{html.escape(_t("page_subtitle"))}</div>'
+        f"</div>",
+        unsafe_allow_html=True,
+    )
 
     _render_about()
     _render_help()

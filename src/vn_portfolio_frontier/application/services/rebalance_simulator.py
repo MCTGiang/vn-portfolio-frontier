@@ -51,6 +51,7 @@ from vn_portfolio_frontier.domain.entities import (
     RebalanceDecision,
 )
 from vn_portfolio_frontier.domain.entities.lot_size import get_lot_size
+from vn_portfolio_frontier.domain.entities.order import OrderSide
 from vn_portfolio_frontier.domain.services import CostCalculator
 from vn_portfolio_frontier.domain.strategies import BaseStrategy
 
@@ -136,6 +137,11 @@ class SimulateResult:
         - before_cost: hypothetical value without cost drag
         - buy_and_hold: passive baseline (initial allocation, no rebalance)
 
+    Also exposes rf_annual_pct = period-mean Rf % used in Sharpe calc
+    (Day 10 Step C): enables UI to display actual value, not just source
+    name. Default Decimal("0") preserves backward compat for callers that
+    don't pass it explicitly.
+
     Allows callers (Streamlit, CLI) to render time-series charts and run
     strategy-vs-baseline comparisons without re-reading the DB.
     """
@@ -145,6 +151,7 @@ class SimulateResult:
     daily_values_before_cost: list[Decimal]
     daily_values_after_cost: list[Decimal]
     daily_values_buy_and_hold: list[Decimal]
+    rf_annual_pct: Decimal = Decimal("0")
 
 
 class RebalanceSimulator:
@@ -285,6 +292,7 @@ class RebalanceSimulator:
             daily_values_before_cost=daily_values_before,
             daily_values_after_cost=daily_values_after,
             daily_values_buy_and_hold=buy_and_hold_series,
+            rf_annual_pct=rf_annual_pct,
         )
 
     # ------------------------------------------------------------------
@@ -383,17 +391,51 @@ class RebalanceSimulator:
             decision = self._enforce_lot_sizes(decision, day)
 
             if decision.is_action:
-                try:
-                    portfolio.apply_orders(decision.orders)
-                except ValueError as exc:
-                    self._run_repo.update_status(
-                        run_id,
-                        status="failed",
-                        error_message=f"Portfolio.apply_orders raised at {day}: {exc}",
+                # SELL-first ordering (ADR-016): VN market uses T+2 cash settlement,
+                # but backtest adopts academic T+0 instant-settlement convention
+                # (Markowitz 1952, Sharpe 1994; standard in LEAN/zipline/Bloomberg
+                # PORT). Under T+0, SELL proceeds fund same-day BUYs.
+                sorted_orders = tuple(
+                    sorted(
+                        decision.orders,
+                        key=lambda o: 0 if o.side == OrderSide.SELL else 1,
                     )
-                    raise
-                last_rebalance_date = day
-                cumulative_cost += decision.costs.total()
+                )
+
+                # ADR-016 Phase 2: budget pre-check after lot enforcement.
+                # Lot round-down on SELLs reduces proceeds while BUYs stay
+                # full-size. If projected cash goes negative, downgrade to
+                # no_trigger (skip rebalance) rather than crash. Scale-down
+                # BUYs proportional is deferred to Sprint 15 polish.
+                projected_cash = portfolio.cash
+                for order in sorted_orders:
+                    if order.side == OrderSide.SELL:
+                        projected_cash += order.gross_amount()
+                    else:
+                        projected_cash -= order.gross_amount()
+
+                if projected_cash < Decimal("0"):
+                    # Infeasible after lot enforcement -- downgrade to no_trigger.
+                    # no_trigger is filtered from actionable_decisions before
+                    # DB save (actionable_decisions list below), so this
+                    # does NOT leak into the rebalance_decision table.
+                    decision = RebalanceDecision.no_action(
+                        strategy_name=decision.strategy_name,
+                        triggered_at=day,
+                        reason="no_trigger",
+                    )
+                else:
+                    try:
+                        portfolio.apply_orders(sorted_orders)
+                    except ValueError as exc:
+                        self._run_repo.update_status(
+                            run_id,
+                            status="failed",
+                            error_message=f"Portfolio.apply_orders raised at {day}: {exc}",
+                        )
+                        raise
+                    last_rebalance_date = day
+                    cumulative_cost += decision.costs.total()
 
             decisions.append(decision)
 

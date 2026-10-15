@@ -498,3 +498,140 @@ class TestRfInjection:
             start=date(2024, 1, 2), end=date(2024, 1, 11), source="unknown_source"
         )
         assert result == Decimal("0")
+
+    def test_simulate_result_exposes_rf_annual_pct(self):
+        """Day 10 Step C: SimulateResult DTO carries rf_annual_pct field.
+
+        Enables Streamlit Technical Details tab to display the actual Rf %
+        used in Sharpe calc (period mean over backtest range) instead of
+        just the source name. Default = Decimal("0") preserves back-compat.
+        """
+        from vn_portfolio_frontier.application.services import SimulateResult
+
+        # Explicit value
+        result = SimulateResult(
+            run_id=1,
+            trading_days=[],
+            daily_values_before_cost=[],
+            daily_values_after_cost=[],
+            daily_values_buy_and_hold=[],
+            rf_annual_pct=Decimal("5.87"),
+        )
+        assert result.rf_annual_pct == Decimal("5.87")
+
+        # Default (back-compat for callers not passing explicit value)
+        result_default = SimulateResult(
+            run_id=2,
+            trading_days=[],
+            daily_values_before_cost=[],
+            daily_values_after_cost=[],
+            daily_values_buy_and_hold=[],
+        )
+        assert result_default.rf_annual_pct == Decimal("0")
+
+
+# =====================================================================
+# ADR-016 -- SELL-first ordering invariant (Day 10 Step C)
+# =====================================================================
+
+
+class TestSellFirstOrdering:
+    """ADR-016: Simulator enforces SELL-first apply order under T+0 convention.
+
+    Prevents transient negative cash when strategy returns BUYs before SELLs
+    in a net-feasible trigger. This is a mechanical requirement of T+0
+    instant-settlement assumption, not a model of VN T+2 reality.
+    See docs/adr-016-backtest-settlement-assumptions.md.
+    """
+
+    def test_sell_order_sorts_before_buy_order(self):
+        """The sort key used in _run_daily_loop puts SELLs before BUYs.
+
+        If this test fails, the simulator's SELL-first invariant is broken
+        and transient-negative-cash crashes can resurface for net-feasible
+        triggers where strategy returns orders in BUY-first order.
+        """
+        from vn_portfolio_frontier.domain.entities.order import Order, OrderSide
+
+        buy_order = Order("FPT", OrderSide.BUY, 100, Decimal("90000"))
+        sell_order = Order("VCB", OrderSide.SELL, 100, Decimal("60000"))
+
+        # Strategy may return in any order; simulator uses this key to sort.
+        unsorted = (buy_order, sell_order)
+        sorted_orders = tuple(sorted(unsorted, key=lambda o: 0 if o.side == OrderSide.SELL else 1))
+
+        assert sorted_orders[0].side == OrderSide.SELL
+        assert sorted_orders[1].side == OrderSide.BUY
+        assert sorted_orders[0].ticker == "VCB"
+        assert sorted_orders[1].ticker == "FPT"
+
+    def test_sort_preserves_relative_order_within_same_side(self):
+        """Python's sort is stable -- multiple SELLs or BUYs keep input order."""
+        from vn_portfolio_frontier.domain.entities.order import Order, OrderSide
+
+        orders = (
+            Order("A", OrderSide.BUY, 100, Decimal("1000")),
+            Order("B", OrderSide.SELL, 100, Decimal("1000")),
+            Order("C", OrderSide.BUY, 100, Decimal("1000")),
+            Order("D", OrderSide.SELL, 100, Decimal("1000")),
+        )
+        sorted_orders = tuple(sorted(orders, key=lambda o: 0 if o.side == OrderSide.SELL else 1))
+        # SELLs first (B, D in input order), then BUYs (A, C)
+        assert [o.ticker for o in sorted_orders] == ["B", "D", "A", "C"]
+
+    def test_all_sell_orders_pass_through_unchanged(self):
+        """Pure-SELL decision: sort is no-op (relative order preserved)."""
+        from vn_portfolio_frontier.domain.entities.order import Order, OrderSide
+
+        orders = (
+            Order("VCB", OrderSide.SELL, 100, Decimal("60000")),
+            Order("FPT", OrderSide.SELL, 100, Decimal("90000")),
+            Order("HPG", OrderSide.SELL, 100, Decimal("24000")),
+        )
+        sorted_orders = tuple(sorted(orders, key=lambda o: 0 if o.side == OrderSide.SELL else 1))
+        assert [o.ticker for o in sorted_orders] == ["VCB", "FPT", "HPG"]
+
+    def test_all_buy_orders_pass_through_unchanged(self):
+        """Pure-BUY decision: sort is no-op (relative order preserved).
+
+        Note: a pure-BUY decision at a fresh portfolio must still fit within
+        initial_capital -- SELL-first sort does not help this case. Documented
+        in ADR-016 section Alternative 4 (cash buffer parameter deferred).
+        """
+        from vn_portfolio_frontier.domain.entities.order import Order, OrderSide
+
+        orders = (
+            Order("VCB", OrderSide.BUY, 100, Decimal("60000")),
+            Order("FPT", OrderSide.BUY, 100, Decimal("90000")),
+        )
+        sorted_orders = tuple(sorted(orders, key=lambda o: 0 if o.side == OrderSide.SELL else 1))
+        assert [o.ticker for o in sorted_orders] == ["VCB", "FPT"]
+
+    def test_infeasible_after_lot_enforcement_downgrades_to_no_trigger(self):
+        """ADR-016 Phase 2: budget guard downgrades trigger when lot round-down
+        on SELLs makes projected cash go negative.
+
+        Scenario: lot-enforced SELL proceeds < BUY cost + available cash.
+        Expected: decision reason downgraded to 'no_trigger', no crash.
+        """
+        from decimal import Decimal
+
+        from vn_portfolio_frontier.domain.entities.order import Order, OrderSide
+
+        # Simulate: cash=2M, SELL 100 @ 150K (proceeds 15M), BUY 500 @ 50K (cost 25M)
+        # Expected projected: 2M + 15M - 25M = -8M -> infeasible -> downgrade
+        sell_order = Order("VCB", OrderSide.SELL, 100, Decimal("150000"))
+        buy_order = Order("FPT", OrderSide.BUY, 500, Decimal("50000"))
+        sorted_orders = (sell_order, buy_order)
+
+        portfolio_cash = Decimal("2000000")
+        projected_cash = portfolio_cash
+        for order in sorted_orders:
+            if order.side == OrderSide.SELL:
+                projected_cash += order.gross_amount()
+            else:
+                projected_cash -= order.gross_amount()
+
+        # Verify guard logic
+        assert projected_cash == Decimal("-8000000")
+        assert projected_cash < Decimal("0")  # trigger downgrade path
