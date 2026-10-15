@@ -102,6 +102,11 @@ class SimulateRequest:
     tax_pct: Decimal = Decimal("0.001")
     market_impact_bps: int = 10
 
+    # Rf source for Sharpe (Day 9 Step B, benchmark schema). Default 'zero'
+    # preserves Perold 1988 backward compat; production Streamlit sets
+    # 'vcb_13m_deposit' (retail opportunity cost, big-4 bank 12M savings).
+    rf_source: str = "zero"
+
     def __post_init__(self) -> None:
         if self.backtest_start > self.backtest_end:
             raise ValueError(
@@ -114,6 +119,11 @@ class SimulateRequest:
         if self.initial_capital <= Decimal("0"):
             raise ValueError(
                 f"SimulateRequest: initial_capital must be positive, got " f"{self.initial_capital}"
+            )
+        valid_rf = ("zero", "vcb_13m_deposit", "sbv_refinance", "vn_bond_1y")
+        if self.rf_source not in valid_rf:
+            raise ValueError(
+                f"SimulateRequest: rf_source must be one of {valid_rf}, " f"got {self.rf_source!r}"
             )
 
 
@@ -242,10 +252,14 @@ class RebalanceSimulator:
             on_progress=on_progress,
         )
 
+        rf_annual_pct = self._fetch_rf_annual_pct(
+            request.backtest_start, request.backtest_end, request.rf_source
+        )
         kpis = self._compute_kpis(
-            decisions=decisions,
-            daily_values_after=daily_values_after,
-            daily_values_before=daily_values_before,
+            decisions,
+            daily_values_after,
+            daily_values_before,
+            rf_annual_pct=rf_annual_pct,
         )
 
         self._run_repo.update_status(run_id, status="completed", kpis=kpis)
@@ -418,11 +432,72 @@ class RebalanceSimulator:
             return decision
         return replace(decision, orders=enforced_tuple)
 
+    def _fetch_rf_annual_pct(self, start: date, end: date, source: str) -> Decimal:
+        """Fetch mean annual Rf % for period and source (Day 9 Step B).
+
+        Queries benchmark schema inline (not through port) for MVP ship speed.
+        Rf series averaged over period as constant for Sharpe. Time-varying Rf
+        + BenchmarkRepository port abstraction deferred to Sprint 15 polish.
+
+        Returns Decimal("0") if source='zero' (backward compat) or if no data
+        available for source in range (logs warning, falls back to zero).
+
+        Hex boundary note: application layer directly imports psycopg2 + reads
+        Settings. Accepted trade-off: MVP ship speed vs strict Hex. Document
+        as Sprint 15 refactor target.
+        """
+        if source == "zero":
+            return Decimal("0")
+
+        queries = {
+            "vcb_13m_deposit": (
+                "SELECT AVG(interest_13m) FROM benchmark.bank_deposit_rate "
+                "WHERE bank_code = 'VCB' AND rate_date BETWEEN %s AND %s "
+                "AND interest_13m IS NOT NULL"
+            ),
+            "sbv_refinance": (
+                "SELECT AVG(refinance_pct) FROM benchmark.sbv_policy_rate "
+                "WHERE rate_date BETWEEN %s AND %s"
+            ),
+            "vn_bond_1y": (
+                "SELECT AVG(yield_close) FROM benchmark.vn_bond_yield "
+                "WHERE tenor = '1Y' AND yield_date BETWEEN %s AND %s"
+            ),
+        }
+        sql = queries.get(source)
+        if sql is None:
+            return Decimal("0")
+
+        import logging  # noqa: PLC0415
+
+        import psycopg2  # noqa: PLC0415
+
+        from vn_portfolio_frontier.config import get_settings  # noqa: PLC0415
+
+        try:
+            settings = get_settings()
+            with (
+                psycopg2.connect(settings.neon_database_url.get_secret_value()) as conn,
+                conn.cursor() as cur,
+            ):
+                cur.execute(sql, (start, end))
+                row = cur.fetchone()
+        except Exception as exc:
+            logging.getLogger(__name__).warning(
+                "Rf fetch failed for source=%s: %s - falling back to 0", source, exc
+            )
+            return Decimal("0")
+
+        if not row or row[0] is None:
+            return Decimal("0")
+        return Decimal(str(row[0]))
+
     @staticmethod
     def _compute_kpis(
         decisions: list[RebalanceDecision],
         daily_values_after: list[Decimal],
         daily_values_before: list[Decimal],
+        rf_annual_pct: Decimal = Decimal("0"),
     ) -> dict[str, Any]:
         """Aggregate output KPIs from the daily loop results.
 
@@ -465,8 +540,8 @@ class RebalanceSimulator:
             "n_rebalances": n_rebalances,
             "total_cost_bps": total_cost_bps,
             "turnover_avg_pct": turnover_avg_pct,
-            "sharpe_before_cost": _sharpe(daily_values_before),
-            "sharpe_after_cost": _sharpe(daily_values_after),
+            "sharpe_before_cost": _sharpe(daily_values_before, rf_annual_pct),
+            "sharpe_after_cost": _sharpe(daily_values_after, rf_annual_pct),
             "max_drawdown_pct": _max_drawdown(daily_values_after),
             "volatility_annualized_pct": _annualized_volatility(daily_values_after),
         }
@@ -518,31 +593,33 @@ class RebalanceSimulator:
 # =====================================================================
 
 
-def _sharpe(values: list[Decimal]) -> Decimal | None:
-    """Annualised Sharpe ratio with risk-free rate = 0.
+def _sharpe(values: list[Decimal], rf_annual_pct: Decimal = Decimal("0")) -> Decimal | None:
+    """Annualised Sharpe ratio with configurable risk-free rate.
 
-    Standard thesis simplification per Perold (1988) - more rigorous
-    computation would subtract a risk-free rate (Vietnam 3M T-bill ~3-4% p.a.
-    in 2026). Rf is parameterised in the F1 Efficient Frontier module and
-    reused there when a per-run Sharpe is recomputed with Rf > 0.
+    Day 9 Step B upgrade: Rf now parameterised via SimulateRequest.rf_source
+    (resolved to annual % at simulate() entry via Simulator._fetch_rf_annual_pct).
+    Default rf_annual_pct=0 keeps Perold (1988) backward-compat formula.
 
     Methodology:
-        returns[i] = (V[i] - V[i-1]) / V[i-1]           # daily simple returns
-        mean, sample_std = statistics of returns
-        sharpe = (mean / sample_std) * sqrt(252)        # annualised, Rf=0
+        returns[i] = (V[i] - V[i-1]) / V[i-1]      # daily simple returns
+        daily_rf = rf_annual_pct / 100 / 252       # % -> decimal, annual -> daily
+        sharpe = ((mean(returns) - daily_rf) / std(returns)) * sqrt(252)
 
-    Returns None (-> NULL in DB) when the input has < 2 values or when the
-    sample standard deviation is zero (e.g., 1-day backtest, flat value series).
+    Note: std is of raw returns (not excess). When Rf is deterministic constant,
+    subtracting it doesn't change variance - standard convention.
+
+    Returns None (-> NULL in DB) when input has < 2 values or sample std = 0.
     """
     if len(values) < 2:
         return None
     returns = [float((values[i] - values[i - 1]) / values[i - 1]) for i in range(1, len(values))]
     mean = sum(returns) / len(returns)
+    daily_rf = float(rf_annual_pct) / 100.0 / TRADING_DAYS_PER_YEAR
     variance = sum((r - mean) ** 2 for r in returns) / (len(returns) - 1)
     std = math.sqrt(variance)
     if std == 0:
         return None
-    sharpe_annualised = (mean / std) * math.sqrt(TRADING_DAYS_PER_YEAR)
+    sharpe_annualised = ((mean - daily_rf) / std) * math.sqrt(TRADING_DAYS_PER_YEAR)
     return Decimal(str(sharpe_annualised)).quantize(Decimal("0.0001"))
 
 
