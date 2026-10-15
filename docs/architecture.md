@@ -725,6 +725,18 @@ Reference artifacts (thesis repo `vn-p2-report`):
 - `analysis/feature-2/package-diagram.puml` — 4-layer dependency direction
 - `analysis/system/component-diagram.puml` — ports + adapters mapping
 
+## ADR-016: Backtest Settlement Assumptions (T+0 vs T+2)
+
+**Status:** Accepted (2026-10-15)
+
+**Context:** VN HSX/HNX settle T+2 cho cả cash và shares. SELL hôm T+0 → cash credited 15:00 T+2 → không dùng được cùng ngày cho BUY (unless margin-funded hoặc "mua đè" product). Production VN rebalance dùng phasing (SELL D, BUY D+2), margin-funded, hoặc cash buffer 2-5%.
+
+**Decision:** P2 backtest adopts **T+0 instant-settlement convention** (academic standard per Markowitz 1952, Sharpe 1994; default trong LEAN/zipline/Bloomberg PORT). Simulator enforces SELL-first iteration order khi apply orders để prevent transient negative cash — maintain T+0 cash neutrality.
+
+**Scope boundary:** P2 là portfolio optimizer (strategy evaluation), không phải execution engine. T+2 settlement + margin + phasing modeling deferred to thesis Phase 3.
+
+**See:** [adr-016-backtest-settlement-assumptions.md](./adr-016-backtest-settlement-assumptions.md) for full rationale, alternatives considered, consequences, and reversibility.
+
 # Open decisions (pending)
 
 ## ADR-007: Prefect vs Apache Airflow for workflow orchestration
