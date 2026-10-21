@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Any
 import psycopg2
 
 from vn_portfolio_frontier.application.services import (
+    FrontierService,
     RebalanceSimulator,
     StrategyFactory,
 )
@@ -114,4 +115,18 @@ class AppFactory:
             run_repo=self.run_repo(),
             decision_repo=self.decision_repo(),
             strategy_factory=self._strategy_factory,
+        )
+
+    def frontier_service(self) -> FrontierService:
+        """Build FrontierService for F1 Efficient Frontier (Day 11).
+
+        Reuses Simulator._fetch_rf_annual_pct for Rf fetching (Day 9 Step B
+        benchmark schema). The method is stateless (reads Settings directly),
+        so binding via a disposable Simulator instance is safe. Sprint 15
+        polish option: extract to standalone RfFetcher utility module.
+        """
+        disposable_sim = self.rebalance_simulator()
+        return FrontierService(
+            price_repo=self.price_repo(),
+            rf_fetcher=disposable_sim._fetch_rf_annual_pct,  # noqa: SLF001
         )

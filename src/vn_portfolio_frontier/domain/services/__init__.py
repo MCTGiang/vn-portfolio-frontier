@@ -20,7 +20,17 @@ Example
 """
 
 from vn_portfolio_frontier.domain.services.cost_calculator import CostCalculator
+from vn_portfolio_frontier.domain.services.frontier_optimizer import (
+    FrontierCurve,
+    FrontierOptimizer,
+    PortfolioWeights,
+    WeightBounds,
+)
 
 __all__ = [
     "CostCalculator",
+    "FrontierCurve",
+    "FrontierOptimizer",
+    "PortfolioWeights",
+    "WeightBounds",
 ]
