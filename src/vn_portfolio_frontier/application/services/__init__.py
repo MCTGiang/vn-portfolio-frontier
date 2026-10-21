@@ -12,6 +12,11 @@ Public exports:
       building the Simulator (AppFactory, tests)
 """
 
+from vn_portfolio_frontier.application.services.frontier_service import (
+    FrontierRequest,
+    FrontierResult,
+    FrontierService,
+)
 from vn_portfolio_frontier.application.services.rebalance_simulator import (
     ProgressCallback,
     RebalanceSimulator,
@@ -21,6 +26,9 @@ from vn_portfolio_frontier.application.services.rebalance_simulator import (
 )
 
 __all__ = [
+    "FrontierRequest",
+    "FrontierResult",
+    "FrontierService",
     "ProgressCallback",
     "RebalanceSimulator",
     "SimulateRequest",

@@ -58,6 +58,61 @@ TRADING_DAYS_PER_YEAR = 252
 
 # v11: Data scope constants (from Sprint 10 B.3 VN30 ingest)
 DATA_MIN_DATE = date(2021, 1, 4)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _get_data_max_date() -> date:
+    """Fetch max available trade_date from DB (cached 1h).
+
+    Day 11 Cụm 3f fix: Prevents date_input allowing selection beyond data
+    availability. Smoke test observed UI showed results for 17-20/10 while
+    DB only had data up to 16/10 — silent data integrity bug.
+    """
+    try:
+        from vn_portfolio_frontier.infrastructure.factory import AppFactory
+
+        factory = AppFactory()
+        latest = factory.price_repo().get_latest_dates()
+        return max(latest.values()) if latest else date.today()
+    except Exception:
+        # Fallback to today if DB unreachable (dev offline mode)
+        return date.today()
+
+
+def _sharpe_badge(sharpe: float | None) -> str:
+    """Return HTML pill badge for Sharpe ratio quality.
+
+    Day 11 Cụm 3f #15: synced with _assess_sharpe (5-tier) + _SEV_CLASS color
+    mapping used by result KPI cards, so F1 badge and Simulation KPI tell the
+    same story with the same labels (kém/yếu/trung bình/tốt/xuất sắc).
+
+    Thresholds (via _assess_sharpe):
+        - < 0:    kém     (red)
+        - 0-0.5:  yếu     (yellow)
+        - 0.5-1:  trung bình (grey)
+        - 1-2:    tốt     (green)
+        - >= 2:   xuất sắc (green)
+    """
+    if sharpe is None:
+        return ""
+    label = _assess_sharpe(sharpe)
+    sev_class = _sev_class(label)
+    # Color mapping aligned with _SEV_CLASS → sev-{class}-bg CSS variants
+    color_map = {
+        "good": ("#D1FAE5", "#065F46"),  # green
+        "neutral": ("#E5E7EB", "#374151"),  # grey
+        "warning": ("#FEF3C7", "#92400E"),  # yellow
+        "bad": ("#FEE2E2", "#991B1B"),  # red
+        "plain": ("#F3F4F6", "#6B7280"),  # muted
+    }
+    bg, fg = color_map.get(sev_class, color_map["plain"])
+    return (
+        f'<span style="display:inline-block;padding:2px 10px;margin-left:8px;'
+        f"border-radius:999px;background:{bg};color:{fg};"
+        f'font-size:11px;font-weight:600;vertical-align:middle;">{label}</span>'
+    )
+
+
 MIN_RECOMMENDED_YEARS = 2.0
 
 
@@ -324,6 +379,7 @@ TRANSLATIONS = {
             "So sánh với các lựa chọn khác (Mua rồi giữ, gửi tiết kiệm, quỹ mở)",
             "Lượng hóa rủi ro trước: mức sụt giảm tối đa, mức dao động — giúp chuẩn bị tâm lý",
             "Lượng hóa chi phí trước: biết trước phí giao dịch ăn vào lợi nhuận bao nhiêu",
+            "**Gợi ý tỷ trọng tối ưu** theo lý thuyết Markowitz (1952) — chọn mức rủi ro mong muốn, hệ thống đề xuất tỷ trọng cân bằng phù hợp",
         ],
         "about_limit_title": "⚠️ Giới hạn (quan trọng để không hiểu nhầm)",
         "about_limit_list": [
@@ -354,6 +410,35 @@ TRANSLATIONS = {
         "rf_zero": "Không điều chỉnh Rf (Perold 1988)",
         "rf_source_caption": "ℹ️ Giá trị thực tế hiển thị trong tab Chi tiết kỹ thuật sau khi chạy mô phỏng",
         "rf_actual_fmt": "Rf thực tế dùng: {value}%/năm (trung bình qua giai đoạn backtest)",
+        # ==== F1 Efficient Frontier (Day 11) ====
+        "f1_section_header": "📈 Đường biên hiệu quả (F1)",
+        "f1_section_intro": "**📌 Workflow F1 (Tùy chọn):**\n\n1. Chọn tối thiểu 2 mã + giai đoạn kiểm thử ở sidebar\n2. Điều chỉnh tham số bên dưới nếu cần (giới hạn 40% + 20 điểm là mặc định tốt)\n3. Nhấn 🔍 **Tính đường biên hiệu quả** → hệ thống tính 20 danh mục tối ưu + 3 danh mục tham chiếu\n4. Trượt thanh **Chọn điểm** để xem từng danh mục (lợi suất/rủi ro/tỷ trọng)\n5. Nhấn ⚡ **Dùng tỷ trọng này cho mô phỏng** → tỷ trọng tự chuyển sang sidebar\n6. Quay lại sidebar nhấn **Chạy mô phỏng** để backtest với tỷ trọng F1\n\n*Bỏ qua F1 → nhập tỷ trọng tay ở sidebar.*",
+        "f1_compute_btn": "🔍 Tính đường biên hiệu quả",
+        "f1_compute_btn_help": "Dựa trên dữ liệu lịch sử theo giai đoạn kiểm thử + rổ cổ phiếu đã chọn + nguồn Rf",
+        "f1_need_min_tickers": "ℹ️ Cần chọn ≥ 2 mã cổ phiếu ở sidebar trước khi tính F1",
+        "f1_upper_bound_label": "Giới hạn tỷ trọng tối đa/mã",
+        "f1_upper_bound_help": "Mức tối đa cho phép phân bổ vào 1 mã. Mặc định 40% (phổ biến cho nhà đầu tư cá nhân VN)",
+        "f1_n_points_label": "Số điểm trên đường biên",
+        "f1_n_points_help": "Càng nhiều điểm = đường cong càng mịn. Mặc định 20",
+        "f1_computing": "Đang tính đường biên hiệu quả...",
+        "f1_computed_ok": "✓ Đã tính xong đường biên {n} điểm từ {days} ngày dữ liệu ({rows} observations)",
+        "f1_chart_title": "Đường biên hiệu quả — tối ưu rủi ro vs lợi suất",
+        "f1_chart_x_label": "Rủi ro (độ lệch chuẩn %/năm)",
+        "f1_chart_y_label": "Lợi suất kỳ vọng (%/năm)",
+        "f1_curve_label": "Đường biên",
+        "f1_slider_label": "Chọn điểm trên đường biên",
+        "f1_slider_help": "Trượt để chọn điểm có tỷ lệ rủi ro/lợi suất mong muốn. Trái = ít rủi ro + lợi suất thấp; phải = rủi ro cao + lợi suất cao",
+        "f1_selected_point_header": "📌 Điểm đã chọn",
+        "f1_selected_point_metrics": "Lợi suất kỳ vọng: **{ret}%/năm** · Rủi ro: **{vol}%/năm** · Sharpe: **{sharpe}**",
+        "f1_ex_ante_caption": "📘 **Số liệu lý thuyết (ex-ante)** — Lợi suất/Sharpe trên là trung bình số học của returns quá khứ. Simulation thực tế có thể khác do rebalancing threshold + chi phí giao dịch + path-dependence. **Rủi ro MAX** (max drawdown) chỉ xuất hiện ở Kết quả mô phỏng, không có ở F1.",
+        "f1_weights_table_header": "Tỷ trọng danh mục",
+        "f1_apply_btn": "⚡ Dùng tỷ trọng này cho mô phỏng",
+        "f1_apply_success": "✓ Đã áp dụng tỷ trọng. Nhấn 'Chạy mô phỏng' để kiểm thử.",
+        "f1_ref_portfolios_header": "📊 3 danh mục tham chiếu",
+        "f1_ref_min_variance": "Rủi ro tối thiểu",
+        "f1_ref_max_sharpe": "Sharpe tối đa",
+        "f1_ref_risk_parity": "Cân bằng rủi ro",
+        "f1_defense_note": "ℹ️ F1 là ứng dụng của lý thuyết Markowitz (1952). Các điểm trên đường biên tối ưu rủi ro cho mỗi mức lợi suất kỳ vọng. 3 điểm tham chiếu đại diện cho 3 chiến lược phổ biến.",
         "update_failed": "Thất bại",
         "tickers_section": "📊 Danh mục của tôi",
         "ticker_scope_info": "📌 Scope: 30 cổ phiếu VN30 (HOSE) — dữ liệu từ {min_date} đến {max_date}",
@@ -453,7 +538,7 @@ TRANSLATIONS = {
         "kpi_tier_c_header": "🔧 Chỉ số kỹ thuật",
         "kpi_rebalances": "Số giao dịch",
         "kpi_total_cost_pct": "Tổng chi phí",
-        "kpi_turnover": "Xoay vòng/lần",
+        "kpi_turnover": "Mức xoay vòng/lần cân đối",
         "kpi_sharpe_before": "Hiệu quả rủi ro (trước phí)",
         "kpi_sharpe_after": "Hiệu quả rủi ro (Sharpe)",
         "kpi_mdd": "Sụt giảm sâu nhất",
@@ -496,9 +581,10 @@ TRANSLATIONS = {
         "help_step1": "**Bước 1:** Nhập vốn đầu tư (triệu VND)",
         "help_step2": "**Bước 2:** Gõ mã (VD: VCB) rồi Enter để thêm, nhập tỷ trọng % (tổng = 100%)",
         "help_step3": "**Bước 3:** Chọn giai đoạn test",
-        "help_step4": "**Bước 4:** (Tùy chọn) Mở 'Nâng cao' để điều chỉnh ngưỡng và chi phí",
-        "help_step5": "**Bước 5:** Nhấn 'Chạy mô phỏng'",
-        "help_step6": "**Bước 6:** Xem Tổng quan — mở các tab khác nếu muốn chi tiết",
+        "help_step4": "**Bước 4:** (Tùy chọn) Mở 'Nâng cao' để điều chỉnh ngưỡng + chi phí + chọn nguồn Rf",
+        "help_step5": "**Bước 5:** (Tùy chọn) Dùng F1 Đường biên hiệu quả ở khu vực chính → tìm danh mục Markowitz tối ưu → áp dụng tỷ trọng vào sidebar",
+        "help_step6": "**Bước 6:** Nhấn 'Chạy mô phỏng' ở sidebar để backtest",
+        "help_step7": "**Bước 7:** Xem Tổng quan — mở các tab Nhật ký cân đối / Chi tiết kỹ thuật nếu cần chi tiết",
         "idle_msg": "Hoàn tất thiết lập ở sidebar bên trái rồi nhấn Chạy mô phỏng",
         "failed_msg": "Mô phỏng thất bại: {error}",
         "footer_meta": "Mô phỏng #{run_id} • {ts}",
@@ -518,10 +604,11 @@ TRANSLATIONS = {
         "about_purpose_body": "Helps investors backtest a rebalancing strategy before deploying real capital, based on VN30 historical data.",
         "about_value_title": "📚 Practical value",
         "about_value_list": [
-            "Understand if a strategy is effective across market regimes (bull/bear/sideways)",
-            "Compare with alternatives (Buy & Hold, savings, mutual funds)",
-            "Quantify risk upfront: max drawdown, volatility — mental preparation",
-            "Quantify costs upfront: transaction fee impact on returns",
+            "Understand if strategy works across market phases (up/down/sideways)",
+            "Compare vs alternatives (Buy & Hold, savings, mutual funds)",
+            "Quantify risk upfront: max drawdown, volatility — helps mental preparation",
+            "Quantify costs upfront: know how much fees eat into profits",
+            "**Optimal weight recommendations** via Markowitz (1952) theory — select desired risk level, system suggests balanced portfolio weights",
         ],
         "about_limit_title": "⚠️ Limitations (important)",
         "about_limit_list": [
@@ -553,6 +640,35 @@ TRANSLATIONS = {
         "rf_zero": "No Rf adjustment (Perold 1988)",
         "rf_source_caption": "ℹ️ Actual value shown in Technical Details tab after simulation runs",
         "rf_actual_fmt": "Actual Rf used: {value}%/year (mean across backtest period)",
+        # ==== F1 Efficient Frontier (Day 11) ====
+        "f1_section_header": "📈 Efficient Frontier (F1)",
+        "f1_section_intro": "**📌 F1 workflow (Optional):**\n\n1. Pick ≥ 2 tickers + backtest period in sidebar\n2. Adjust params below if needed (40% cap + 20 points are good defaults)\n3. Click 🔍 **Compute efficient frontier** → system computes 20 optimal portfolios + 3 reference\n4. Slide **Select point** to inspect each (return/risk/weights)\n5. Click ⚡ **Use these weights for simulation** → weights auto-transfer to sidebar\n6. Return to sidebar, click **Run simulation** to backtest with F1 weights\n\n*Skip F1 → enter weights manually in sidebar.*",
+        "f1_compute_btn": "🔍 Compute efficient frontier",
+        "f1_compute_btn_help": "Based on historical data within selected backtest window + ticker universe + Rf source",
+        "f1_need_min_tickers": "ℹ️ Select ≥ 2 tickers in the sidebar before computing F1",
+        "f1_upper_bound_label": "Max weight per asset",
+        "f1_upper_bound_help": "Diversification cap on single-asset allocation. Default 40% (common for VN retail investors)",
+        "f1_n_points_label": "Number of frontier points",
+        "f1_n_points_help": "More points = smoother curve. Default 20",
+        "f1_computing": "Computing efficient frontier...",
+        "f1_computed_ok": "✓ Frontier computed: {n} points from {days} days of data ({rows} observations)",
+        "f1_chart_title": "Efficient Frontier - risk/return optimization",
+        "f1_chart_x_label": "Risk (annualized std deviation %)",
+        "f1_chart_y_label": "Expected return (%/year)",
+        "f1_curve_label": "Frontier",
+        "f1_slider_label": "Select point on frontier",
+        "f1_slider_help": "Slide to pick desired risk/return ratio. Left = lower risk + lower return; right = higher risk + higher return",
+        "f1_selected_point_header": "📌 Selected point",
+        "f1_selected_point_metrics": "Expected return: **{ret}%/year** · Risk: **{vol}%/year** · Sharpe: **{sharpe}**",
+        "f1_ex_ante_caption": "📘 **Theoretical values (ex-ante)** — Return/Sharpe above are arithmetic means of historical returns. Actual simulation may differ due to rebalancing threshold + transaction costs + path-dependence. **Max drawdown** only appears in Simulation results, not in F1.",
+        "f1_weights_table_header": "Portfolio weights",
+        "f1_apply_btn": "⚡ Use these weights for simulation",
+        "f1_apply_success": "✓ Weights applied. Click 'Run simulation' to backtest.",
+        "f1_ref_portfolios_header": "📊 3 reference portfolios",
+        "f1_ref_min_variance": "Min Variance",
+        "f1_ref_max_sharpe": "Max Sharpe",
+        "f1_ref_risk_parity": "Risk Parity",
+        "f1_defense_note": "ℹ️ F1 implements Markowitz (1952) portfolio theory. Points on the frontier are risk-optimal for each expected return level. The 3 reference portfolios represent common strategies.",
         "update_failed": "Failed",
         "tickers_section": "📊 My portfolio",
         "ticker_scope_info": "📌 Scope: 30 VN30 constituents (HOSE) — data from {min_date} to {max_date}",
@@ -649,7 +765,7 @@ TRANSLATIONS = {
         "kpi_tier_c_header": "🔧 Technical",
         "kpi_rebalances": "Transactions",
         "kpi_total_cost_pct": "Total cost",
-        "kpi_turnover": "Turnover/time",
+        "kpi_turnover": "Turnover per rebalance",
         "kpi_sharpe_before": "Sharpe (before cost)",
         "kpi_sharpe_after": "Sharpe (after cost)",
         "kpi_mdd": "Max drawdown",
@@ -690,11 +806,12 @@ TRANSLATIONS = {
         "sev_na": "N/A",
         "help_header": "📖 User guide",
         "help_step1": "**Step 1:** Enter capital (million VND)",
-        "help_step2": "**Step 2:** Type ticker (e.g. VCB) then Enter to add, enter weight % (sum = 100%)",
-        "help_step3": "**Step 3:** Pick test period",
-        "help_step4": "**Step 4:** (Optional) Open 'Advanced' to tweak threshold and costs",
-        "help_step5": "**Step 5:** Click 'Run'",
-        "help_step6": "**Step 6:** Read Overview — open other tabs for details",
+        "help_step2": "**Step 2:** Type ticker (e.g. VCB) then Enter to add, pick weight allocation mode",
+        "help_step3": "**Step 3:** Select strategy backtest period (data from 04/01/2021)",
+        "help_step4": "**Step 4:** (Optional) Open 'Advanced' to tweak threshold + costs + Rf source",
+        "help_step5": "**Step 5:** (Optional) Use F1 Efficient Frontier in main area → find optimal Markowitz portfolio → apply weights to sidebar",
+        "help_step6": "**Step 6:** Click 'Run simulation' in sidebar to backtest",
+        "help_step7": "**Step 7:** View Overview — open Journal / Technical Details tabs for details",
         "idle_msg": "Complete setup in the left sidebar then click Run Simulation",
         "failed_msg": "Simulation failed: {error}",
         "footer_meta": "Run #{run_id} • {ts}",
@@ -1135,7 +1252,11 @@ def _render_sidebar():
     )
     initial_capital = Decimal(str(initial_capital_m)) * Decimal("1000000")
 
-    if st.sidebar.button(_t("update_prices_btn"), use_container_width=True):
+    if st.sidebar.button(
+        _t("update_prices_btn"),
+        type="primary",
+        use_container_width=True,
+    ):
         with st.spinner(_t("updating_prices")):
             ok, msg = _run_sync_prices()
             if ok:
@@ -1203,6 +1324,9 @@ def _render_sidebar():
         n = len(st.session_state.selected_tickers)
 
         # Mode toggle: Phân bổ đều vs Nhập tỷ trọng kỳ vọng
+        # Day 11 Cụm 3e: default to manual mode when F1 weights applied
+        _f1_source = st.session_state.get("weights_source", "")
+        _default_mode_index = 1 if _f1_source.startswith("F1") else 0
         weight_mode = st.sidebar.radio(
             _t("weight_mode_label"),
             options=["equal", "manual"],
@@ -1211,23 +1335,31 @@ def _render_sidebar():
             ),
             captions=[_t("weight_mode_equal_help"), _t("weight_mode_manual_help")],
             horizontal=True,
-            index=0,
+            index=_default_mode_index,
             key="weight_mode",
         )
 
         if weight_mode == "equal":
-            # Auto-distribute 1/N — preview chip, no editable inputs
-            equal_pct = 100.0 / n
+            # Day 11 Cụm 3e: compute weights (preserve F1-applied if source matches)
+            if not st.session_state.get("weights_source", "").startswith("F1"):
+                # Auto-distribute 1/N
+                equal_pct_val = 100.0 / n
+                for ticker in list(st.session_state.selected_tickers):
+                    weights_pct[ticker] = equal_pct_val
+                    st.session_state.weights_pct[ticker] = equal_pct_val
+            else:
+                # F1 weights preserved — read from session state (per-ticker, not uniform)
+                for ticker in list(st.session_state.selected_tickers):
+                    weights_pct[ticker] = st.session_state.weights_pct.get(ticker, 0.0)
+            # Render preview rows with per-ticker % + remove button
             for ticker in list(st.session_state.selected_tickers):
-                weights_pct[ticker] = equal_pct
-                st.session_state.weights_pct[ticker] = equal_pct
-                # Still allow remove with ✕
                 row_c1, row_c2 = st.sidebar.columns([5, 1])
                 with row_c1:
+                    _pct_display = weights_pct.get(ticker, 0.0)
                     st.markdown(
                         f'<div style="padding:6px 10px;background:#F9FAFB;'
                         f'border:1px solid #E5E7EB;border-radius:4px;font-size:13px;">'
-                        f"<b>{ticker}</b>: {equal_pct:.2f}%</div>",
+                        f"<b>{ticker}</b>: {_pct_display:.2f}%</div>",
                         unsafe_allow_html=True,
                     )
                 with row_c2:
@@ -1240,7 +1372,13 @@ def _render_sidebar():
                         if ticker in st.session_state.weights_pct:
                             del st.session_state.weights_pct[ticker]
                         st.rerun()
-            st.sidebar.info(f"✓ {_t('weight_mode_equal_help')}: {equal_pct:.2f}% × {n} mã")
+            # Info chip: show average or label based on source
+            _avg_pct = sum(weights_pct.values()) / n if n > 0 else 0.0
+            _source = st.session_state.get("weights_source", "")
+            if _source.startswith("F1"):
+                st.sidebar.info(f"📌 Từ {_source} — tổng {sum(weights_pct.values()):.2f}%")
+            else:
+                st.sidebar.info(f"✓ {_t('weight_mode_equal_help')}: {_avg_pct:.2f}% × {n} mã")
         else:
             # Manual mode: per-ticker number inputs
             for ticker in list(st.session_state.selected_tickers):
@@ -1275,6 +1413,16 @@ def _render_sidebar():
     weight_sum = sum(weights_pct.values())
     target_weights = {t: p / 100.0 for t, p in weights_pct.items() if p > 0}
 
+    # Day 11 Cụm 3d: show current weights source if applied from F1
+    _weights_source = st.session_state.get("weights_source", "")
+    if _weights_source:
+        st.sidebar.markdown(
+            f'<div style="font-size:11px;color:#146026;padding:4px 8px;'
+            f"background:#F0FDF4;border-left:3px solid #146026;"
+            f'border-radius:4px;margin:6px 0;">📌 Nguồn tỷ trọng: <b>{_weights_source}</b></div>',
+            unsafe_allow_html=True,
+        )
+
     st.sidebar.subheader(_t("range_section"))
     st.sidebar.caption(_t("range_section_caption"))
     # Day 10 Step C Phase 2: period recommendation shown BEFORE date pickers
@@ -1282,22 +1430,26 @@ def _render_sidebar():
         f'<div class="period-rec">{_t("range_period_rec", min_years=MIN_RECOMMENDED_YEARS)}</div>',
         unsafe_allow_html=True,
     )
-    today = date.today()
-    # Default to 3 years (within data range) + min_value constrained
-    default_start = max(DATA_MIN_DATE, today - timedelta(days=365 * 3))
+    # Day 11 Cụm 3f: enforce DB max date (data integrity bug fix)
+    data_max_date = _get_data_max_date()
+    st.sidebar.caption(f"📅 Dữ liệu có sẵn đến **{data_max_date.strftime('%d/%m/%Y')}**")
+    # Default to 3 years (within data range), bounded by DB max date
+    default_start = max(DATA_MIN_DATE, data_max_date - timedelta(days=365 * 3))
     backtest_start = st.sidebar.date_input(
         _t("start_date_label"),
         value=default_start,
         min_value=DATA_MIN_DATE,
-        max_value=today,
+        max_value=data_max_date,
         format="DD/MM/YYYY",
+        key="backtest_start",
     )
     backtest_end = st.sidebar.date_input(
         _t("end_date_label"),
-        value=today,
+        value=data_max_date,
         min_value=DATA_MIN_DATE,
-        max_value=today,
+        max_value=data_max_date,
         format="DD/MM/YYYY",
+        key="backtest_end",
     )
     if backtest_start <= backtest_end:
         test_years = (backtest_end - backtest_start).days / 365.25
@@ -1382,7 +1534,10 @@ def _render_sidebar():
         disabled=not all_ok,
         use_container_width=True,
     )
-    if not run_pressed:
+    # Day 11 Cụm 3f #3 (X4-micro): also honor "Chạy ngay" from F1 section
+    # so user doesn't need to scroll back to sidebar after applying F1 weights
+    _f1_trigger = st.session_state.pop("f1_trigger_sim", False)
+    if not run_pressed and not _f1_trigger:
         return None
 
     return {
@@ -1966,40 +2121,43 @@ def _render_kpi_tiered(result, record):
 
     st.divider()
 
-    st.subheader(_t("kpi_tier_c_header"))
-    c7, c8 = st.columns(2)
-    with c7:
-        turnover_label = _assess_turnover_per_year(
-            record.turnover_avg_pct, record.n_rebalances, years
-        )
-        _render_kpi_card(
-            label=_t("kpi_turnover"),
-            value=(
-                f"{float(record.turnover_avg_pct) * 100:.2f}%"
-                if record.turnover_avg_pct is not None
-                else "—"
-            ),
-            severity=_sev_class(turnover_label),
-            severity_label=turnover_label,
-            help_text=_t("kpi_turnover_help"),
-            practical=_build_turnover_practical(
+    # Day 11 Cum 3f #16: wrap Technical tier in expander (collapsed default)
+    # Turnover + Gross Sharpe = advanced metrics for defense/analyst use,
+    # not primary end-user signals
+    with st.expander(_t("kpi_tier_c_header"), expanded=False):
+        c7, c8 = st.columns(2)
+        with c7:
+            turnover_label = _assess_turnover_per_year(
                 record.turnover_avg_pct, record.n_rebalances, years
-            ),
-        )
-    with c8:
-        sb_label = _assess_sharpe(record.sharpe_before_cost)
-        _render_kpi_card(
-            label=_t("kpi_sharpe_before"),
-            value=(
-                f"{float(record.sharpe_before_cost):.4f}"
-                if record.sharpe_before_cost is not None
-                else "—"
-            ),
-            severity=_sev_class(sb_label),
-            severity_label=sb_label,
-            help_text=_t("kpi_sharpe_before_help"),
-            practical=_t("kpi_practical_sharpe_before"),
-        )
+            )
+            _render_kpi_card(
+                label=_t("kpi_turnover"),
+                value=(
+                    f"{float(record.turnover_avg_pct) * 100:.2f}%"
+                    if record.turnover_avg_pct is not None
+                    else "—"
+                ),
+                severity=_sev_class(turnover_label),
+                severity_label=turnover_label,
+                help_text=_t("kpi_turnover_help"),
+                practical=_build_turnover_practical(
+                    record.turnover_avg_pct, record.n_rebalances, years
+                ),
+            )
+        with c8:
+            sb_label = _assess_sharpe(record.sharpe_before_cost)
+            _render_kpi_card(
+                label=_t("kpi_sharpe_before"),
+                value=(
+                    f"{float(record.sharpe_before_cost):.4f}"
+                    if record.sharpe_before_cost is not None
+                    else "—"
+                ),
+                severity=_sev_class(sb_label),
+                severity_label=sb_label,
+                help_text=_t("kpi_sharpe_before_help"),
+                practical=_t("kpi_practical_sharpe_before"),
+            )
 
 
 # =====================================================================
@@ -2016,6 +2174,17 @@ def _render_results(result, config):
     decisions = decision_repo.find_by_run(result.run_id)
 
     st.header(_t("run_header"))
+
+    # Day 11 Cụm 3f #14: show weights source (F1 point / Chia đều / Nhập tay)
+    # for audit trail — user knows which weight set produced these results
+    _ws = st.session_state.get("weights_source", "")
+    _chip_label = f"Chạy với tỷ trọng: {_ws}" if _ws else "Chạy với tỷ trọng tự nhập"
+    st.markdown(
+        f'<div style="display:inline-block;font-size:12px;color:#146026;'
+        f"padding:4px 12px;background:#F0FDF4;border-left:3px solid #146026;"
+        f'border-radius:4px;margin:4px 0 16px 0;">📌 {_chip_label}</div>',
+        unsafe_allow_html=True,
+    )
 
     tab_overview, tab_journal, tab_tech = st.tabs(
         [
@@ -2053,6 +2222,415 @@ def _render_results(result, config):
     )
 
 
+def _build_preview_config() -> dict | None:
+    """Build config dict for F1 preview without requiring Run button.
+
+    Reads sidebar widget values from session_state (Day 11 Patch A added
+    keys to date_input + Day 10 Step C had key for rf_source_select).
+    Returns None if required fields missing (selected_tickers < 2).
+    Used by _render_f1_section to compute frontier before user commits
+    to full simulation.
+    """
+    tickers = st.session_state.get("selected_tickers", [])
+    if len(tickers) < 2:
+        return None
+
+    # Day 11 Cụm 3f: use DB max date (consistency with sidebar)
+    data_max_date = _get_data_max_date()
+    default_start = max(DATA_MIN_DATE, data_max_date - timedelta(days=365 * 3))
+
+    return {
+        "tickers": tuple(sorted(tickers)),
+        "backtest_start": st.session_state.get("backtest_start", default_start),
+        "backtest_end": st.session_state.get("backtest_end", data_max_date),
+        "rf_source": st.session_state.get("rf_source_select", "zero"),
+    }
+
+
+def _render_f1_chart(curve, selected_idx: int | None = None) -> None:
+    """Render Plotly scatter chart: frontier curve + 3 reference markers.
+
+    Day 11 F1 Sprint 11. Uses module-level `go` import (plotly.graph_objects).
+    If selected_idx provided, adds a highlighted marker at that point (Cụm 3d).
+    """
+    df = curve.as_dataframe()
+
+    fig = go.Figure()
+
+    # Main curve - frontier points
+    fig.add_trace(
+        go.Scatter(
+            x=df["volatility"],
+            y=df["expected_return"],
+            mode="lines+markers",
+            name=_t("f1_curve_label"),
+            line={"color": "#146026", "width": 3},
+            marker={"size": 8, "color": "#146026"},
+            hovertemplate=(
+                "<b>Diem %{customdata}</b><br>"
+                "Rủi ro: %{x:.2f}%/năm<br>"
+                "Lợi suất: %{y:.2f}%/năm<br>"
+                "<extra></extra>"
+            ),
+            customdata=list(range(len(df))),
+        )
+    )
+
+    # 3 reference portfolios as star markers
+    refs = [
+        (curve.ref_min_variance, _t("f1_ref_min_variance"), "#80c433"),
+        (curve.ref_max_sharpe, _t("f1_ref_max_sharpe"), "#DC2626"),
+        (curve.ref_risk_parity, _t("f1_ref_risk_parity"), "#cbdd56"),
+    ]
+    for portfolio, label, color in refs:
+        fig.add_trace(
+            go.Scatter(
+                x=[float(portfolio.volatility_annual_pct)],
+                y=[float(portfolio.expected_return_annual_pct)],
+                mode="markers+text",
+                name=label,
+                marker={
+                    "size": 16,
+                    "color": color,
+                    "symbol": "star",
+                    "line": {"color": "white", "width": 2},
+                },
+                text=[label],
+                textposition="top center",
+                textfont={"size": 10, "color": color},
+                hovertemplate=(
+                    f"<b>{label}</b><br>"
+                    "Rủi ro: %{x:.2f}%<br>"
+                    "Lợi suất: %{y:.2f}%<br>"
+                    "<extra></extra>"
+                ),
+            )
+        )
+
+    # Day 11 Cụm 3d: highlighted marker for user-selected point via slider
+    if selected_idx is not None and 0 <= selected_idx < len(curve.points):
+        sp = curve.points[selected_idx]
+        fig.add_trace(
+            go.Scatter(
+                x=[float(sp.volatility_annual_pct)],
+                y=[float(sp.expected_return_annual_pct)],
+                mode="markers",
+                name=f"Điểm chọn ({selected_idx + 1})",
+                marker={
+                    "size": 22,
+                    "color": "rgba(255, 160, 74, 0.3)",
+                    "symbol": "circle",
+                    "line": {"color": "#DC2626", "width": 3},
+                },
+                hovertemplate=(
+                    f"<b>Điểm đã chọn ({selected_idx + 1})</b><br>"
+                    "Rủi ro: %{x:.2f}%/năm<br>"
+                    "Lợi suất: %{y:.2f}%/năm<br>"
+                    "<extra></extra>"
+                ),
+                showlegend=True,
+            )
+        )
+
+    fig.update_layout(
+        title=_t("f1_chart_title"),
+        xaxis_title=_t("f1_chart_x_label"),
+        yaxis_title=_t("f1_chart_y_label"),
+        height=450,
+        hovermode="closest",
+        template="plotly_white",
+        margin={"l": 60, "r": 20, "t": 50, "b": 50},
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": -0.25,
+            "xanchor": "center",
+            "x": 0.5,
+        },
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def _apply_f1_weights_callback(new_weights_pct: dict, source_label: str) -> None:
+    """Callback: safely apply F1 weights to sidebar state (Day 11 Cụm 3d).
+
+    Streamlit forbids direct assignment to a widget's key AFTER the widget
+    is instantiated. Callbacks run BEFORE widget re-instantiation on the
+    next rerun, so they can safely modify session_state.
+
+    Clears:
+        - weight_pct_<TICKER> widget keys (per-ticker number_input)
+        - weight_mode widget key (sidebar radio)
+    Sets:
+        - weights_pct dict (new ticker->pct mapping)
+        - weights_source (display label for sidebar status chip)
+    """
+    st.session_state["weights_pct"] = new_weights_pct
+    st.session_state["weights_source"] = source_label
+    # Delete per-ticker widget keys so number_input picks up new values
+    for key in list(st.session_state.keys()):
+        if key.startswith("weight_pct_"):
+            del st.session_state[key]
+    # Delete radio widget key so it picks up index=1 (manual) default on rerun
+    if "weight_mode" in st.session_state:
+        del st.session_state["weight_mode"]
+
+
+def _clear_f1_weights_callback() -> None:
+    """Clear F1-applied weights state so user can switch back to manual/equal."""
+    if "weights_source" in st.session_state:
+        del st.session_state["weights_source"]
+    if "weight_mode" in st.session_state:
+        del st.session_state["weight_mode"]
+    # Keep weights_pct dict so manual inputs show previous F1 values as starting point
+
+
+def _render_f1_section(preview_config: dict | None, factory) -> None:
+    """Day 11 F1: Efficient Frontier section rendered in main area.
+
+    Flow (Option C design):
+        1. Section header + intro + defense note
+        2. Advanced controls (upper_bound slider + n_points input)
+        3. "Compute Frontier" button -> calls FrontierService
+        4. If result in session_state: render Plotly chart + slider + weights
+        5. "Apply weights" button -> populates session_state.weights_pct
+           and reruns (user then clicks "Run simulation" in sidebar)
+    """
+    st.markdown("---")
+    st.markdown(f"### {_t('f1_section_header')}")
+    st.markdown(_t("f1_section_intro"))
+
+    # Advanced controls - 2 columns side by side
+    _f1_c1, _f1_c2 = st.columns([1, 1])
+    with _f1_c1:
+        upper_bound = st.slider(
+            _t("f1_upper_bound_label"),
+            min_value=0.1,
+            max_value=1.0,
+            value=st.session_state.get("f1_upper_bound_val", 0.4),
+            step=0.05,
+            format="%.2f",
+            help=_t("f1_upper_bound_help"),
+            key="f1_upper_bound_val",  # gitleaks:allow (Streamlit widget key, not a secret)
+        )
+    with _f1_c2:
+        n_points = st.number_input(
+            _t("f1_n_points_label"),
+            min_value=5,
+            max_value=50,
+            value=st.session_state.get("f1_n_points_val", 20),
+            step=1,
+            help=_t("f1_n_points_help"),
+            key="f1_n_points_val",
+        )
+
+    # Guard: F1 compute requires >= 2 tickers
+    f1_ready = preview_config is not None
+
+    compute_pressed = st.button(
+        _t("f1_compute_btn"),
+        type="primary",
+        disabled=not f1_ready,
+        help=_t("f1_compute_btn_help"),
+        key="f1_compute_btn_action",
+        use_container_width=True,
+    )
+
+    if not f1_ready:
+        st.info(_t("f1_need_min_tickers"))
+
+    if compute_pressed and f1_ready:
+        from vn_portfolio_frontier.application.services import FrontierRequest
+
+        try:
+            with st.spinner(_t("f1_computing")):
+                service = factory.frontier_service()
+                request = FrontierRequest(
+                    tickers=preview_config["tickers"],
+                    backtest_start=preview_config["backtest_start"],
+                    backtest_end=preview_config["backtest_end"],
+                    rf_source=preview_config["rf_source"],
+                    upper_bound=float(upper_bound),
+                    n_frontier_points=int(n_points),
+                )
+                result = service.compute(request)
+                st.session_state["f1_result"] = result
+                # Day 11 Cụm 3f #2: default slider = frontier point closest to MaxSharpe
+                # (optimal risk-adjusted return per Markowitz theory) instead of midpoint
+                # which has no financial meaning
+                _curve = result.frontier_curve
+                _target_sharpe = _curve.ref_max_sharpe.sharpe
+                _best_idx = min(
+                    range(len(_curve.points)),
+                    key=lambda i: abs(_curve.points[i].sharpe - _target_sharpe),
+                )
+                st.session_state["f1_slider_val"] = _best_idx + 1
+                st.session_state["f1_selected_point_idx"] = _best_idx
+                st.success(
+                    _t(
+                        "f1_computed_ok",
+                        n=len(result.frontier_curve.points),
+                        days=result.data_window_days,
+                        rows=result.returns_rows,
+                    )
+                )
+        except Exception as exc:
+            st.error(f"F1 computation failed: {exc}")
+            if "f1_result" in st.session_state:
+                del st.session_state["f1_result"]
+
+    # Render chart + slider + weights if result available
+    result = st.session_state.get("f1_result")
+    if result is None:
+        st.markdown("---")
+        return
+
+    curve = result.frontier_curve
+    # Day 11 Cụm 3d: pass selected_idx so chart highlights the picked point
+    _selected_idx_from_state = st.session_state.get("f1_selected_point_idx", len(curve.points) // 2)
+    _selected_idx_clamped = min(_selected_idx_from_state, len(curve.points) - 1)
+    _render_f1_chart(curve, selected_idx=_selected_idx_clamped)
+
+    # Slider for point selection (1-indexed display for UX, 0-indexed internal)
+    n_points_total = len(curve.points)
+    default_1idx = st.session_state.get("f1_slider_val", n_points_total // 2 + 1)
+    default_1idx = max(1, min(default_1idx, n_points_total))
+    slider_1idx = st.slider(
+        _t("f1_slider_label"),
+        min_value=1,
+        max_value=n_points_total,
+        value=default_1idx,
+        step=1,
+        help=_t("f1_slider_help"),
+        key="f1_slider_val",
+    )
+    selected_idx = slider_1idx - 1  # 0-indexed for list access
+    st.session_state["f1_selected_point_idx"] = selected_idx  # for chart highlight
+    selected_point = curve.points[selected_idx]
+
+    # Selected point metrics + weights
+    st.markdown(f"#### {_t('f1_selected_point_header')}")
+    sharpe_display = (
+        f"{float(selected_point.sharpe):.4f}" if selected_point.sharpe is not None else "N/A"
+    )
+    # Day 11 Cụm 3f #4: visual Sharpe quality badge next to numeric value
+    _sharpe_val = float(selected_point.sharpe) if selected_point.sharpe is not None else None
+    _badge_html = _sharpe_badge(_sharpe_val)
+    _metrics_text = _t(
+        "f1_selected_point_metrics",
+        ret=f"{float(selected_point.expected_return_annual_pct):.2f}",
+        vol=f"{float(selected_point.volatility_annual_pct):.2f}",
+        sharpe=sharpe_display,
+    )
+    st.markdown(_metrics_text + _badge_html, unsafe_allow_html=True)
+    # Day 11 Cụm 3f #13: ex-ante disclaimer to prevent confusion between F1
+    # theoretical metrics and realized simulation metrics
+    st.caption(_t("f1_ex_ante_caption"))
+
+    # Day 11 Cụm 3e D.1: Chip-style weights (compact, scannable, no dataframe grid)
+    # Color intensity by weight magnitude: top-weight = dark green, lighter = pastel
+    non_zero_weights = {ticker: w for ticker, w in selected_point.weights.items() if w > 0.001}
+    _sorted_weights = sorted(non_zero_weights.items(), key=lambda kv: kv[1], reverse=True)
+
+    st.markdown(f"**{_t('f1_weights_table_header')}:**")
+
+    _chip_parts = []
+    for _ticker, _w in _sorted_weights:
+        _pct = _w * 100
+        if _pct >= 25:
+            _bg, _fg = "#146026", "#FFFFFF"
+        elif _pct >= 15:
+            _bg, _fg = "#D1FAE5", "#065F46"
+        else:
+            _bg, _fg = "#F0FDF4", "#146026"
+        _chip_parts.append(
+            f'<span style="display:inline-block;padding:5px 12px;margin:3px 5px 3px 0;'
+            f"border-radius:999px;background:{_bg};color:{_fg};"
+            f'font-size:13px;font-weight:600;line-height:1.4;">'
+            f'{_ticker}&nbsp;<span style="opacity:0.9;font-weight:500;">{_pct:.1f}%</span>'
+            f"</span>"
+        )
+    st.markdown(
+        f'<div style="margin:6px 0 14px 0;line-height:2;">{"".join(_chip_parts)}</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Apply weights button — uses on_click callback (Day 11 Cụm 3d fix)
+    # Callback runs BEFORE widget re-instantiation on next rerun, safe to
+    # modify weight_mode widget key then.
+    new_weights_pct = {ticker: w * 100 for ticker, w in non_zero_weights.items()}
+    for ticker in st.session_state.get("selected_tickers", []):
+        if ticker not in new_weights_pct:
+            new_weights_pct[ticker] = 0.0
+
+    # Day 11 Cụm 3f #3 (X4-micro): add 3rd column "Chạy mô phỏng ngay" to avoid
+    # ping-pong UX (user had to scroll back to sidebar after applying F1 weights)
+    _f1_btn_col1, _f1_btn_col2, _f1_btn_col3 = st.columns([2, 1, 2])
+    _has_f1_applied = st.session_state.get("weights_source", "").startswith("F1")
+
+    with _f1_btn_col1:
+        st.button(
+            _t("f1_apply_btn"),
+            type="primary",
+            on_click=_apply_f1_weights_callback,
+            args=(new_weights_pct, f"F1 Điểm {selected_idx + 1}"),
+            key="f1_apply_action",
+            use_container_width=True,
+        )
+    with _f1_btn_col2:
+        if _has_f1_applied:
+            st.button(
+                "↩️ Hủy F1",
+                type="secondary",
+                on_click=_clear_f1_weights_callback,
+                key="f1_clear_action",
+                use_container_width=True,
+                help="Hủy áp dụng F1, quay về tự nhập tỷ trọng ở sidebar",
+            )
+    with _f1_btn_col3:
+        if _has_f1_applied and st.button(
+            "▶️ Chạy mô phỏng ngay",
+            type="primary",
+            key="f1_run_action",
+            use_container_width=True,
+            help="Chạy backtest ngay với tỷ trọng F1 vừa áp dụng",
+        ):
+            st.session_state["f1_trigger_sim"] = True
+            st.rerun()
+
+    # 3 reference portfolios footer
+    with st.expander(_t("f1_ref_portfolios_header"), expanded=False):
+        _ref_cols = st.columns(3)
+        ref_entries = [
+            ("f1_ref_min_variance", curve.ref_min_variance),
+            ("f1_ref_max_sharpe", curve.ref_max_sharpe),
+            ("f1_ref_risk_parity", curve.ref_risk_parity),
+        ]
+        for i, (label_key, portfolio) in enumerate(ref_entries):
+            with _ref_cols[i]:
+                st.markdown(f"**{_t(label_key)}**")
+                sharpe_text = (
+                    f"Sharpe: {float(portfolio.sharpe):.4f}"
+                    if portfolio.sharpe is not None
+                    else "Sharpe: N/A"
+                )
+                st.caption(
+                    f"Lợi suất: {float(portfolio.expected_return_annual_pct):.2f}%/năm<br>"
+                    f"Rủi ro: {float(portfolio.volatility_annual_pct):.2f}%/năm<br>"
+                    f"{sharpe_text}",
+                    unsafe_allow_html=True,
+                )
+                top_weights = sorted(portfolio.weights.items(), key=lambda x: -x[1])[:5]
+                st.caption(
+                    "<br>".join(f"{t}: {w*100:.1f}%" for t, w in top_weights if w > 0.001),
+                    unsafe_allow_html=True,
+                )
+
+    st.caption(_t("f1_defense_note"))
+    st.markdown("---")
+
+
 def _render_help():
     with st.expander(_t("help_header")):
         content = (
@@ -2061,7 +2639,8 @@ def _render_help():
             f"{_t('help_step3')}\n\n"
             f"{_t('help_step4')}\n\n"
             f"{_t('help_step5')}\n\n"
-            f"{_t('help_step6')}"
+            f"{_t('help_step6')}\n\n"
+            f"{_t('help_step7')}"
         )
         st.markdown(content)
 
@@ -2088,6 +2667,12 @@ def main():
     _render_help()
 
     config = _render_sidebar()
+
+    # Day 11 F1: Efficient Frontier section (optional, computed independently of Run button)
+    # Allows user to preview optimal portfolios + apply weights before full simulation.
+    preview_config = _build_preview_config()
+    _render_f1_section(preview_config, get_factory())
+
     if config is not None:
         st.session_state.run_status = "running"
         st.session_state.last_config = config
