@@ -737,6 +737,18 @@ Reference artifacts (thesis repo `vn-p2-report`):
 
 **See:** [adr-016-backtest-settlement-assumptions.md](./adr-016-backtest-settlement-assumptions.md) for full rationale, alternatives considered, consequences, and reversibility.
 
+## ADR-017: FrontierOptimizer via scipy.optimize (not vnstock_quant)
+
+**Status:** Accepted (2026-10-20)
+
+**Context:** Day 11 Sprint 11 built F1 Efficient Frontier (Markowitz 1952). Original plan was `vnstock_quant.portfolio` built-in solver, but it requires valid vnstock auth internally (couples optimization math to vendor SDK state), and VNSTOCK API key auth has been stuck 4+ days with INVALID_CREDENTIAL error despite Dashboard showing active Silver tier.
+
+**Decision:** Implement FrontierOptimizer internally using `scipy.optimize.minimize` (SLSQP method) for all 3 reference portfolios (MinVar/MaxSharpe/RiskParity) + N-point frontier curve. Keeps domain layer pure per ADR-015 Hex boundaries, zero vendor SDK dependency, deterministic + mock-friendly tests (42 shipped Day 11 Cụm 4, coverage 86% + 100%).
+
+**Trade-off:** Scipy slower than vnstock_quant Rust-core but acceptable at N=6-30 asset scale (ms per call). Industry-standard choice (default in LEAN/zipline/backtrader academic/professional stacks).
+
+**See:** [adr-017-frontier-optimizer-scipy.md](./adr-017-frontier-optimizer-scipy.md) for full rationale, alternatives, consequences, and references.
+
 # Open decisions (pending)
 
 ## ADR-007: Prefect vs Apache Airflow for workflow orchestration
@@ -804,3 +816,14 @@ Two approaches for the structured extraction task (per ADR-006):
 **Labeling quality of ~5,000 LLM-labeled samples.** If labels are clean and consistent → fine-tune wins (fast inference, no LLM API cost). If labels are noisy → RAG wins (flexibility to adjust extraction template).
 
 Decision at 2026-10-20 will be made after audit of first 200 LLM-labeled samples (human eval).
+## ADR-018: GitHub Actions daily cron for data refresh
+
+**Status:** Proposed - placeholder for Day 12 implementation
+
+**Context:** As of Day 11, data sync runs manually via `scripts/sync_prices.py` + `scripts/sync_benchmarks.py` on local machine. Defense day risk if forgotten: stale data in Streamlit demo. End-user expectation: "runs continuously, auto-refreshes daily after HSX close".
+
+**Decision (PENDING Day 12):** GitHub Actions scheduled workflow daily on weekdays at 17:00 ICT (post HSX close), cron `0 10 * * 1-5` (UTC). Runs sync_prices + sync_benchmarks + logs to new audit table (migration 014 PENDING).
+
+**Blocker:** Requires VNSTOCK API key auth to be stable (currently blocked, see ADR-017). Parallel ticket vnstocks.com for resolution.
+
+**See:** [adr-018-github-actions-daily-cron.md](./adr-018-github-actions-daily-cron.md) for full implementation plan, alternatives, consequences.
