@@ -538,7 +538,7 @@ TRANSLATIONS = {
         "kpi_tier_c_header": "🔧 Chỉ số kỹ thuật",
         "kpi_rebalances": "Số giao dịch",
         "kpi_total_cost_pct": "Tổng chi phí",
-        "kpi_turnover": "Mức xoay vòng/lần cân đối",
+        "kpi_turnover": "Xoay vòng (%/lần)",
         "kpi_sharpe_before": "Hiệu quả rủi ro (trước phí)",
         "kpi_sharpe_after": "Hiệu quả rủi ro (Sharpe)",
         "kpi_mdd": "Sụt giảm sâu nhất",
@@ -582,8 +582,8 @@ TRANSLATIONS = {
         "help_step2": "**Bước 2:** Gõ mã (VD: VCB) rồi Enter để thêm, nhập tỷ trọng % (tổng = 100%)",
         "help_step3": "**Bước 3:** Chọn giai đoạn test",
         "help_step4": "**Bước 4:** (Tùy chọn) Mở 'Nâng cao' để điều chỉnh ngưỡng + chi phí + chọn nguồn Rf",
-        "help_step5": "**Bước 5:** (Tùy chọn) Dùng F1 Đường biên hiệu quả ở khu vực chính → tìm danh mục Markowitz tối ưu → áp dụng tỷ trọng vào sidebar",
-        "help_step6": "**Bước 6:** Nhấn 'Chạy mô phỏng' ở sidebar để backtest",
+        "help_step5": "**Bước 5:** (Tùy chọn) Dùng F1 Đường biên hiệu quả ở khu vực chính → chọn điểm tối ưu Markowitz → ⚡ Dùng tỷ trọng → ▶️ **Chạy mô phỏng ngay** để backtest luôn (không cần quay lại sidebar)",
+        "help_step6": "**Bước 6:** Hoặc nếu không dùng F1: nhập tỷ trọng tay ở sidebar → nhấn 'Chạy mô phỏng' ở sidebar",
         "help_step7": "**Bước 7:** Xem Tổng quan — mở các tab Nhật ký cân đối / Chi tiết kỹ thuật nếu cần chi tiết",
         "idle_msg": "Hoàn tất thiết lập ở sidebar bên trái rồi nhấn Chạy mô phỏng",
         "failed_msg": "Mô phỏng thất bại: {error}",
@@ -765,7 +765,7 @@ TRANSLATIONS = {
         "kpi_tier_c_header": "🔧 Technical",
         "kpi_rebalances": "Transactions",
         "kpi_total_cost_pct": "Total cost",
-        "kpi_turnover": "Turnover per rebalance",
+        "kpi_turnover": "Turnover (%/time)",
         "kpi_sharpe_before": "Sharpe (before cost)",
         "kpi_sharpe_after": "Sharpe (after cost)",
         "kpi_mdd": "Max drawdown",
@@ -809,8 +809,8 @@ TRANSLATIONS = {
         "help_step2": "**Step 2:** Type ticker (e.g. VCB) then Enter to add, pick weight allocation mode",
         "help_step3": "**Step 3:** Select strategy backtest period (data from 04/01/2021)",
         "help_step4": "**Step 4:** (Optional) Open 'Advanced' to tweak threshold + costs + Rf source",
-        "help_step5": "**Step 5:** (Optional) Use F1 Efficient Frontier in main area → find optimal Markowitz portfolio → apply weights to sidebar",
-        "help_step6": "**Step 6:** Click 'Run simulation' in sidebar to backtest",
+        "help_step5": "**Step 5:** (Optional) Use F1 Efficient Frontier in main area → pick optimal Markowitz point → ⚡ Apply weights → ▶️ **Run simulation now** (no need to scroll back to sidebar)",
+        "help_step6": "**Step 6:** Or if skipping F1: enter weights manually in sidebar → click 'Run simulation' in sidebar",
         "help_step7": "**Step 7:** View Overview — open Journal / Technical Details tabs for details",
         "idle_msg": "Complete setup in the left sidebar then click Run Simulation",
         "failed_msg": "Simulation failed: {error}",
@@ -1195,10 +1195,22 @@ def _render_portfolio_chips():
         return
     chips = []
     total_pct = 0.0
+    hidden_count = 0
     for ticker in st.session_state.selected_tickers:
         pct = st.session_state.weights_pct.get(ticker, 0.0)
         total_pct += pct
-        chips.append(f'<span class="ticker-chip">{ticker} {pct:.0f}%</span>')
+        # Day 11 Cum 5 D1: hide 0% tickers from chip display (less clutter);
+        # user still sees them trong weight inputs section below
+        if pct > 0:
+            chips.append(f'<span class="ticker-chip">{ticker} {pct:.0f}%</span>')
+        else:
+            hidden_count += 1
+    if hidden_count > 0:
+        chips.append(
+            f'<span class="ticker-chip" '
+            f'style="opacity:0.6;font-style:italic;background:#F3F4F6;color:#6B7280;">'
+            f"+{hidden_count} ẩn 0%</span>"
+        )
     sum_class = "ticker-sum-ok" if abs(total_pct - 100.0) <= 1.0 else "ticker-sum-bad"
     sum_text = (
         _t("sum_ok", sum=total_pct)
@@ -2277,12 +2289,14 @@ def _render_f1_chart(curve, selected_idx: int | None = None) -> None:
     )
 
     # 3 reference portfolios as star markers
+    # Day 11 Cum 5 D3: per-marker textposition to prevent label overlap with
+    # frontier curve. MinVar bottom-left, Sharpe top-right, RiskParity bottom-center
     refs = [
-        (curve.ref_min_variance, _t("f1_ref_min_variance"), "#80c433"),
-        (curve.ref_max_sharpe, _t("f1_ref_max_sharpe"), "#DC2626"),
-        (curve.ref_risk_parity, _t("f1_ref_risk_parity"), "#cbdd56"),
+        (curve.ref_min_variance, _t("f1_ref_min_variance"), "#80c433", "bottom left"),
+        (curve.ref_max_sharpe, _t("f1_ref_max_sharpe"), "#DC2626", "top right"),
+        (curve.ref_risk_parity, _t("f1_ref_risk_parity"), "#cbdd56", "bottom center"),
     ]
-    for portfolio, label, color in refs:
+    for portfolio, label, color, text_pos in refs:
         fig.add_trace(
             go.Scatter(
                 x=[float(portfolio.volatility_annual_pct)],
@@ -2295,9 +2309,9 @@ def _render_f1_chart(curve, selected_idx: int | None = None) -> None:
                     "symbol": "star",
                     "line": {"color": "white", "width": 2},
                 },
-                text=[label],
-                textposition="top center",
-                textfont={"size": 10, "color": color},
+                text=[f"  {label}  "],
+                textposition=text_pos,
+                textfont={"size": 11, "color": color, "family": "Inter, sans-serif"},
                 hovertemplate=(
                     f"<b>{label}</b><br>"
                     "Rủi ro: %{x:.2f}%<br>"
