@@ -47,7 +47,7 @@ Secrets required (GitHub Actions):
 - Defense story: "Production-grade automation".
 
 **Negative:**
-- Requires VNSTOCK auth to be stable (currently blocked, see ADR-017).
+- ~Requires VNSTOCK auth to be stable (currently blocked, see ADR-017).~ **RESOLVED 2026-10-26**: vnstock package upgrade 5.0.1 -> 5.2.0 (released 2026-10-23) restored auth. Server returned InternalError when client version pre-dated server expectations. Status now: `tier: silver, authenticated: True, expires_at: 2026-12-30`.
 - GitHub Actions free tier limit: 2000 minutes/month (daily job ~5 min = 150 min/month, well within).
 - Timezone drift: GitHub cron uses UTC; need to update if ICT changes (unlikely for VN).
 
@@ -59,7 +59,7 @@ Secrets required (GitHub Actions):
 - [ ] T4: Add GitHub secrets via `gh api repos/MCTGiang/vn-portfolio-frontier/actions/secrets`.
 - [ ] T5: Manual trigger test (workflow_dispatch) to verify.
 - [ ] T6: Monitor first 3 scheduled runs.
-- [ ] BLOCKED: VNSTOCK API key auth resolution (parallel ticket vnstocks.com).
+- [x] ~BLOCKED: VNSTOCK API key auth resolution (parallel ticket vnstocks.com).~ **RESOLVED 2026-10-26** via vnstock upgrade 5.2.0.
 
 ## References
 

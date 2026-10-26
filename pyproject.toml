@@ -67,7 +67,7 @@ dev = [
     "jupyterlab>=4.2",
 ]
 data = [
-    "vnstock>=5.0.1",
+    "vnstock>=5.2.0",
 ]
 
 [project.urls]
