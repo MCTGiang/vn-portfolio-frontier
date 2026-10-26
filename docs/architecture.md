@@ -420,7 +420,7 @@ Schema `news_sentiment.article` (from Commit 8) supports this decision:
 ### Related
 
 - ADR-006 (structured extraction, not return prediction) — bounds what the sentiment pipeline outputs.
-- ADR-008 (PhoBERT vs RAG, open) — decision at 2026-10-20 uses this corpus as training data.
+- ADR-008 (PhoBERT vs RAG, open) — decision at 2026-10-30 uses this corpus as training data.
 - Commit 8 (news_sentiment schema, SHA 288113d) — implements the storage layer this decision plans against.
 - Task 5 (Sprint 10) — initial scraper build reads from these sources.
 
@@ -791,31 +791,20 @@ Preliminary recommendation **Prefect** remains the leaning choice for Phase 4 �
 
 ---
 
-## ADR-008 (OPEN): PhoBERT fine-tune vs RAG for sentiment extraction
+## ADR-008: PhoBERT fine-tune vs RAG for sentiment extraction
 
-**Status:** PROPOSED — decision deadline **2026-10-20** (moved earlier from 2026-11-15 for schedule risk mitigation)
+**Status:** PROPOSED — decision deadline **2026-10-30** (originally 2026-11-15, moved to 2026-10-20 for schedule risk mitigation, now +10 days due to F1 Sprint 11 extension to 23/10)
 
-### Context
+**Context:** Feature F3 extracts structured signals from Vietnamese financial news. Two paths considered: (1) PhoBERT fine-tune on 5000 LLM-labeled samples, or (2) RAG with Chroma + GPT-4 Turbo. Both approaches cost ~$10/month.
 
-Two approaches for the structured extraction task (per ADR-006):
+**Decision factor:** Quality audit of first 200 LLM-labeled samples. Per-field F1 scores + noise rate drive decision tree:
+- avg F1 >= 0.75 AND noise rate <= 15% → **FINE-TUNE** (PhoBERT)
+- avg F1 < 0.65 OR noise rate > 25% → **RAG** (safer default)
+- Grey zone 0.65-0.75 → expand to 500 samples, then RAG if still grey
 
-**Option 1: PhoBERT fine-tune**
-- Take VinAI's pretrained Vietnamese BERT
-- Add task-specific head (entity extraction + sentiment regression)
-- Fine-tune on ~5,000 LLM-labeled samples
-- Deploy inference on CPU or Colab Pro GPU
+**Sprint 13 schedule:** Day 1 (28/10) scrape 500-1000 articles via vnstock_news + LLM label 200. Day 2 (29/10) human audit + compute metrics + lock decision. Hard stop 2026-11-02 (defender RAG as safer default).
 
-**Option 2: RAG (Retrieval-Augmented Generation)**
-- Vector DB of news chunks (e.g., using Chroma + embeddings)
-- LLM (GPT-4 or local model) retrieves relevant chunks per query
-- Prompt-engineered extraction template
-- No fine-tuning required
-
-### Decision factor
-
-**Labeling quality of ~5,000 LLM-labeled samples.** If labels are clean and consistent → fine-tune wins (fast inference, no LLM API cost). If labels are noisy → RAG wins (flexibility to adjust extraction template).
-
-Decision at 2026-10-20 will be made after audit of first 200 LLM-labeled samples (human eval).
+**See:** [adr-008-phobert-vs-rag.md](./adr-008-phobert-vs-rag.md) for full evaluation framework, metrics table, decision tree, alternatives, consequences by path, and schedule.
 ## ADR-018: GitHub Actions daily cron for data refresh
 
 **Status:** Proposed - placeholder for Day 12 implementation

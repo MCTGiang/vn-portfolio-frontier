@@ -1384,13 +1384,11 @@ def _render_sidebar():
                         if ticker in st.session_state.weights_pct:
                             del st.session_state.weights_pct[ticker]
                         st.rerun()
-            # Info chip: show average or label based on source
+            # Day 11 Cum 5 D9: dedup F1 source chip - keep only sidebar bottom chip
+            # (line ~1430) which always shows when weights_source exists; this
+            # equal-mode info now only shows the equal-average message
             _avg_pct = sum(weights_pct.values()) / n if n > 0 else 0.0
-            _source = st.session_state.get("weights_source", "")
-            if _source.startswith("F1"):
-                st.sidebar.info(f"📌 Từ {_source} — tổng {sum(weights_pct.values()):.2f}%")
-            else:
-                st.sidebar.info(f"✓ {_t('weight_mode_equal_help')}: {_avg_pct:.2f}% × {n} mã")
+            st.sidebar.info(f"✓ {_t('weight_mode_equal_help')}: {_avg_pct:.2f}% × {n} mã")
         else:
             # Manual mode: per-ticker number inputs
             for ticker in list(st.session_state.selected_tickers):
@@ -2584,9 +2582,11 @@ def _render_f1_section(preview_config: dict | None, factory) -> None:
     _has_f1_applied = st.session_state.get("weights_source", "").startswith("F1")
 
     with _f1_btn_col1:
+        # Day 11 Cum 5 D6: demote to secondary after apply so "Chạy mô phỏng ngay"
+        # (primary) becomes the clear next action
         st.button(
             _t("f1_apply_btn"),
-            type="primary",
+            type="secondary" if _has_f1_applied else "primary",
             on_click=_apply_f1_weights_callback,
             args=(new_weights_pct, f"F1 Điểm {selected_idx + 1}"),
             key="f1_apply_action",
@@ -2623,21 +2623,41 @@ def _render_f1_section(preview_config: dict | None, factory) -> None:
         ]
         for i, (label_key, portfolio) in enumerate(ref_entries):
             with _ref_cols[i]:
-                st.markdown(f"**{_t(label_key)}**")
+                # Day 11 Cum 5 D7: concentration warning if top-2 weights > 70%
+                _sorted_w = sorted(portfolio.weights.values(), reverse=True)
+                _top2_sum = sum(_sorted_w[:2]) if len(_sorted_w) >= 2 else 0.0
+                _concentration_badge = ""
+                if _top2_sum > 0.70:
+                    _concentration_badge = (
+                        f'<span style="display:inline-block;padding:1px 6px;'
+                        f"margin-left:6px;border-radius:999px;background:#FEF3C7;"
+                        f'color:#92400E;font-size:10px;font-weight:600;">'
+                        f"⚠ Tập trung {_top2_sum*100:.0f}% top-2</span>"
+                    )
+                # Day 11 Cum 5 D8: card wrapper with bg + border for visual separation
                 sharpe_text = (
                     f"Sharpe: {float(portfolio.sharpe):.4f}"
                     if portfolio.sharpe is not None
                     else "Sharpe: N/A"
                 )
-                st.caption(
+                top_weights = sorted(portfolio.weights.items(), key=lambda x: -x[1])[:5]
+                _weights_html = "<br>".join(
+                    f"{t}: {w*100:.1f}%" for t, w in top_weights if w > 0.001
+                )
+                st.markdown(
+                    f'<div style="background:#F9FAFB;border:1px solid #E5E7EB;'
+                    f'border-radius:8px;padding:12px;margin:4px 0;">'
+                    f'<div style="font-weight:600;font-size:14px;margin-bottom:8px;">'
+                    f"{_t(label_key)}{_concentration_badge}</div>"
+                    f'<div style="font-size:12px;color:#6B7280;line-height:1.6;">'
                     f"Lợi suất: {float(portfolio.expected_return_annual_pct):.2f}%/năm<br>"
                     f"Rủi ro: {float(portfolio.volatility_annual_pct):.2f}%/năm<br>"
-                    f"{sharpe_text}",
-                    unsafe_allow_html=True,
-                )
-                top_weights = sorted(portfolio.weights.items(), key=lambda x: -x[1])[:5]
-                st.caption(
-                    "<br>".join(f"{t}: {w*100:.1f}%" for t, w in top_weights if w > 0.001),
+                    f"{sharpe_text}"
+                    f"</div>"
+                    f'<div style="font-size:12px;color:#1F2937;margin-top:8px;line-height:1.6;">'
+                    f"{_weights_html}"
+                    f"</div>"
+                    f"</div>",
                     unsafe_allow_html=True,
                 )
 
