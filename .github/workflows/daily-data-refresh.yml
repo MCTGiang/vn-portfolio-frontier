@@ -1,0 +1,116 @@
+name: daily-data-refresh
+
+on:
+  schedule:
+    # 10:00 UTC = 17:00 ICT (post-HSX close), Mon-Fri
+    - cron: "0 10 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      scripts:
+        description: "Which sync scripts to run (comma-separated)"
+        required: false
+        default: "sync_prices,sync_benchmarks"
+        type: string
+
+concurrency:
+  group: daily-data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Refresh VN30 prices + Rf benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
+      GITHUB_RUN_ID: ${{ github.run_id }}
+      GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install package (with vnstock Sponsor Silver)
+        run: |
+          python -m pip install --upgrade pip
+          pip install --extra-index-url https://vnstocks.com/api/packages -e .
+
+      - name: Verify VNSTOCK auth
+        run: |
+          python -c "
+          import vnstock, os
+          vnstock.login(os.environ['VNSTOCK_API_KEY'])
+          status = vnstock.status()
+          print(f'tier={status[\"tier\"]} authenticated={status[\"authenticated\"]} active={status[\"active\"]}')
+          assert status['authenticated'] and status['active'], 'VNSTOCK auth failed'
+          "
+
+      - name: Run sync_prices
+        id: sync_prices
+        run: |
+          set +e
+          # Determine source based on trigger
+          SOURCE="github_actions_cron"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            SOURCE="github_actions_dispatch"
+          fi
+          # Start audit row
+          RUN_ID=$(python scripts/audit_log.py start sync_prices \
+            --github-run-id "$GITHUB_RUN_ID" \
+            --github-run-url "$GITHUB_RUN_URL" \
+            --source "$SOURCE")
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          echo "::group::sync_prices output"
+          python scripts/sync_prices.py --today
+          EXIT_CODE=$?
+          echo "::endgroup::"
+          if [ $EXIT_CODE -eq 0 ]; then
+            python scripts/audit_log.py end "$RUN_ID" --status succeeded --rows 0
+          else
+            python scripts/audit_log.py end "$RUN_ID" --status failed \
+              --error "sync_prices exit code $EXIT_CODE (check workflow logs)"
+            exit $EXIT_CODE
+          fi
+
+      - name: Run sync_benchmarks
+        id: sync_benchmarks
+        if: always()
+        run: |
+          set +e
+          SOURCE="github_actions_cron"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            SOURCE="github_actions_dispatch"
+          fi
+          RUN_ID=$(python scripts/audit_log.py start sync_benchmarks \
+            --github-run-id "$GITHUB_RUN_ID" \
+            --github-run-url "$GITHUB_RUN_URL" \
+            --source "$SOURCE")
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          echo "::group::sync_benchmarks output"
+          python scripts/sync_benchmarks.py --today
+          EXIT_CODE=$?
+          echo "::endgroup::"
+          if [ $EXIT_CODE -eq 0 ]; then
+            python scripts/audit_log.py end "$RUN_ID" --status succeeded --rows 0
+          else
+            python scripts/audit_log.py end "$RUN_ID" --status failed \
+              --error "sync_benchmarks exit code $EXIT_CODE (check workflow logs)"
+            exit $EXIT_CODE
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Daily data refresh summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- sync_prices: ${{ steps.sync_prices.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- sync_benchmarks: ${{ steps.sync_benchmarks.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Trigger: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Audit log: see audit.data_refresh_run table in Neon" >> $GITHUB_STEP_SUMMARY
