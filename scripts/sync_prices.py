@@ -231,6 +231,34 @@ def sync_universe(
 
     if tickers is None:
         tickers = VN30_UNIVERSE
+
+    # Day 13 M30 safety: clamp end_date to previous trading day if script runs
+    # BEFORE HSX market close (15:00 ICT + 30min settle buffer). Prevents vnstock
+    # returning intraday snapshot that gets stored as EOD close_price in DB.
+    # Discovered 2026-10-27: 4 dates had intraday contamination (13/15/16/27 Oct).
+    from datetime import datetime as _dt
+    from datetime import time as _dtime
+
+    try:
+        from zoneinfo import ZoneInfo
+
+        _now_ict = _dt.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    except ImportError:
+        import pytz as _pytz
+
+        _now_ict = _dt.now(_pytz.timezone("Asia/Ho_Chi_Minh"))
+
+    if end_date >= _now_ict.date() and _now_ict.time() < _dtime(15, 30):
+        _adjusted = _now_ict.date() - timedelta(days=1)
+        while _adjusted.weekday() >= 5:  # skip Sat/Sun
+            _adjusted -= timedelta(days=1)
+        logger.warning(
+            f"Clamping end_date {end_date} -> {_adjusted} "
+            f"(HSX not yet closed, now_ICT={_now_ict.time().strftime('%H:%M')}). "
+            f"Re-run after 15:30 ICT for today's EOD data."
+        )
+        end_date = _adjusted
+
     settings = get_settings()
     if settings.vnstock_api_key is not None:
         os.environ["VNSTOCK_API_KEY"] = settings.vnstock_api_key.get_secret_value()
