@@ -154,3 +154,11 @@ desktop.ini
 scripts/_translate_sweep.py
 scripts/_phase_b_translate.py
 .env.backup.*
+
+# ==============================================================================
+# Data files
+# ==============================================================================
+
+data/sentiment_training/raw_articles.jsonl
+data/sentiment_training/llm_labels.jsonl
+data/sentiment_training/human_audit_200.jsonl
