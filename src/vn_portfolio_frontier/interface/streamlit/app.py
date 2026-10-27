@@ -113,6 +113,58 @@ def _sharpe_badge(sharpe: float | None) -> str:
     )
 
 
+@st.cache_data(ttl=86400, show_spinner=False)  # cache 1 day
+def _get_vn30_sector_map() -> dict:
+    """Returns {ticker: (icb_code_lv2, icb_name_vi)} for all HOSE tickers.
+
+    Day 13 reference enhancement: sector breakdown via vnstock Reference.
+    Cached 1 day since ICB classifications rarely change.
+    """
+    try:
+        from vnstock import Reference
+
+        ref = Reference()
+        tickers_df = ref.equity.list_by_exchange()
+        inds_df = ref.industry.list()
+        lv2 = inds_df[inds_df["icb_level"] == 2]
+        code_to_name = dict(zip(lv2["icb_code"].astype(str), lv2["icb_name"], strict=False))
+        return {
+            row["symbol"]: (
+                str(row["icb_code_lv2"]),
+                code_to_name.get(str(row["icb_code_lv2"]), "Khác"),
+            )
+            for _, row in tickers_df.iterrows()
+        }
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+@st.cache_data(ttl=3600, show_spinner=False)  # cache 1 hour
+def _get_upcoming_events(tickers_tuple: tuple, days_ahead: int = 30):
+    """Returns upcoming corporate events DataFrame for given tickers.
+
+    Day 13 reference enhancement: events.calendar context widget.
+    Cache 1h — events don't change intraday meaningfully.
+    """
+    try:
+        from vnstock import Reference
+
+        ref = Reference()
+        today = date.today()
+        end = today + timedelta(days=days_ahead)
+        cal = ref.events.calendar(start=today.isoformat(), end=end.isoformat())
+        if cal is None or len(cal) == 0:
+            return None
+        filtered = cal[cal["symbol"].isin(tickers_tuple)].copy()
+        if len(filtered) == 0:
+            return None
+        # Sort by ex_right_date ascending (nearest first)
+        filtered = filtered.sort_values("ex_right_date", na_position="last")
+        return filtered
+    except Exception:  # noqa: BLE001
+        return None
+
+
 MIN_RECOMMENDED_YEARS = 2.0
 
 
@@ -1220,6 +1272,29 @@ def _render_portfolio_chips():
     chips.append(f'<span class="{sum_class}">{sum_text}</span>')
     st.sidebar.markdown("".join(chips), unsafe_allow_html=True)
 
+    # Day 13 A2: Sector allocation pie chart (collapsed expander)
+    _sector_map = _get_vn30_sector_map()
+    if _sector_map:
+        _sector_weights = {}
+        for _ticker, _pct in st.session_state.weights_pct.items():
+            if _pct <= 0:
+                continue
+            _sector = _sector_map.get(_ticker, (None, "Khác"))[1]
+            _sector_weights[_sector] = _sector_weights.get(_sector, 0.0) + _pct
+        if _sector_weights:
+            with st.sidebar.expander("🏭 Phân bổ theo ngành (ICB)", expanded=False):
+                _sorted_sectors = sorted(_sector_weights.items(), key=lambda x: -x[1])
+                _total = sum(_sector_weights.values())
+                for _s, _w in _sorted_sectors:
+                    _pct_sector = _w / _total * 100 if _total > 0 else 0
+                    st.markdown(
+                        f'<div style="font-size:12px;margin:3px 0;">'
+                        f'<span style="color:#146026;font-weight:600;">{_s}</span>: '
+                        f'<span style="color:#1F2937;">{_pct_sector:.1f}%</span></div>',
+                        unsafe_allow_html=True,
+                    )
+                st.caption(f"Tổng {len(_sorted_sectors)} ngành · nguồn: ICB L2 (vnstock Reference)")
+
 
 def _render_sidebar():
     st.sidebar.title(_t("sidebar_title"))
@@ -1537,6 +1612,33 @@ def _render_sidebar():
         key="rf_source_select",
     )
     st.sidebar.caption(_t("rf_source_caption"))
+
+    # Day 13 A1: Upcoming corporate events next 30 days (collapsed expander)
+    _tickers_tuple = tuple(st.session_state.get("selected_tickers", []))
+    if _tickers_tuple:
+        _events_df = _get_upcoming_events(_tickers_tuple, days_ahead=30)
+        if _events_df is not None and len(_events_df) > 0:
+            with st.sidebar.expander(f"📅 Sự kiện 30 ngày tới ({len(_events_df)})", expanded=False):
+                for _, _ev in _events_df.head(10).iterrows():
+                    _ex_date = _ev.get("ex_right_date")
+                    _ex_str = (
+                        _ex_date.strftime("%d/%m")
+                        if _ex_date is not None and hasattr(_ex_date, "strftime")
+                        else "—"
+                    )
+                    _sym = _ev.get("symbol", "?")
+                    _name = str(_ev.get("event_title", ""))[:50]
+                    _val = _ev.get("value")
+                    _val_str = f" ({float(_val):,.0f}đ)" if _val and str(_val) != "nan" else ""
+                    st.markdown(
+                        f'<div style="font-size:11px;margin:3px 0;line-height:1.4;">'
+                        f'<span style="color:#DC2626;font-weight:600;">{_ex_str}</span> · '
+                        f'<span style="color:#146026;font-weight:600;">{_sym}</span>: '
+                        f'<span style="color:#374151;">{_name}{_val_str}</span></div>',
+                        unsafe_allow_html=True,
+                    )
+                if len(_events_df) > 10:
+                    st.caption(f"...và {len(_events_df) - 10} sự kiện khác")
 
     run_pressed = st.sidebar.button(
         _t("run_btn"),
