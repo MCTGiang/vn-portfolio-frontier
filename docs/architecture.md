@@ -807,7 +807,7 @@ Preliminary recommendation **Prefect** remains the leaning choice for Phase 4 â€
 **See:** [adr-008-phobert-vs-rag.md](./adr-008-phobert-vs-rag.md) for full evaluation framework, metrics table, decision tree, alternatives, consequences by path, and schedule.
 ## ADR-018: GitHub Actions daily cron for data refresh
 
-**Status:** Proposed - placeholder for Day 12 implementation
+**Status:** PARTIALLY IMPLEMENTED (2026-10-27) - infrastructure shipped; cron disabled due to vnstock Silver device registration limit. Manual weekly sync is current workaround.
 
 **Context:** As of Day 11, data sync runs manually via `scripts/sync_prices.py` + `scripts/sync_benchmarks.py` on local machine. Defense day risk if forgotten: stale data in Streamlit demo. End-user expectation: "runs continuously, auto-refreshes daily after HSX close".
 

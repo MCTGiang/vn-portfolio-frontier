@@ -1,6 +1,10 @@
 # ADR-018: GitHub Actions daily cron for data refresh
 
-**Status:** Proposed — placeholder for Day 12 implementation
+**Status:** PARTIALLY IMPLEMENTED (2026-10-27) — blocked by vnstock Silver tier device registration
+
+Infrastructure shipped (Migration 014 + scripts/audit_log.py + workflow YAML) but
+cron trigger disabled. Workflow callable via workflow_dispatch for future testing
+when blocker resolves. See "Known blockers" section below.
 
 ## Context
 
@@ -60,6 +64,41 @@ Secrets required (GitHub Actions):
 - [ ] T5: Manual trigger test (workflow_dispatch) to verify.
 - [ ] T6: Monitor first 3 scheduled runs.
 - [x] ~BLOCKED: VNSTOCK API key auth resolution (parallel ticket vnstocks.com).~ **RESOLVED 2026-10-26** via vnstock upgrade 5.2.0.
+
+## Known blockers
+
+### Device registration (discovered 2026-10-27 smoke test run #40446954626)
+
+Vnstock Silver tier binds API key to specific `device_id` (one device per
+subscription). Local machine registered during initial `vnstock.login()` call
+creates device_id entry on vnstocks.com backend. GitHub Actions runner is
+ephemeral (new device_id each run) -> `"Thiet bi chua duoc dang ky"` (Device
+not registered) error on all `vnstock.*` calls.
+
+**Impact:** Automated cron data refresh via GitHub Actions NOT POSSIBLE on
+Silver tier. Cron trigger commented out in workflow YAML; workflow_dispatch
+kept for future testing.
+
+**Workarounds considered:**
+
+1. **Golden tier upgrade** (~$30-60/month): includes vnstock_pipeline package
+   designed for CI/CD multi-device. Rejected for Project 2 scope - cost
+   outside thesis budget. Reconsider for thesis platform Phase 3+.
+2. **Dedicated cloud VM** ($4-10/month): fixed-IP VM registered once as the
+   "device". Rejected: setup complexity + ongoing cost not justified for
+   thesis timeline (defense 2026-11-17).
+3. **Manual weekly sync** (current workaround): Ginny runs
+   `python scripts/sync_prices.py --today` + `python scripts/sync_benchmarks.py
+   --today` from local machine every Monday + Thursday. Audit log works
+   when sourced as `local_dev`. Sufficient for thesis defense data freshness
+   requirements.
+4. **GitHub self-hosted runner on Ginny machine**: runner stays on same
+   device, inherits registered device_id. Rejected: machine must stay on,
+   adds attack surface, moot given option 3.
+
+**Decision:** Option 3 (manual weekly sync) adopted for Project 2 /
+thesis defense phase. Infrastructure (Migration 014 + audit helper + workflow
+YAML) kept for future Phase 3+ when Golden tier is justified.
 
 ## References
 

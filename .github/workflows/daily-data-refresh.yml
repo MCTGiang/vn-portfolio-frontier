@@ -1,9 +1,11 @@
 name: daily-data-refresh
 
 on:
-  schedule:
-    # 10:00 UTC = 17:00 ICT (post-HSX close), Mon-Fri
-    - cron: "0 10 * * 1-5"
+  # Day 12 limitation: vnstock Silver tier binds API key to local device_id;
+  # GitHub Actions runner is ephemeral -> "Device not registered" error.
+  # Cron trigger disabled until Golden tier upgrade OR dedicated VM. See ADR-018.
+  # schedule:
+  #   - cron: "0 10 * * 1-5"
   workflow_dispatch:
     inputs:
       scripts:
