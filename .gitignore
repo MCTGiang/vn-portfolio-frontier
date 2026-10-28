@@ -162,3 +162,7 @@ scripts/_phase_b_translate.py
 data/sentiment_training/raw_articles.jsonl
 data/sentiment_training/llm_labels.jsonl
 data/sentiment_training/human_audit_200.jsonl
+
+# F3 sentiment training data (raw articles contain copyrighted content)
+data/sentiment_training/
+logs/
