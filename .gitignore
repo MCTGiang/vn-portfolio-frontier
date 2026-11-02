@@ -166,3 +166,6 @@ data/sentiment_training/human_audit_200.jsonl
 # F3 sentiment training data (raw articles contain copyrighted content)
 data/sentiment_training/
 logs/
+
+# Local Task Scheduler XML (machine-specific, do not commit)
+scripts/task_scheduler_predictions.xml
