@@ -791,28 +791,82 @@ Preliminary recommendation **Prefect** remains the leaning choice for Phase 4 �
 
 ---
 
-## ADR-008: PhoBERT fine-tune vs RAG for sentiment extraction
+## ADR-008: PhoBERT fine-tune vs RAG for F3 structured signal extraction
 
-**Status:** PROPOSED — decision deadline **2026-10-30** (originally 2026-11-15, moved to 2026-10-20 for schedule risk mitigation, now +10 days due to F1 Sprint 11 extension to 23/10)
+**Status:** Accepted — 2026-11-02 (RAG direction confirmed; F3 corpus positioned as evidence base, not training set)
 
-**Context:** Feature F3 extracts structured signals from Vietnamese financial news. Two paths considered: (1) PhoBERT fine-tune on 5000 LLM-labeled samples, or (2) RAG with Chroma + GPT-4 Turbo. Both approaches cost ~$10/month.
+**Context:** F3 extracts structured signals from Vietnamese financial news per ADR-006 scope (11-field schema: ticker, event_type, sentiment, magnitude, entities, ...). Two implementation paths evaluated through Sprint 13 Day 1-2: (1) PhoBERT fine-tune on labeled samples, or (2) Agentic RAG using corpus as evidence base.
 
-**Decision factor:** Quality audit of first 200 LLM-labeled samples. Per-field F1 scores + noise rate drive decision tree:
-- avg F1 >= 0.75 AND noise rate <= 15% → **FINE-TUNE** (PhoBERT)
-- avg F1 < 0.65 OR noise rate > 25% → **RAG** (safer default)
-- Grey zone 0.65-0.75 → expand to 500 samples, then RAG if still grey
+**Decision factors (resolved 2026-11-02):**
+1. Phase B labeling output: 699 labeled articles over 6 sources, with 106 ticker-relevant signals (15.2% density). Corpus size at lower edge of PhoBERT fine-tuning threshold (500-1000 for stable training).
+2. Research advisor guidance (02/11/2026): long-term advisor horizon (6M-2Y) with structured event extraction is a modern approach; binary sentiment classification is outdated per NLP finance literature post-2022.
+3. Hexagonal architecture allows seamless swap between implementations via `SentimentPort` without domain layer changes.
 
-**Sprint 13 schedule:** Day 1 (28/10) scrape 500-1000 articles via vnstock_news + LLM label 200. Day 2 (29/10) human audit + compute metrics + lock decision. Hard stop 2026-11-02 (defender RAG as safer default).
+**Decision:** **RAG path with corpus as evidence base.** The 699-article labeled corpus is persisted as retrieval source for an Agentic RAG pipeline implemented in Project 3 (vector embedding + hybrid BM25) and consumed by Agentic AI advisor in the thesis stage. PhoBERT fine-tune path is formally rejected for Project 2+ scope; the corpus labels and schema remain reusable for future training runs if needed.
 
-**See:** [adr-008-phobert-vs-rag.md](./adr-008-phobert-vs-rag.md) for full evaluation framework, metrics table, decision tree, alternatives, consequences by path, and schedule.
-## ADR-018: GitHub Actions daily cron for data refresh
+**Consequences:**
+- Project 2 Chapter 6 writes corpus foundation + schema design, not classifier results
+- Project 3 Sprint 5 implements vector embedding + hybrid search over corpus
+- Thesis Chapter integrates corpus as RAG retrieval source for Agentic workflow
+- API cost estimate: Claude Sonnet 5-5 at ~$0.015/query, scaling to ~$30-60/month at expected thesis traffic
 
-**Status:** PARTIALLY IMPLEMENTED (2026-10-27) - infrastructure shipped; cron disabled due to vnstock Silver device registration limit. Manual weekly sync is current workaround.
+**See:** [adr-008-phobert-vs-rag.md](./adr-008-phobert-vs-rag.md) for full evaluation framework, scoring matrix, and alternatives.
 
-**Context:** As of Day 11, data sync runs manually via `scripts/sync_prices.py` + `scripts/sync_benchmarks.py` on local machine. Defense day risk if forgotten: stale data in Streamlit demo. End-user expectation: "runs continuously, auto-refreshes daily after HSX close".
+## ADR-018: Windows Task Scheduler for daily data refresh (GitHub Actions blocked)
 
-**Decision (PENDING Day 12):** GitHub Actions scheduled workflow daily on weekdays at 17:00 ICT (post HSX close), cron `0 10 * * 1-5` (UTC). Runs sync_prices + sync_benchmarks + logs to new audit table (migration 014 PENDING).
+**Status:** Accepted — 2026-10-27 (Windows Task Scheduler workaround locked; GitHub Actions cron deferred until vendor device-lock resolved)
 
-**Blocker:** Requires VNSTOCK API key auth to be stable (currently blocked, see ADR-017). Parallel ticket vnstocks.com for resolution.
+**Context:** Daily data refresh needs scheduled execution post-HSX close. Initial plan was GitHub Actions scheduled workflow for serverless, reproducible, log-aggregated execution. However, vnstock Silver tier binds API key to specific `device_id` (local machine hardware fingerprint), making GitHub Actions ephemeral runners incompatible — every runner reports "Thiết bị chưa được đăng ký" (device not registered).
 
-**See:** [adr-018-github-actions-daily-cron.md](./adr-018-github-actions-daily-cron.md) for full implementation plan, alternatives, consequences.
+**Decision:** Use **Windows Task Scheduler** on local development machine as scheduled executor. Infrastructure includes:
+- `migrations/014_audit_data_refresh_run.sql` — audit log schema
+- `scripts/audit_log.py` — CLI helper (start/end subcommands) for pipeline instrumentation
+- `scripts/weekly_sync.bat` — Task Scheduler wrapper for sync_prices + sync_benchmarks
+- `scripts/log_predictions_daily.bat` — Task Scheduler wrapper for daily prediction logger (ADR-019)
+- `.github/workflows/daily-data-refresh.yml` — kept for documentation but cron trigger disabled
+
+**Reversibility:** GitHub Actions cron workflow is preserved in disabled state. If vnstock changes tier policy to allow device-less tokens (e.g., Golden tier), re-enabling is a one-line YAML change.
+
+**See:** [adr-018-github-actions-daily-cron.md](./adr-018-github-actions-daily-cron.md) for full technical implementation plan, alternatives considered, and vendor coordination log.
+
+## ADR-019: Live Prediction Tracking Protocol (ADR-019)
+
+**Status:** Accepted — 2026-11-02 (operational since 02/11/2026)
+
+**Context:** Backtest-only evaluation is insufficient for thesis-grade empirical claims due to overfitting risk, lookahead bias, survivorship bias, and regime bias. Research guidance 02/11/2026 established need for live out-of-sample tracking as the gold standard. Statistical requirement: N >= 125 trading observations for p<0.05 significance on standard metrics (MDA, IC, Alpha) per Grinold & Kahn (2000). Thesis defense window 06/2027 + working backward requires logger go-live by early 11/2026 for safety margin.
+
+**Decision:** Implement live prediction tracking pipeline with three components:
+- **Schema (migration 015):** `predictions` namespace with `daily_prediction` (idempotent UNIQUE signature), `daily_actual` (benchmark + alpha), and `evaluation_rolling` materialized view (weekly MDA / IC / Alpha).
+- **Logger script:** `scripts/log_daily_prediction.py` executing three steps per run: F1 reference portfolio weights (3 strategies × 30 VN30 tickers = 90 predictions per day), news-based BUY/SELL/HOLD signals (Phase B deferred Sprint 13), and matured prediction evaluation (horizon-based).
+- **Scheduling:** Windows Task Scheduler per ADR-018 convention. Mon-Fri 16:30 local time (after HSX close + sync buffer). Idempotent via ON CONFLICT; weekend-safe.
+
+**Current state (02/11/2026):** First automated run verified rc=0 at 14:19:56 producing 90 F1 predictions in 71.97 seconds. Target: 155+ observations by thesis defense June 2027.
+
+**See:** [adr-019-live-prediction-tracking.md](./adr-019-live-prediction-tracking.md) for full rationale, 6 alternatives considered, risk register, and weekly health check queries.
+
+## ADR-020: Thesis scope lock (planned, deadline 30/11/2026)
+
+**Status:** Proposed — target decision date 2026-11-30
+
+**Context:** Research track roadmap formalization. ADR-020 will formally lock the thesis research question, scope boundaries, deliverable milestones, and empirical evaluation methodology for the Agentic AI advisor stage (03-06/2027). Prerequisite for Project 3 kickoff planning.
+
+**Pending inputs:**
+- Finalized Research Question (RQ1 methodology + RQ2 empirical + RQ3 UX)
+- Lock legal positioning per ADR-022
+- Lock Project 3 → Thesis handoff deliverables
+
+**See:** draft document will be published post-decision.
+
+## ADR-022: Educational positioning and legal compliance strategy (planned, deadline 15/01/2027)
+
+**Status:** Proposed — target decision date 2027-01-15
+
+**Context:** Agentic AI advisor to be released as part of thesis defense has implicit legal exposure under Vietnam Securities Law 54/2019/QH14 Articles 72 and 86 (investment advisory requires organizational license). The author holds a UBCKNN-issued Professional Analysis Certificate for securities (CKPT), which authorizes practice at licensed entities but does not grant independent organizational licensing. ADR-022 formalizes positioning and defensive design patterns to maintain educational scope.
+
+**Decision scope:**
+- Platform positioning language ("Educational AI assistant for self-directed VN30 research" rather than "advisor")
+- Defensive design patterns (system prompt filter, output regex filter, user Terms of Service acknowledgment, full conversation audit trail, hard disclaimer per response)
+- Post-thesis commercialization pathways (academic-only / CTV at licensed securities company / internal VCBS product)
+- Risk register for UBCKNN compliance review
+
+**See:** draft document will be published post-decision.

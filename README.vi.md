@@ -1,44 +1,73 @@
 # vn-portfolio-frontier
 
-> Hệ thống Tối ưu và Tái cân bằng Danh mục Cổ phiếu Việt Nam theo Đường biên Hiệu quả với Tín hiệu Cảm xúc từ Tin tức Tài chính tiếng Việt.
+> **Nền tảng nghiên cứu** cho tối ưu danh mục Markowitz, mô phỏng tái cân bằng tự động, và trích xuất tín hiệu có cấu trúc từ tin tức tài chính Việt Nam trên rổ VN30. Là bước nền tảng cho một trợ lý AI đầu tư dài hạn được phát triển trong khuôn khổ một đồ án nghiên cứu học thuật.
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Trạng thái](https://img.shields.io/badge/trạng%20thái-đang%20phát%20triển-green)]()
+[![Mục đích học thuật](https://img.shields.io/badge/mục%20đích-học%20thuật%20%2F%20giáo%20dục-blueviolet)]()
 
-**Phiên bản tiếng Anh (đầy đủ hơn):** [README.md](./README.md)
+> ⚠️ **Chỉ dùng cho mục đích học thuật và nghiên cứu.** Nền tảng này là một đồ án nghiên cứu đại học. Nó **không phải** dịch vụ tư vấn đầu tư chứng khoán được cấp phép theo Điều 72 Luật Chứng khoán Việt Nam (54/2019/QH14). Nền tảng không đưa ra khuyến nghị mua/bán/nắm giữ cho các mã chứng khoán cụ thể. Mọi quyết định đầu tư là trách nhiệm của người dùng và nên tham khảo chuyên gia tư vấn có giấy phép.
+
+**English README (chi tiết đầy đủ hơn):** [README.md](./README.md)
 
 ---
 
 ## Giới thiệu
 
-Kế thừa từ [`vn-portfolio-optimizer`](https://github.com/MCTGiang/vn-portfolio-optimizer) (Project 1 — MPT tối ưu portfolio VN30), dự án này mở rộng ba năng lực mới:
+Nhà đầu tư cá nhân Việt Nam thường đối mặt với ba câu hỏi định lượng mà các công cụ cấp tổ chức giải quyết tốt nhưng công cụ công khai dành cho giáo dục thì ít khi làm được:
 
-1. **Đường biên hiệu quả đầy đủ** — Không chỉ điểm biến động nhỏ nhất (MVP), người dùng chọn được portfolio ở bất kỳ mức rủi ro nào trên đường cong risk-return.
-2. **Mô phỏng tái cân bằng tự động** — Tái tối ưu định kỳ với chi phí giao dịch, ràng buộc turnover, và tracking drift.
-3. **Trích xuất tín hiệu từ tin tức tiếng Việt** — Structured extraction (loại sự kiện, mã CK, cường độ sentiment, entities) từ VnExpress, CafeF, VietStock. **Không** khẳng định "sentiment dự đoán được return" — positioning yếu và khó defense.
+1. **Phân bổ** — Tỷ trọng danh mục nào tối ưu đánh đổi rủi ro-lợi nhuận cho một tập mã cho trước?
+2. **Tái cân bằng** — Khi nào và như thế nào nên điều chỉnh phân bổ để duy trì rủi ro mục tiêu, có tính đến chi phí giao dịch đặc thù Việt Nam?
+3. **Tín hiệu thông tin** — Làm sao chuyển hóa tin tức tài chính công bố thành tín hiệu có cấu trúc, có thể kiểm toán, thay vì các điểm số sentiment mờ ảo?
 
-Đối tượng: Nhà đầu tư cá nhân Việt Nam và nghiên cứu viên định lượng làm việc với VN30.
+Đồ án xây dựng ba thành phần nền tảng cho một lộ trình nghiên cứu học thuật trả lời các câu hỏi này, với phạm vi được xác định rõ ràng cho bối cảnh thị trường Việt Nam (quy định lot size HSX, thuế TNCN theo Thông tư 111/2013, sự tiến hóa của rổ VN30, lãi suất tham chiếu từ NHNN).
+
+Đối tượng: **nhà nghiên cứu học thuật, sinh viên định lượng tài chính, và nhà đầu tư tự chủ (self-directed) muốn tìm công cụ giáo dục để hiểu về lý thuyết danh mục và động học thị trường do tin tức dẫn dắt**. Nền tảng được định vị là một tạo tác nghiên cứu và công cụ giáo dục — không phải dịch vụ tư vấn thương mại.
+
+## Bối cảnh đồ án
+
+Đây là **Project 2** trong lộ trình nghiên cứu bốn giai đoạn hướng tới Đồ án Tốt nghiệp chương trình Kỹ sư Công nghệ Thông tin tại Đại học Bách khoa Hà Nội (HUST), 2025-2027:
+
+| Giai đoạn | Thời gian | Phạm vi |
+|---|---|---|
+| Project 1 — MVP | 04-05/2025 | Minimum-variance optimizer 29 mã VN30, SQLite, scipy baseline ([v1.0.0 released](https://github.com/MCTGiang/vn-portfolio-optimizer)) |
+| **Project 2 — Nền tảng (repo này)** | 09-11/2026 | Full Markowitz efficient frontier + auto-rebalancing + structured news signal corpus + Hexagonal architecture |
+| Project 3 — Platform | 12/2026-02/2027 | FastAPI backend, 3-tier auth, Agentic RAG prototype, live prediction tracker |
+| Đồ án Tốt nghiệp — Trợ lý AI | 03-06/2027 | Trợ lý giáo dục full-stack với usability study và đánh giá empirical |
+
+Project 2 **không phải** sản phẩm end-user hoàn chỉnh. Đây là một nền tảng nghiên cứu đã validate với các outputs (dịch vụ tối ưu, mô phỏng rebalance, kho tin tức có nhãn) phục vụ các giai đoạn tiếp theo.
 
 ## Tính năng
 
-Trạng thái: ✅ Đã hoàn thành · 🚧 Đang làm · 📋 Kế hoạch
+Trạng thái: ✅ Đã hoàn thành · 🚧 Đang làm · 📋 Kế hoạch (giai đoạn tiếp theo)
 
-- 📋 Trực quan hoá đường biên hiệu quả (Streamlit)
-- 📋 Mô phỏng tái cân bằng với chi phí giao dịch
-- 📋 Sentiment tiếng Việt qua PhoBERT hoặc RAG
-- 📋 Tích hợp dữ liệu fundamentals (nguồn dữ liệu thứ hai)
+### Project 2 (repository này)
 
-## Stack
+- ✅ **Đường biên hiệu quả (F1)** — Full Markowitz efficient frontier với 3 danh mục tham chiếu (Minimum Variance, Max Sharpe, Risk Parity) và đường cong 20 điểm cho người dùng chọn theo khẩu vị rủi ro. Triển khai qua `scipy.optimize` SLSQP (xem ADR-017).
+- ✅ **Mô phỏng tái cân bằng tự động (F2)** — Chiến lược Threshold Band (500 bps mặc định) với mô hình chi phí đặc thù Việt Nam (thuế TT 111/2013, lot size HSX theo QĐ 496, phí môi giới nhập liệu).
+- 🚧 **Kho tín hiệu có cấu trúc từ tin tức (F3)** — Dataset có nhãn 699 bài tin tức tài chính Việt Nam với schema 11-trường (`ticker`, `event_type`, `sentiment`, `magnitude`, `entities`, ...) trích xuất qua Claude Sonnet 5-5 teacher model. Định vị là nền tảng evidence base cho Agentic Retrieval-Augmented Generation (RAG) ở các giai đoạn tiếp theo, không phải sentiment classifier độc lập.
+- ✅ **Theo dõi dự đoán trực tiếp** — Logger dự đoán hàng ngày (ADR-019) chạy từ 02/11/2026 để tích lũy 155+ quan sát giao dịch phục vụ đánh giá empirical ở giai đoạn thesis.
+- ✅ **Hexagonal Architecture** — Phân tách bốn lớp (Domain / Application / Infrastructure / Interface) theo Cockburn (2005) với Protocol-based ports. Đã được validate bởi hai case study thực tế: scipy fallback khi `vnstock_quant` khóa auth (ADR-017), và Task Scheduler bypass cho `vnstock` device-lock (ADR-018).
 
-| Lớp | Lựa chọn |
-|-----|----------|
-| Ngôn ngữ | Python 3.11+ |
-| Database | Neon Cloud PostgreSQL (Singapore) |
-| Orchestration | Prefect (dự kiến, chốt 2026-09-15) |
-| Transformation | dbt |
-| NLP | PhoBERT (fine-tune hoặc RAG, chốt 2026-10-20) |
-| Frontend | Streamlit |
-| CI/CD | GitHub Actions + pytest + black + ruff |
+### Xem trước giai đoạn tiếp theo (không triển khai trong Project 2)
+
+- 📋 **FastAPI REST backend** (Project 3) — Expose F1 và F2 dưới dạng REST endpoints cho Agentic chatbot tool consumption.
+- 📋 **Trợ lý AI tác tử** (Thesis) — LangGraph orchestration với 5-7 tool, hybrid RAG retrieval trên kho tin tức có nhãn, 3-tier authentication (định vị giáo dục, không bán tư vấn live).
+- 📋 **Báo cáo đánh giá empirical** (Thesis) — Phân tích MDA, IC, Jensen's Alpha, Sharpe từ 7+ tháng dữ liệu dự đoán trực tiếp.
+
+## Stack công nghệ
+
+| Lớp | Lựa chọn | Lý do |
+|-----|---------|------|
+| Ngôn ngữ | Python 3.11-3.13 (matrix test trong CI) | pandas 3.0+ yêu cầu 3.11+ |
+| Database | Neon Cloud PostgreSQL (Singapore) | Managed service, 0.5 GB free tier đủ cho ~215K dòng ở phạm vi Project 2 |
+| Tối ưu danh mục | scipy SLSQP (ADR-017) | Chuẩn ngành (LEAN, zipline, backtrader); không phụ thuộc vendor |
+| Gán nhãn tin tức | Claude Sonnet 5-5 teacher model | Chất lượng tiếng Việt tốt; schema 11-trường (ADR-006) |
+| Kiến trúc retrieval | Agentic RAG (Project 3+) | Linh hoạt hơn fine-tuned classifier ở corpus size <1000 (ADR-008 resolution 02/11/2026) |
+| Frontend | Streamlit (nội bộ / admin), Next.js kế hoạch (Project 3+ end-user) | Streamlit cho research prototype; Next.js cho Agentic chatbot UI |
+| Orchestration | Windows Task Scheduler (ADR-018) | Bắt buộc do vnstock Silver device-lock |
+| CI/CD | GitHub Actions matrix Python 3.11/3.12/3.13 + pip-audit | 1,4 phút/run |
 
 ## Cài đặt
 
@@ -47,29 +76,50 @@ Chi tiết đầy đủ trong [README.md tiếng Anh](./README.md#getting-starte
 ```bash
 git clone https://github.com/MCTGiang/vn-portfolio-frontier.git
 cd vn-portfolio-frontier
-cp .env.example .env  # điền connection string Neon vào .env
+python -m venv .venv && source .venv/Scripts/activate
+pip install -e ".[dev,data]"
+cp .env.example .env  # điền Neon connection string + vnstock API key vào .env
 ```
 
 **Không commit `.env`** — đã git-ignore.
 
-## Roadmap
+## Nguồn dữ liệu
 
-- **Phase 1 (hiện tại):** Repo foundation, README, CI skeleton
-- **Phase 2:** Setup Neon + thiết kế schema
-- **Phase 3:** Prefect orchestration trong Docker
-- **Phase 4:** dbt transformations
-- **Phase 5:** Efficient frontier + rebalancing
-- **Phase 6:** PhoBERT/RAG sentiment
-- **Nộp:** 17/11/2026
+| Nguồn | Phạm vi | Tần suất | Truy cập |
+|-------|---------|---------|---------|
+| OHLCV VN30 | 30 mã, từ 04/01/2021 | Daily close | vnstock Silver tier |
+| Sự kiện VN30 membership | 11 rebalance 2021-2026 | Semi-annual | YAML seed + script (event-sourcing theo ADR-013) |
+| Fundamentals | VN30 constituents | Quý | vnstock Silver (bronze/silver schema ADR-014) |
+| Lãi suất tham chiếu | TPCP 1Y, SBV refi, VCB 13M | Daily | vnstock Macro API |
+| Tin tức tài chính | 18 nguồn tiếng Việt | Daily | vnstock_news Silver tier |
 
-## Dự án liên quan
+Dữ liệu lịch sử bắt đầu từ **04/01/2021** — ngày HSX đổi lot size từ 10 lên 100 cổ/lot (Quyết định 496/QĐ-SGDHCM). Backtest trước mốc này đòi hỏi xử lý rule split lot, defer sang giai đoạn thesis.
 
-- [`vn-portfolio-optimizer`](https://github.com/MCTGiang/vn-portfolio-optimizer) (Project 1) — Giảm **25.9% biến động** so với danh mục đều tay trên VN30 (v1.0.0, 15/08/2026).
+## Tài liệu
+
+- **Architecture Decision Records**: [`docs/architecture.md`](./docs/architecture.md) — 19 ADR document các quyết định
+- **Nygard format**: [Documenting Architecture Decisions](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
+- **Meta-process lessons**: `docs/decisions-and-learnings.md` — 38 bài học rút ra trong quá trình phát triển
+
+## Đóng góp
+
+Pull requests cho bug fixes, cải thiện tài liệu, hoặc thảo luận methodology được chào đón. Pull requests triển khai feature mới sẽ được review trong bối cảnh phạm vi nghiên cứu của đồ án. Xem [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## License
 
-MIT — xem [LICENSE](./LICENSE).
+MIT — xem [`LICENSE`](./LICENSE). License MIT áp dụng cho source code. Mọi derived use cho tư vấn đầu tư thương mại cần tuân thủ Luật Chứng khoán 54/2019/QH14 và được cấp phép bởi tổ chức có nghiệp vụ tư vấn chứng khoán.
+
+## Thông báo pháp lý
+
+Đồ án này là **tạo tác nghiên cứu** được phát triển trong khuôn khổ một đồ án tốt nghiệp đại học tại Đại học Bách khoa Hà Nội. Nó không phải dịch vụ tư vấn đầu tư được cấp phép và không đưa ra khuyến nghị đầu tư cho các mã chứng khoán cụ thể theo định nghĩa tại Điều 72 và Điều 86 Luật Chứng khoán 54/2019/QH14. Người dùng chịu trách nhiệm hoàn toàn cho mọi quyết định đầu tư. Để được tư vấn đầu tư thực sự, hãy liên hệ chuyên gia có giấy phép thuộc công ty chứng khoán có giấy phép UBCKNN hợp lệ.
+
+## Lời cảm ơn
+
+- **VinAI Research** cho mô hình PhoBERT (dùng cho phân tích exploratory trong giai đoạn thiết kế ban đầu; kiến trúc F3 cuối cùng pivot sang Agentic RAG theo ADR-008 resolution 02/11/2026).
+- **Neon** cho managed PostgreSQL với free tier phù hợp phần cứng dev 8 GB RAM.
+- **Anthropic** cho Claude Sonnet 5-5 teacher model.
+- **vnstock team** cho quyền truy cập Silver tier dữ liệu thị trường Việt Nam.
 
 ---
 
-Đồ án 2, chương trình kỹ sư IT bằng 2, HUST 2025-2027. Nộp **17/11/2026**.
+Phát triển trong khuôn khổ **Project 2** chương trình Kỹ sư Công nghệ Thông tin bằng 2 tại HUST (2025-2027). Hạn nộp Project 2: **17/11/2026**. Bảo vệ Đồ án Tốt nghiệp: **06/2027**.
