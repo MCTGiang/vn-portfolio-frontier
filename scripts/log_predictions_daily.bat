@@ -1,41 +1,24 @@
 @echo off
-REM =============================================================
-REM scripts/log_predictions_daily.bat
-REM Windows Task Scheduler wrapper for daily prediction logger.
-REM
-REM Setup in Task Scheduler:
-REM   Name    : vn-portfolio-daily-predictions
-REM   Trigger : Mon-Fri 16:30 local
-REM   Depends : vn-portfolio-sync-prices (60-min delay OR separate trigger 16:30)
-REM   Battery : [uncheck] Start the task only if on AC power
-REM   Battery : [check]   Stop if goes to battery
-REM   Program : D:\Projects\vn-portfolio-frontier\scripts\log_predictions_daily.bat
-REM =============================================================
-
 cd /d D:\Projects\vn-portfolio-frontier
-
-REM Ensure logs folder exists
 if not exist logs mkdir logs
 
-REM Activate venv
-call .venv\Scripts\activate.bat
-
-REM Build dated log file
-set LOGDATE=%date:~-4%%date:~3,2%%date:~0,2%
+REM Locale-independent YYYYMMDD via PowerShell (fixes VN date "T 2, 11/ 2/2026" bug)
+for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd"') do set LOGDATE=%%i
 set LOGFILE=logs\predictions_%LOGDATE%.log
 
-echo. >> %LOGFILE%
-echo === Run started: %date% %time% === >> %LOGFILE%
+echo. >> "%LOGFILE%"
+echo === Scheduler run started: %date% %time% === >> "%LOGFILE%"
+echo CWD: %CD% >> "%LOGFILE%"
 
-REM Run logger
-python scripts\log_daily_prediction.py --today >> %LOGFILE% 2>&1
+if not exist .venv\Scripts\activate.bat (
+    echo FATAL: .venv not found >> "%LOGFILE%"
+    exit /b 98
+)
+call .venv\Scripts\activate.bat
+where python >> "%LOGFILE%" 2>&1
+
+python scripts\log_daily_prediction.py --today >> "%LOGFILE%" 2>&1
 set RC=%ERRORLEVEL%
 
-echo === Run finished rc=%RC%: %date% %time% === >> %LOGFILE%
-
-REM Non-zero exit codes:
-REM   0 = clean
-REM   1 = partial success (some sources failed)
-REM   2 = full failure
-REM Task Scheduler will show the exit code in history for monitoring.
+echo === Scheduler run finished rc=%RC%: %date% %time% === >> "%LOGFILE%"
 exit /b %RC%
