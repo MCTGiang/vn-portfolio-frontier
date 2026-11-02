@@ -60,7 +60,7 @@ dev = [
     "pytest-cov>=5.0",
     "hypothesis==6.168.5",
     "import-linter==2.15",
-    "black==26.10.0",
+    "black==26.10.1",
     "ruff==0.16.10",
     "mypy>=1.11",
     "ipykernel>=6.29",

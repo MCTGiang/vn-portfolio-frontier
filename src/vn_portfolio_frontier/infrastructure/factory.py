@@ -130,3 +130,11 @@ class AppFactory:
             price_repo=self.price_repo(),
             rf_fetcher=disposable_sim._fetch_rf_annual_pct,  # noqa: SLF001
         )
+
+    def prediction_repo(self):
+        """Build Neon prediction repo for ADR-019 live tracking."""
+        from vn_portfolio_frontier.infrastructure.neon.predictions_repo import (
+            NeonPredictionRepository,
+        )
+
+        return NeonPredictionRepository(self._conn_factory)
