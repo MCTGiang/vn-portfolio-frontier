@@ -1623,7 +1623,7 @@ def _render_sidebar():
                     _ex_date = _ev.get("ex_right_date")
                     _ex_str = (
                         _ex_date.strftime("%d/%m")
-                        if _ex_date is not None and hasattr(_ex_date, "strftime")
+                        if pd.notna(_ex_date) and hasattr(_ex_date, "strftime")
                         else "—"
                     )
                     _sym = _ev.get("symbol", "?")
