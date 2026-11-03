@@ -74,6 +74,21 @@ def _default_strategy_factory(
     """
     if name == "threshold_band":
         return ThresholdBandStrategy(cost_calc, **params)
+
+    if name == "calendar_monthly":
+        from vn_portfolio_frontier.domain.strategies.periodic import (
+            CalendarMonthlyStrategy,
+        )
+
+        return CalendarMonthlyStrategy(cost_calc)
+
+    if name == "fixed_window":
+        from vn_portfolio_frontier.domain.strategies.periodic import (
+            FixedWindowStrategy,
+        )
+
+        return FixedWindowStrategy(cost_calc, **params)
+
     raise ValueError(f"Unknown strategy: {name}")
 
 

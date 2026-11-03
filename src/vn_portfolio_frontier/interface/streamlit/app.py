@@ -1543,14 +1543,43 @@ def _render_sidebar():
 
     with st.sidebar.expander(_t("advanced_expander")):
         st.info(_t("strategy_info"))
-        band_bps = st.number_input(
-            _t("band_label"),
-            min_value=1,
-            max_value=10000,
-            value=500,
-            step=50,
-            help=_t("band_help"),
+
+        strategy_name = st.selectbox(
+            "Chiến lược tái cân bằng",
+            options=["threshold_band", "calendar_monthly", "fixed_window"],
+            format_func=lambda x: {
+                "threshold_band": "Threshold Band (ngưỡng drift)",
+                "calendar_monthly": "Calendar Monthly (đầu tháng)",
+                "fixed_window": "Fixed Window (chu kỳ N ngày)",
+            }[x],
+            help="Threshold Band: trigger khi drift > ngưỡng. "
+            "Calendar Monthly: đầu tháng mới. "
+            "Fixed Window: sau N calendar days.",
         )
+
+        if strategy_name == "threshold_band":
+            band_bps = st.number_input(
+                _t("band_label"),
+                min_value=1,
+                max_value=10000,
+                value=500,
+                step=50,
+                help=_t("band_help"),
+            )
+            strategy_params = {"band_bps": band_bps}
+        elif strategy_name == "calendar_monthly":
+            st.info("Rebalance mỗi tháng vào ngày giao dịch đầu tiên. Không có tham số bổ sung.")
+            strategy_params = {}
+        elif strategy_name == "fixed_window":
+            window_days = st.number_input(
+                "Window (số ngày calendar)",
+                min_value=1,
+                max_value=365,
+                value=90,
+                step=30,
+                help="Default 90 ngày ≈ 1 quý (63 trading days). Alternative: 30=monthly, 180=semi-annual.",
+            )
+            strategy_params = {"window_days": window_days}
         st.subheader(_t("cost_subheader"))
         brokerage_pct_input = st.number_input(
             _t("brokerage_label"),
@@ -1657,8 +1686,8 @@ def _render_sidebar():
         "initial_capital": initial_capital,
         "backtest_start": backtest_start,
         "backtest_end": backtest_end,
-        "strategy_name": "threshold_band",
-        "strategy_params": {"band_bps": band_bps},
+        "strategy_name": strategy_name,
+        "strategy_params": strategy_params,
         "brokerage_pct": brokerage_pct,
         "tax_pct": tax_pct,
         "market_impact_bps": market_impact_bps,
