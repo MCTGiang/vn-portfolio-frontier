@@ -844,18 +844,20 @@ Preliminary recommendation **Prefect** remains the leaning choice for Phase 4 �
 
 **See:** [adr-019-live-prediction-tracking.md](./adr-019-live-prediction-tracking.md) for full rationale, 6 alternatives considered, risk register, and weekly health check queries.
 
-## ADR-020: Thesis scope lock (planned, deadline 30/11/2026)
+## ADR-020: Thesis scope lock — Agentic AI advisor for Vietnamese retail investors (draft published, deadline 30/11/2026)
 
-**Status:** Proposed — target decision date 2026-11-30
+**Status:** Proposed — pending GVHD TS. Nguyễn Đức Anh sign-off before 30/11/2026
 
-**Context:** Research track roadmap formalization. ADR-020 will formally lock the thesis research question, scope boundaries, deliverable milestones, and empirical evaluation methodology for the Agentic AI advisor stage (03-06/2027). Prerequisite for Project 3 kickoff planning.
+**Context:** ĐATN original scope "Microservices platform integrate P1+P2+P3" pivoted per GVHD feedback 30/10 + 02/11/2026. Four methodology concerns raised: engineering scope lacks research question, realtime VN data infeasible, PhoBERT binary sentiment outdated, 3-tier news impact missing.
 
-**Pending inputs:**
-- Finalized Research Question (RQ1 methodology + RQ2 empirical + RQ3 UX)
-- Lock legal positioning per ADR-022
-- Lock Project 3 → Thesis handoff deliverables
+**Decision:** Lock ĐATN scope as "Agentic AI advisor web/app for Vietnamese retail investors with Agentic RAG + 3-tier access + usability study".
+- **Research question:** How effective is Agentic RAG (vs classical PhoBERT fine-tune) for structured signal extraction from Vietnamese financial news to support retail investment decisions?
+- **Architecture:** FastAPI backend + Next.js 15 frontend + LangGraph+Claude Sonnet 5-5 agentic + pgvector+bge-m3 hybrid retrieval + Clerk auth 3-tier (Free/Pro/Enterprise)
+- **Roadmap:** 6 sprints P3 (12/2026-02/2027) + 6 sprints ĐATN (03-06/2027)
 
-**See:** draft document will be published post-decision.
+**Related:** ADR-008 Resolution (RAG direction locked), ADR-019 (Live Prediction Tracking infrastructure), ADR-022 (Educational positioning, pending)
+
+**See:** [docs/adr-020-thesis-scope-lock.md](adr-020-thesis-scope-lock.md) for full detail (189 lines, 5 alternatives considered, consequences, risks).
 
 ## ADR-022: Educational positioning and legal compliance strategy (planned, deadline 15/01/2027)
 
