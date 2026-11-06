@@ -462,9 +462,8 @@ TRANSLATIONS = {
         "rf_zero": "Không điều chỉnh Rf (Perold 1988)",
         "rf_source_caption": "ℹ️ Giá trị thực tế hiển thị trong tab Chi tiết kỹ thuật sau khi chạy mô phỏng",
         "rf_actual_fmt": "Rf thực tế dùng: {value}%/năm (trung bình qua giai đoạn backtest)",
-        # ==== F1 Efficient Frontier (Day 11) ====
-        "f1_section_header": "📈 Đường biên hiệu quả (F1)",
-        "f1_section_intro": "**📌 Workflow F1 (Tùy chọn):**\n\n1. Chọn tối thiểu 2 mã + giai đoạn kiểm thử ở sidebar\n2. Điều chỉnh tham số bên dưới nếu cần (giới hạn 40% + 20 điểm là mặc định tốt)\n3. Nhấn 🔍 **Tính đường biên hiệu quả** → hệ thống tính 20 danh mục tối ưu + 3 danh mục tham chiếu\n4. Trượt thanh **Chọn điểm** để xem từng danh mục (lợi suất/rủi ro/tỷ trọng)\n5. Nhấn ⚡ **Dùng tỷ trọng này cho mô phỏng** → tỷ trọng tự chuyển sang sidebar\n6. Quay lại sidebar nhấn **Chạy mô phỏng** để backtest với tỷ trọng F1\n\n*Bỏ qua F1 → nhập tỷ trọng tay ở sidebar.*",
+        "f1_section_header": "📈 Đường biên hiệu quả F1: Tối ưu Markowitz (dựa trên danh mục Bước 1)",
+        "f1_section_intro": "**📌 Workflow F1 (Tùy chọn):**\n\n1. Chọn tối thiểu 2 mã ở sidebar (Bước 1)\n2. Điều chỉnh tham số bên dưới nếu cần (giới hạn 40%/mã + 20 điểm là mặc định tốt)\n3. Nhấn 🔍 **Tính đường biên hiệu quả** → hệ thống tính 20 danh mục tối ưu + 3 danh mục tham chiếu\n4. Trượt thanh **Chọn điểm** để xem từng danh mục (lợi suất/rủi ro/tỷ trọng)\n5. Nhấn ⚡ **Dùng tỷ trọng này cho mô phỏng** → tỷ trọng locked chuyển vào Bước 3\n6. Scroll xuống Bước 3 cấu hình chiến lược + chi phí + nhấn 🚀 **CHẠY MÔ PHỎNG**\n\n*Bỏ qua F1 → nhập tỷ trọng tay ở sidebar.*",
         "f1_compute_btn": "🔍 Tính đường biên hiệu quả",
         "f1_compute_btn_help": "Dựa trên dữ liệu lịch sử theo giai đoạn kiểm thử + rổ cổ phiếu đã chọn + nguồn Rf",
         "f1_need_min_tickers": "ℹ️ Cần chọn ≥ 2 mã cổ phiếu ở sidebar trước khi tính F1",
@@ -637,7 +636,7 @@ TRANSLATIONS = {
         "help_step5": "**Bước 5:** (Tùy chọn) Dùng F1 Đường biên hiệu quả ở khu vực chính → chọn điểm tối ưu Markowitz → ⚡ Dùng tỷ trọng → ▶️ **Chạy mô phỏng ngay** để backtest luôn (không cần quay lại sidebar)",
         "help_step6": "**Bước 6:** Hoặc nếu không dùng F1: nhập tỷ trọng tay ở sidebar → nhấn 'Chạy mô phỏng' ở sidebar",
         "help_step7": "**Bước 7:** Xem Tổng quan — mở các tab Nhật ký cân đối / Chi tiết kỹ thuật nếu cần chi tiết",
-        "idle_msg": "Hoàn tất thiết lập ở sidebar bên trái rồi nhấn Chạy mô phỏng",
+        "idle_msg": "Cấu hình xong các bước ở trên rồi nhấn 🚀 CHẠY MÔ PHỎNG ở cuối Bước 3",
         "failed_msg": "Mô phỏng thất bại: {error}",
         "footer_meta": "Mô phỏng #{run_id} • {ts}",
         "csv_date": "Ngày",
@@ -693,8 +692,8 @@ TRANSLATIONS = {
         "rf_source_caption": "ℹ️ Actual value shown in Technical Details tab after simulation runs",
         "rf_actual_fmt": "Actual Rf used: {value}%/year (mean across backtest period)",
         # ==== F1 Efficient Frontier (Day 11) ====
-        "f1_section_header": "📈 Efficient Frontier (F1)",
-        "f1_section_intro": "**📌 F1 workflow (Optional):**\n\n1. Pick ≥ 2 tickers + backtest period in sidebar\n2. Adjust params below if needed (40% cap + 20 points are good defaults)\n3. Click 🔍 **Compute efficient frontier** → system computes 20 optimal portfolios + 3 reference\n4. Slide **Select point** to inspect each (return/risk/weights)\n5. Click ⚡ **Use these weights for simulation** → weights auto-transfer to sidebar\n6. Return to sidebar, click **Run simulation** to backtest with F1 weights\n\n*Skip F1 → enter weights manually in sidebar.*",
+        "f1_section_header": "📈 Efficient Frontier (F1): Markowitz Optimization (based on Step 1 portfolio)",
+        "f1_section_intro": "**📌 F1 workflow (Optional):**\n\n1. Pick ≥ 2 tickers in sidebar (Step 1)\n2. Adjust params below if needed (40% cap + 20 points are good defaults)\n3. Click 🔍 **Compute efficient frontier** → system computes 20 optimal portfolios + 3 reference\n4. Slide **Select point** to inspect each (return/risk/weights)\n5. Click ⚡ **Use these weights for simulation** → weights locked to Step 3\n6. Scroll to Step 3 configure strategy + costs + click 🚀 **RUN SIMULATION**\n\n*Skip F1 → enter weights manually in sidebar.*",
         "f1_compute_btn": "🔍 Compute efficient frontier",
         "f1_compute_btn_help": "Based on historical data within selected backtest window + ticker universe + Rf source",
         "f1_need_min_tickers": "ℹ️ Select ≥ 2 tickers in the sidebar before computing F1",
@@ -864,7 +863,7 @@ TRANSLATIONS = {
         "help_step5": "**Step 5:** (Optional) Use F1 Efficient Frontier in main area → pick optimal Markowitz point → ⚡ Apply weights → ▶️ **Run simulation now** (no need to scroll back to sidebar)",
         "help_step6": "**Step 6:** Or if skipping F1: enter weights manually in sidebar → click 'Run simulation' in sidebar",
         "help_step7": "**Step 7:** View Overview — open Journal / Technical Details tabs for details",
-        "idle_msg": "Complete setup in the left sidebar then click Run Simulation",
+        "idle_msg": "Finish the steps above then click 🚀 RUN SIMULATION at end of Step 3",
         "failed_msg": "Simulation failed: {error}",
         "footer_meta": "Run #{run_id} • {ts}",
         "csv_date": "Date",
@@ -1212,19 +1211,15 @@ _init_state()
 
 def _render_about():
     with st.expander(_t("about_header")):
-        value_items = _t("about_value_list")
-        limit_items = _t("about_limit_list")
-        value_bullets = "\n".join(f"- {item}" for item in value_items)
-        limit_bullets = "\n".join(f"- {item}" for item in limit_items)
-        content = (
-            f"**{_t('about_purpose_title')}**\n\n"
-            f"{_t('about_purpose_body')}\n\n"
-            f"**{_t('about_value_title')}**\n\n"
-            f"{value_bullets}\n\n"
-            f"**{_t('about_limit_title')}**\n\n"
-            f"{limit_bullets}"
-        )
-        st.markdown(content)
+        # Phase 2 fix: separate st.markdown calls avoid newline rendering ambiguity
+        st.markdown(f"**{_t('about_purpose_title')}**")
+        st.markdown(_t("about_purpose_body"))
+        st.markdown(f"**{_t('about_value_title')}**")
+        for _item in _t("about_value_list"):
+            st.markdown(f"- {_item}")
+        st.markdown(f"**{_t('about_limit_title')}**")
+        for _item in _t("about_limit_list"):
+            st.markdown(f"- {_item}")
 
 
 # =====================================================================
@@ -1242,6 +1237,26 @@ def _apply_equal_weight(tickers):
 
 
 def _render_portfolio_chips():
+    # Bước 1 progress chip
+    _tickers = st.session_state.get("selected_tickers", [])
+    _wsum = sum(float(st.session_state.get(f"weight_pct_{t}", 0.0)) for t in _tickers)
+    if len(_tickers) >= 2:
+        if abs(_wsum - 100.0) < 0.1:
+            st.sidebar.success(f"✅ Bước 1 hoàn tất: {len(_tickers)} mã · tổng 100%")
+        elif _wsum > 0:
+            st.sidebar.info(
+                f"📊 Bước 1: {len(_tickers)} mã · tổng {_wsum:.1f}% · "
+                "Chuyển Bước 2 (F1 tự tối ưu) hoặc nhập 100% để chạy trực tiếp Bước 3."
+            )
+        else:
+            st.sidebar.info(
+                f"📊 Bước 1: {len(_tickers)} mã đã chọn · "
+                "Chuyển sang Bước 2 F1 để tối ưu tỷ trọng."
+            )
+    elif len(_tickers) > 0:
+        st.sidebar.warning(f"⚠️ Bước 1: Mới chọn {len(_tickers)} mã (cần tối thiểu 2 mã)")
+    else:
+        st.sidebar.info("💡 Bước 1: Nhập mã VN30 ở khung trên để bắt đầu")
     if not st.session_state.selected_tickers:
         st.sidebar.caption(_t("ticker_chip_empty"))
         return
@@ -1321,27 +1336,32 @@ def _render_sidebar():
             st.session_state["lang"] = "en"
             st.rerun()
 
-    # Day 10 Step C: compliance chip (NFR-R-02 lot size) — i18n + diacritics
+    # ━━━ Bước 1 header ━━━
+    # Phase 2 polish: Hủy F1 toast feedback
+    _f1_cancelled = st.session_state.pop("_f1_cancelled_notice", None)
+    if _f1_cancelled:
+        st.toast(f"✅ Đã hủy {_f1_cancelled} — tỷ trọng mở lại để chỉnh tay", icon="⚡")
     st.sidebar.markdown(
-        f'<span class="compliance-chip" title="{_t("lot_compliance_tooltip")}">'
-        f'{_t("lot_compliance_chip")}</span>',
+        '<div style="margin:16px 0 4px 0;padding:8px 12px;background:#EFF6FF;'
+        "border-left:3px solid #2563EB;border-radius:3px;font-size:13px;"
+        'font-weight:700;color:#1E3A8A;">'
+        "📁 Bước 1: Cấu hình danh mục"
+        "</div>",
         unsafe_allow_html=True,
     )
-
     st.sidebar.subheader(_t("capital_section"))
-    st.sidebar.caption(_t("capital_caption"))
     initial_capital_m = st.sidebar.number_input(
         _t("capital_label"),
         min_value=1.0,
         value=100.0,
         step=10.0,
         format="%.2f",
+        key="initial_capital_m",
     )
     initial_capital = Decimal(str(initial_capital_m)) * Decimal("1000000")
 
     if st.sidebar.button(
         _t("update_prices_btn"),
-        type="primary",
         use_container_width=True,
     ):
         with st.spinner(_t("updating_prices")):
@@ -1361,7 +1381,6 @@ def _render_sidebar():
 
     # v10: Ticker section with text_input + Enter form
     st.sidebar.subheader(_t("tickers_section"))
-    st.sidebar.caption(_t("ticker_section_caption"))
 
     # v11: scope info banner
     all_tickers = _get_available_tickers()
@@ -1370,13 +1389,12 @@ def _render_sidebar():
         max_date = max(latest_dates.values()) if latest_dates else date.today()
     except Exception:
         max_date = date.today()
-    st.sidebar.markdown(
-        f'<div class="scope-info">{_t("ticker_scope_info", min_date=DATA_MIN_DATE.strftime("%d/%m/%Y"), max_date=max_date.strftime("%d/%m/%Y"))}</div>'
-        f'<div class="scope-info" style="margin-top:4px;">{_t("vn30_roster_info", snapshot_date=max_date.strftime("%d/%m/%Y"))}</div>',
-        unsafe_allow_html=True,
+    # Phase 2 polish: compact scope info (1 line + tooltip-style)
+    st.sidebar.caption(
+        f"🎯 Rổ VN30 (HOSE): 30 mã · dữ liệu {DATA_MIN_DATE.strftime('%d/%m/%Y')} → {max_date.strftime('%d/%m/%Y')} · cập nhật quý"
     )
 
-    _render_portfolio_chips()
+    # _render_portfolio_chips()  # Phase 2A: chip removed (redundant with main area Bước 1)
 
     # Add ticker via form - Enter in text_input submits form (clear_on_submit=True clears input)
     with st.sidebar.form("add_ticker_form", clear_on_submit=True):
@@ -1410,21 +1428,37 @@ def _render_sidebar():
     if st.session_state.selected_tickers:
         n = len(st.session_state.selected_tickers)
 
+        # F1 override notice (unified Phase 2 — concise single notice)
+        _ws = st.session_state.get("weights_source", "")
+        if _ws.startswith("F1"):
+            st.sidebar.markdown(
+                f'<div style="background:#DCFCE7;border:2px solid #16A34A;'
+                f"padding:12px 14px;border-radius:6px;margin:10px 0;font-size:13px;"
+                f'color:#166534;">'
+                f"⚡ <strong>Đang áp dụng {_ws}</strong><br/>"
+                f'<span style="font-size:11px;font-weight:normal;color:#166534;">'
+                f"Tỷ trọng locked từ F1 · Hủy ở Bước 2 để chọn tay"
+                f"</span></div>",
+                unsafe_allow_html=True,
+            )
         # Mode toggle: Phân bổ đều vs Nhập tỷ trọng kỳ vọng
-        # Day 11 Cụm 3e: default to manual mode when F1 weights applied
-        _f1_source = st.session_state.get("weights_source", "")
-        _default_mode_index = 1 if _f1_source.startswith("F1") else 0
-        weight_mode = st.sidebar.radio(
-            _t("weight_mode_label"),
-            options=["equal", "manual"],
-            format_func=lambda m: (
-                _t("equal_weight_btn") if m == "equal" else _t("manual_weight_btn")
-            ),
-            captions=[_t("weight_mode_equal_help"), _t("weight_mode_manual_help")],
-            horizontal=True,
-            index=_default_mode_index,
-            key="weight_mode",
-        )
+        # Issue 2: Hide radio when F1 applied — F1 weights are specific, not "equal"
+        _ws_check = st.session_state.get("weights_source", "")
+        if _ws_check.startswith("F1"):
+            # F1 locked mode — force manual + skip radio
+            weight_mode = "manual"
+        else:
+            weight_mode = st.sidebar.radio(
+                _t("weight_mode_label"),
+                options=["equal", "manual"],
+                format_func=lambda m: (
+                    _t("equal_weight_btn") if m == "equal" else _t("manual_weight_btn")
+                ),
+                index=0,
+                captions=[_t("weight_mode_equal_help"), _t("weight_mode_manual_help")],
+                horizontal=True,
+                key="weight_mode",
+            )
 
         if weight_mode == "equal":
             # Day 11 Cụm 3e: compute weights (preserve F1-applied if source matches)
@@ -1496,8 +1530,20 @@ def _render_sidebar():
                         st.rerun()
 
     weight_sum = sum(weights_pct.values())
+    # ━━━ Bước 1 kết thúc — handoff sang Bước 2/3 ở màn chính ━━━
+    st.sidebar.divider()
+    st.sidebar.markdown(
+        '<div style="padding:8px 12px;background:#F0FDF4;border-left:3px solid #16A34A;'
+        'border-radius:3px;font-size:12px;color:#166534;line-height:1.5;">'
+        "✅ <strong>Hoàn tất Bước 1 ở sidebar</strong><br/>"
+        "Tiếp tục <strong>Bước 2</strong> (F1 tùy chọn) và <strong>Bước 3</strong> "
+        "(cấu hình mô phỏng + nhấn 🚀 CHẠY) ở màn chính."
+        "</div>",
+        unsafe_allow_html=True,
+    )
     target_weights = {t: p / 100.0 for t, p in weights_pct.items() if p > 0}
-
+    # Snapshot to stable key (widget weight_pct_X can be reset on rerun)
+    st.session_state["committed_weights"] = dict(target_weights)
     # Day 11 Cụm 3d: show current weights source if applied from F1
     _weights_source = st.session_state.get("weights_source", "")
     if _weights_source:
@@ -1508,178 +1554,39 @@ def _render_sidebar():
             unsafe_allow_html=True,
         )
 
-    st.sidebar.subheader(_t("range_section"))
-    st.sidebar.caption(_t("range_section_caption"))
-    # Day 10 Step C Phase 2: period recommendation shown BEFORE date pickers
-    st.sidebar.markdown(
-        f'<div class="period-rec">{_t("range_period_rec", min_years=MIN_RECOMMENDED_YEARS)}</div>',
-        unsafe_allow_html=True,
-    )
-    # Day 11 Cụm 3f: enforce DB max date (data integrity bug fix)
+    # Phase 2B.1: Date inputs moved to main area Bước 3. Read from session_state.
     data_max_date = _get_data_max_date()
-    st.sidebar.caption(f"📅 Dữ liệu có sẵn đến **{data_max_date.strftime('%d/%m/%Y')}**")
-    # Default to 3 years (within data range), bounded by DB max date
-    default_start = max(DATA_MIN_DATE, data_max_date - timedelta(days=365 * 3))
-    backtest_start = st.sidebar.date_input(
-        _t("start_date_label"),
-        value=default_start,
-        min_value=DATA_MIN_DATE,
-        max_value=data_max_date,
-        format="DD/MM/YYYY",
-        key="backtest_start",
-    )
-    backtest_end = st.sidebar.date_input(
-        _t("end_date_label"),
-        value=data_max_date,
-        min_value=DATA_MIN_DATE,
-        max_value=data_max_date,
-        format="DD/MM/YYYY",
-        key="backtest_end",
-    )
-    if backtest_start <= backtest_end:
-        test_years = (backtest_end - backtest_start).days / 365.25
-        if test_years < MIN_RECOMMENDED_YEARS:
-            st.sidebar.warning(_t("range_too_short", years=test_years))
-
-    with st.sidebar.expander(_t("advanced_expander")):
-        st.info(_t("strategy_info"))
-
-        strategy_name = st.selectbox(
-            "Chiến lược tái cân bằng",
-            options=["threshold_band", "calendar_monthly", "fixed_window"],
-            format_func=lambda x: {
-                "threshold_band": "Threshold Band (ngưỡng drift)",
-                "calendar_monthly": "Calendar Monthly (đầu tháng)",
-                "fixed_window": "Fixed Window (chu kỳ N ngày)",
-            }[x],
-            help="Threshold Band: trigger khi drift > ngưỡng. "
-            "Calendar Monthly: đầu tháng mới. "
-            "Fixed Window: sau N calendar days.",
-        )
-
-        if strategy_name == "threshold_band":
-            band_bps = st.number_input(
-                _t("band_label"),
-                min_value=1,
-                max_value=10000,
-                value=500,
-                step=50,
-                help=_t("band_help"),
-            )
-            strategy_params = {"band_bps": band_bps}
-        elif strategy_name == "calendar_monthly":
-            st.info("Rebalance mỗi tháng vào ngày giao dịch đầu tiên. Không có tham số bổ sung.")
-            strategy_params = {}
-        elif strategy_name == "fixed_window":
-            window_days = st.number_input(
-                "Window (số ngày calendar)",
-                min_value=1,
-                max_value=365,
-                value=90,
-                step=30,
-                help="Default 90 ngày ≈ 1 quý (63 trading days). Alternative: 30=monthly, 180=semi-annual.",
-            )
-            strategy_params = {"window_days": window_days}
-        st.subheader(_t("cost_subheader"))
-        brokerage_pct_input = st.number_input(
-            _t("brokerage_label"),
-            min_value=0.0,
-            max_value=1.0,
-            value=0.15,
-            step=0.01,
-            format="%.4f",
-            help=_t("brokerage_help"),
-        )
-        brokerage_pct = Decimal(str(brokerage_pct_input)) / Decimal("100")
-        tax_pct_input = st.number_input(
-            _t("tax_label"),
-            min_value=0.0,
-            max_value=1.0,
-            value=0.10,
-            step=0.01,
-            format="%.4f",
-            help=_t("tax_help"),
-        )
-        tax_pct = Decimal(str(tax_pct_input)) / Decimal("100")
-        market_impact_bps = st.number_input(
-            _t("market_impact_label"),
-            min_value=0,
-            max_value=500,
-            value=10,
-            step=5,
-            help=_t("market_impact_help"),
-        )
+    # Default start no longer used — Bước 3 dates handled by _render_buoc3_dates
+    backtest_start = st.session_state.get("backtest_start")
+    backtest_end = st.session_state.get("backtest_end", data_max_date)
 
     weights_ok = abs(weight_sum - 100.0) <= 1.0 and len(target_weights) >= 1
-    dates_ok = backtest_start <= backtest_end
+    dates_ok = (
+        backtest_start is not None and backtest_end is not None and backtest_start <= backtest_end
+    )
     capital_ok = initial_capital > 0
     all_ok = weights_ok and dates_ok and capital_ok
-    if not dates_ok:
-        st.sidebar.error(_t("range_err"))
 
-    # Day 10 Step C: Rf source selector (Day 9 Step B feature wire-up)
-    # Day 10 Step C: Rf source selectbox (priority order per ADR-016 + i18n)
-    # Order: retail realistic (default) → academic standard → policy → baseline
-    rf_sources_order = [
-        "vcb_13m_deposit",  # DEFAULT: big-4 bank savings opportunity cost
-        "vn_bond_1y",  # Academic standard (Sharpe 1994 convention)
-        "sbv_refinance",  # Policy rate (less common for retail)
-        "zero",  # Baseline no-adjustment (Perold 1988)
-    ]
-    rf_label_key = {
-        "vcb_13m_deposit": "rf_vcb_13m",
-        "vn_bond_1y": "rf_vn_bond_1y",
-        "sbv_refinance": "rf_sbv_refinance",
-        "zero": "rf_zero",
-    }
-    rf_source = st.sidebar.selectbox(
-        _t("rf_source_label"),
-        options=rf_sources_order,
-        index=0,
-        format_func=lambda src: _t(rf_label_key[src]),
-        help=_t("rf_source_help"),
-        key="rf_source_select",
-    )
-    st.sidebar.caption(_t("rf_source_caption"))
-
-    # Day 13 A1: Upcoming corporate events next 30 days (collapsed expander)
-    _tickers_tuple = tuple(st.session_state.get("selected_tickers", []))
-    if _tickers_tuple:
-        _events_df = _get_upcoming_events(_tickers_tuple, days_ahead=30)
-        if _events_df is not None and len(_events_df) > 0:
-            with st.sidebar.expander(f"📅 Sự kiện 30 ngày tới ({len(_events_df)})", expanded=False):
-                for _, _ev in _events_df.head(10).iterrows():
-                    _ex_date = _ev.get("ex_right_date")
-                    _ex_str = (
-                        _ex_date.strftime("%d/%m")
-                        if pd.notna(_ex_date) and hasattr(_ex_date, "strftime")
-                        else "—"
-                    )
-                    _sym = _ev.get("symbol", "?")
-                    _name = str(_ev.get("event_title", ""))[:50]
-                    _val = _ev.get("value")
-                    _val_str = f" ({float(_val):,.0f}đ)" if _val and str(_val) != "nan" else ""
-                    st.markdown(
-                        f'<div style="font-size:11px;margin:3px 0;line-height:1.4;">'
-                        f'<span style="color:#DC2626;font-weight:600;">{_ex_str}</span> · '
-                        f'<span style="color:#146026;font-weight:600;">{_sym}</span>: '
-                        f'<span style="color:#374151;">{_name}{_val_str}</span></div>',
-                        unsafe_allow_html=True,
-                    )
-                if len(_events_df) > 10:
-                    st.caption(f"...và {len(_events_df) - 10} sự kiện khác")
-
-    run_pressed = st.sidebar.button(
-        _t("run_btn"),
-        type="primary",
-        disabled=not all_ok,
-        use_container_width=True,
-    )
-    # Day 11 Cụm 3f #3 (X4-micro): also honor "Chạy ngay" from F1 section
-    # so user doesn't need to scroll back to sidebar after applying F1 weights
+    # Trigger sources: Bước 3 main button OR F1 combo button
+    _run_from_main = st.session_state.pop("run_from_main", False)
     _f1_trigger = st.session_state.pop("f1_trigger_sim", False)
-    if not run_pressed and not _f1_trigger:
+    run_pressed = (_run_from_main or _f1_trigger) and all_ok
+
+    if not run_pressed:
         return None
+
+    # Phase 2B.2+2B.3: Read moved widget values from session_state
+    strategy_name = st.session_state.get("strategy_select", "threshold_band")
+    if strategy_name == "threshold_band":
+        strategy_params = {"band_bps": int(st.session_state.get("band_bps_input", 500))}
+    elif strategy_name == "fixed_window":
+        strategy_params = {"window_days": int(st.session_state.get("window_days_input", 90))}
+    else:  # calendar_monthly
+        strategy_params = {}
+    brokerage_pct = Decimal(str(st.session_state.get("brokerage_input", 0.15))) / Decimal("100")
+    tax_pct = Decimal(str(st.session_state.get("tax_input", 0.10))) / Decimal("100")
+    market_impact_bps = int(st.session_state.get("market_impact_input", 10))
+    rf_source = st.session_state.get("rf_source_select", "vcb_13m_deposit")
 
     return {
         "target_weights": target_weights,
@@ -2378,12 +2285,10 @@ def _build_preview_config() -> dict | None:
 
     # Day 11 Cụm 3f: use DB max date (consistency with sidebar)
     data_max_date = _get_data_max_date()
-    default_start = max(DATA_MIN_DATE, data_max_date - timedelta(days=365 * 3))
-
     return {
         "tickers": tuple(sorted(tickers)),
-        "backtest_start": st.session_state.get("backtest_start", default_start),
-        "backtest_end": st.session_state.get("backtest_end", data_max_date),
+        "backtest_start": DATA_MIN_DATE,  # F1 full data range (Phase 2A)
+        "backtest_end": data_max_date,
         "rf_source": st.session_state.get("rf_source_select", "zero"),
     }
 
@@ -2521,11 +2426,18 @@ def _apply_f1_weights_callback(new_weights_pct: dict, source_label: str) -> None
 
 
 def _clear_f1_weights_callback() -> None:
-    """Clear F1-applied weights state so user can switch back to manual/equal."""
+    """Clear F1-applied weights state so user can switch back to manual/equal.
+
+    Phase 2 polish: Store notice flag + reset to default mode for clear feedback.
+    """
+    _prev_source = st.session_state.get("weights_source", "")
     if "weights_source" in st.session_state:
         del st.session_state["weights_source"]
     if "weight_mode" in st.session_state:
         del st.session_state["weight_mode"]
+    # Trigger notice on next rerun
+    if _prev_source:
+        st.session_state["_f1_cancelled_notice"] = _prev_source
     # Keep weights_pct dict so manual inputs show previous F1 values as starting point
 
 
@@ -2542,43 +2454,59 @@ def _render_f1_section(preview_config: dict | None, factory) -> None:
     """
     st.markdown("---")
     st.markdown(f"### {_t('f1_section_header')}")
-    st.markdown(_t("f1_section_intro"))
+    # Phase 2 polish: Collapse verbose 6-step F1 explainer into expander
+    with st.expander("📘 Hướng dẫn F1 chi tiết (6 bước)", expanded=False):
+        st.markdown(_t("f1_section_intro"))
 
-    # Advanced controls - 2 columns side by side
-    _f1_c1, _f1_c2 = st.columns([1, 1])
-    with _f1_c1:
-        upper_bound = st.slider(
-            _t("f1_upper_bound_label"),
-            min_value=0.1,
-            max_value=1.0,
-            value=st.session_state.get("f1_upper_bound_val", 0.4),
-            step=0.05,
-            format="%.2f",
-            help=_t("f1_upper_bound_help"),
-            key="f1_upper_bound_val",  # gitleaks:allow (Streamlit widget key, not a secret)
-        )
-    with _f1_c2:
-        n_points = st.number_input(
-            _t("f1_n_points_label"),
-            min_value=5,
-            max_value=50,
-            value=st.session_state.get("f1_n_points_val", 20),
-            step=1,
-            help=_t("f1_n_points_help"),
-            key="f1_n_points_val",
-        )
+    # FB — F1 data range indicator
+    if preview_config:
+        _ps = preview_config.get("backtest_start")
+        _pe = preview_config.get("backtest_end")
+        if _ps and _pe:
+            st.caption(
+                f"📅 F1 tính trên **TOÀN BỘ dữ liệu** từ **{_ps.strftime('%d/%m/%Y')}** "
+                f"đến **{_pe.strftime('%d/%m/%Y')}** "
+                f"(~{(_pe - _ps).days // 365} năm, bao phủ nhiều chu kỳ thị trường). "
+                "F2 backtest dùng Giai đoạn kiểm thử riêng ở Bước 3."
+            )
 
     # Guard: F1 compute requires >= 2 tickers
     f1_ready = preview_config is not None
 
+    # Phase 2 polish: Compute button full-width (no skip button needed)
     compute_pressed = st.button(
-        _t("f1_compute_btn"),
+        "🚀 " + _t("f1_compute_btn"),
         type="primary",
         disabled=not f1_ready,
         help=_t("f1_compute_btn_help"),
         key="f1_compute_btn_action",
         use_container_width=True,
     )
+
+    # Advanced F1 controls (progressive disclosure)
+    with st.expander("⚙️ Nâng cao F1 (giới hạn tỷ trọng + số điểm đường biên)", expanded=False):
+        _f1_c1, _f1_c2 = st.columns([1, 1])
+        with _f1_c1:
+            upper_bound = st.slider(
+                _t("f1_upper_bound_label"),
+                min_value=0.1,
+                max_value=1.0,
+                value=st.session_state.get("f1_upper_bound_val", 0.4),
+                step=0.05,
+                format="%.2f",
+                help=_t("f1_upper_bound_help"),
+                key="f1_upper_bound_val",  # gitleaks:allow
+            )
+        with _f1_c2:
+            n_points = st.number_input(
+                _t("f1_n_points_label"),
+                min_value=5,
+                max_value=50,
+                value=st.session_state.get("f1_n_points_val", 20),
+                step=1,
+                help=_t("f1_n_points_help"),
+                key="f1_n_points_val",
+            )
 
     if not f1_ready:
         st.info(_t("f1_need_min_tickers"))
@@ -2709,20 +2637,30 @@ def _render_f1_section(preview_config: dict | None, factory) -> None:
 
     # Day 11 Cụm 3f #3 (X4-micro): add 3rd column "Chạy mô phỏng ngay" to avoid
     # ping-pong UX (user had to scroll back to sidebar after applying F1 weights)
-    _f1_btn_col1, _f1_btn_col2, _f1_btn_col3 = st.columns([2, 1, 2])
+    _f1_btn_col1, _f1_btn_col2 = st.columns(2)
     _has_f1_applied = st.session_state.get("weights_source", "").startswith("F1")
 
     with _f1_btn_col1:
-        # Day 11 Cum 5 D6: demote to secondary after apply so "Chạy mô phỏng ngay"
-        # (primary) becomes the clear next action
-        st.button(
-            _t("f1_apply_btn"),
-            type="secondary" if _has_f1_applied else "primary",
-            on_click=_apply_f1_weights_callback,
-            args=(new_weights_pct, f"F1 Điểm {selected_idx + 1}"),
-            key="f1_apply_action",
-            use_container_width=True,
-        )
+        # Phase 2B.0: Hide "Dùng tỷ trọng F1" after applied — show chip instead
+        if _has_f1_applied:
+            _ws = st.session_state.get("weights_source", "")
+            st.markdown(
+                f'<div style="background:#DCFCE7;border:1px solid #16A34A;'
+                f"padding:8px 12px;border-radius:4px;text-align:center;"
+                f'font-size:13px;color:#166534;font-weight:600;margin-top:4px;">'
+                f"✅ Đã áp dụng {_ws}"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.button(
+                _t("f1_apply_btn"),
+                type="primary",
+                on_click=_apply_f1_weights_callback,
+                args=(new_weights_pct, f"F1 Điểm {selected_idx + 1}"),
+                key="f1_apply_action",
+                use_container_width=True,
+            )
     with _f1_btn_col2:
         if _has_f1_applied:
             st.button(
@@ -2733,16 +2671,6 @@ def _render_f1_section(preview_config: dict | None, factory) -> None:
                 use_container_width=True,
                 help="Hủy áp dụng F1, quay về tự nhập tỷ trọng ở sidebar",
             )
-    with _f1_btn_col3:
-        if _has_f1_applied and st.button(
-            "▶️ Chạy mô phỏng ngay",
-            type="primary",
-            key="f1_run_action",
-            use_container_width=True,
-            help="Chạy backtest ngay với tỷ trọng F1 vừa áp dụng",
-        ):
-            st.session_state["f1_trigger_sim"] = True
-            st.rerun()
 
     # 3 reference portfolios footer
     with st.expander(_t("f1_ref_portfolios_header"), expanded=False):
@@ -2814,44 +2742,517 @@ def _render_help():
 # Main
 # =====================================================================
 
+# =====================================================================
+# UX Polish — Landing Hero + Workflow Stepper + Presets + Disclaimer
+# =====================================================================
+
+# Portfolio presets per risk tolerance — Vietnam retail investor archetypes
+
+
+def _compute_workflow_step() -> int:
+    """Enhanced: Step 1 complete requires >=2 tickers AND weights sum ~=100%.
+    Step 2 ready = step 1 complete. Step 3 ready = step 1 complete. Step 4 = result.
+    """
+    if st.session_state.get("run_status") == "completed":
+        return 4
+    tickers = st.session_state.get("selected_tickers", [])
+    # Xóa hẳn dòng (weights_sum không dùng, chỉ check len(tickers) >= 2)
+    # Bước 1 complete when >=2 tickers (weights có thể 0% nếu dùng F1)
+    step_1_complete = len(tickers) >= 2
+
+    if not step_1_complete:
+        return 1  # still at step 1
+
+    if st.session_state.get("f1_result") is not None:
+        return 3
+    return 2
+
+
+def _render_landing_hero():
+    """Hero: disclaimer + value prop only. Presets removed (Q2 A)."""
+    st.markdown(
+        """
+        <div style="background:#FFF3CD;border-left:4px solid #FFC107;
+                    padding:12px 16px;border-radius:4px;margin-bottom:16px;
+                    font-size:13px;color:#664D03;">
+        <strong>⚠️ Công cụ nghiên cứu &amp; giáo dục đầu tư</strong> ·
+        Không phải tư vấn đầu tư cá nhân · Dữ liệu lịch sử không đảm bảo
+        kết quả tương lai · Mọi quyết định đầu tư thuộc trách nhiệm người dùng.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div style="background:linear-gradient(135deg,#F0FDF4 0%,#DCFCE7 100%);
+                    padding:20px 24px;border-radius:8px;margin-bottom:16px;
+                    border:1px solid #BBF7D0;">
+          <h2 style="margin:0 0 8px 0;color:#166534;font-size:22px;">
+            🎯 Nền tảng nghiên cứu đầu tư VN30
+          </h2>
+          <p style="margin:0 0 12px 0;color:#166534;font-size:14px;line-height:1.5;">
+            Tối ưu tỷ trọng danh mục Markowitz · So sánh 3 chiến lược tái cân bằng ·
+            Phân tích chi phí giao dịch chuẩn Việt Nam (TT 111/2013 + HSX QĐ 496)
+          </p>
+          <div style="color:#166534;font-size:13px;font-weight:600;">
+            📍 3 bước: 1️⃣ Chọn danh mục ở sidebar →
+            2️⃣ Tối ưu F1 (tùy chọn) → 3️⃣ Mô phỏng F2
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_workflow_stepper():
+    """Visual progress indicator for 4-step user journey."""
+    step = _compute_workflow_step()
+    steps = [
+        ("1", "Chọn danh mục"),
+        ("2", "Tối ưu F1"),
+        ("3", "Mô phỏng F2"),
+        ("4", "Kết quả"),
+    ]
+
+    chips = []
+    for i, (num, label) in enumerate(steps, start=1):
+        if i < step:
+            icon = "✅"
+            color = "#16A34A"
+            bg = "#F0FDF4"
+        elif i == step:
+            icon = "🔵"
+            color = "#2563EB"
+            bg = "#EFF6FF"
+        else:
+            icon = "⚪"
+            color = "#9CA3AF"
+            bg = "#F9FAFB"
+
+        chips.append(
+            f'<span style="display:inline-block;padding:6px 12px;'
+            f"background:{bg};color:{color};border:1px solid {color}33;"
+            f"border-radius:16px;margin-right:6px;font-size:12px;"
+            f'font-weight:600;">{icon} {num}. {label}</span>'
+        )
+        if i < len(steps):
+            chips.append(
+                '<span style="color:#D1D5DB;font-size:14px;margin-right:4px;">&rarr;</span>'
+            )
+
+    st.markdown(
+        f'<div style="margin:12px 0 20px 0;">{" ".join(chips)}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_step_header(num: int, title: str, hint: str = ""):
+    """Render visual section header for workflow step boundary.
+
+    Phase 2 polish (05/11): Bump font-size 18→22px + weight 700→800
+    so step headers OUTWEIGH sub-section #### markdown headers below.
+    """
+    hint_html = (
+        f'<div style="font-size:13px;color:#4B5563;margin-top:6px;">{hint}</div>' if hint else ""
+    )
+    st.markdown(
+        f"""
+        <div style="margin:32px 0 16px 0;padding:14px 20px;
+                    background:linear-gradient(90deg,#EFF6FF 0%,#FFFFFF 100%);
+                    border-left:5px solid #2563EB;border-radius:4px;">
+          <div style="font-size:22px;font-weight:800;color:#1E3A8A;
+                      line-height:1.3;">
+            Bước {num}: {title}
+          </div>
+          {hint_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_buoc3_dates():
+    """Bước 3 date range inputs (Phase 2B.1 moved from sidebar).
+
+    Widget keys 'backtest_start'/'backtest_end' unchanged → sidebar config
+    build reads from session_state transparently.
+    """
+    st.markdown("#### 📅 Giai đoạn kiểm thử chiến lược")
+    st.caption(_t("range_section_caption"))
+    st.markdown(
+        f'<div class="period-rec">{_t("range_period_rec", min_years=MIN_RECOMMENDED_YEARS)}</div>',
+        unsafe_allow_html=True,
+    )
+    data_max_date = _get_data_max_date()
+    st.caption(f"📅 Dữ liệu có sẵn đến **{data_max_date.strftime('%d/%m/%Y')}**")
+    default_start = DATA_MIN_DATE  # Phase 2: default full data range
+
+    _dc1, _dc2 = st.columns(2)
+    with _dc1:
+        backtest_start = st.date_input(
+            _t("start_date_label"),
+            value=default_start,
+            min_value=DATA_MIN_DATE,
+            max_value=data_max_date,
+            format="DD/MM/YYYY",
+            key="backtest_start",
+        )
+    with _dc2:
+        backtest_end = st.date_input(
+            _t("end_date_label"),
+            value=data_max_date,
+            min_value=DATA_MIN_DATE,
+            max_value=data_max_date,
+            format="DD/MM/YYYY",
+            key="backtest_end",
+        )
+    if backtest_start <= backtest_end:
+        test_years = (backtest_end - backtest_start).days / 365.25
+        if test_years < MIN_RECOMMENDED_YEARS:
+            st.warning(_t("range_too_short", years=test_years))
+
+
+def _render_buoc3_advanced():
+    """Bước 3 advanced config: strategy + costs + Rf (Phase 2B.2+2B.3).
+
+    Widget keys unchanged → sidebar config build reads from session_state.
+    """
+    st.markdown("#### ⚙️ Chiến lược tái cân bằng + Chi phí giao dịch")
+
+    # Strategy selectbox
+    strategy_name = st.selectbox(
+        "Chiến lược tái cân bằng",
+        options=["threshold_band", "calendar_monthly", "fixed_window"],
+        format_func=lambda x: {
+            "threshold_band": "Threshold Band (ngưỡng drift)",
+            "calendar_monthly": "Calendar Monthly (đầu tháng)",
+            "fixed_window": "Fixed Window (chu kỳ N ngày)",
+        }[x],
+        help="Threshold Band: trigger khi drift > ngưỡng. "
+        "Calendar Monthly: đầu tháng mới. "
+        "Fixed Window: sau N calendar days.",
+        key="strategy_select",
+    )
+
+    # Strategy params (conditional)
+    if strategy_name == "threshold_band":
+        _ = st.number_input(
+            _t("band_label"),
+            min_value=1,
+            max_value=10000,
+            value=500,
+            step=50,
+            help=_t("band_help"),
+            key="band_bps_input",
+        )
+    elif strategy_name == "calendar_monthly":
+        st.info("📅 Rebalance mỗi tháng vào ngày giao dịch đầu tiên. Không có tham số bổ sung.")
+    elif strategy_name == "fixed_window":
+        _ = st.number_input(
+            "Window (số ngày calendar)",
+            min_value=1,
+            max_value=365,
+            value=90,
+            step=30,
+            help="Default 90 ngày ≈ 1 quý (63 trading days). Alternative: 30=monthly, 180=semi-annual.",
+            key="window_days_input",
+        )
+
+    # Costs
+    st.markdown("##### 💰 Chi phí giao dịch")
+    _cc1, _cc2, _cc3 = st.columns(3)
+    with _cc1:
+        st.number_input(
+            _t("brokerage_label"),
+            min_value=0.0,
+            max_value=1.0,
+            value=0.15,
+            step=0.01,
+            format="%.4f",
+            help=_t("brokerage_help"),
+            key="brokerage_input",
+        )
+    with _cc2:
+        st.number_input(
+            _t("tax_label"),
+            min_value=0.0,
+            max_value=1.0,
+            value=0.10,
+            step=0.01,
+            format="%.4f",
+            help=_t("tax_help"),
+            key="tax_input",
+        )
+    with _cc3:
+        st.number_input(
+            _t("market_impact_label"),
+            min_value=0,
+            max_value=500,
+            value=10,
+            step=5,
+            help=_t("market_impact_help"),
+            key="market_impact_input",
+        )
+
+    # Rf source
+    rf_sources_order = [
+        "vcb_13m_deposit",
+        "vn_bond_1y",
+        "sbv_refinance",
+        "zero",
+    ]
+    rf_label_key = {
+        "vcb_13m_deposit": "rf_vcb_13m",
+        "vn_bond_1y": "rf_vn_bond_1y",
+        "sbv_refinance": "rf_sbv_refinance",
+        "zero": "rf_zero",
+    }
+    st.selectbox(
+        _t("rf_source_label"),
+        options=rf_sources_order,
+        index=0,
+        format_func=lambda src: _t(rf_label_key[src]),
+        help=_t("rf_source_help"),
+        key="rf_source_select",
+    )
+    st.caption(_t("rf_source_caption"))
+    # ━━━ Validation + Run button (Phase 2B.4: moved from sidebar) ━━━
+    st.markdown("---")
+    st.markdown("#### 🚀 Chạy mô phỏng")
+
+    # Validation checks (read ACTUAL widget keys)
+    _committed = st.session_state.get("committed_weights", {})
+    _wsum_check = sum(_committed.values())
+    _weights_ok = len(_committed) >= 2 and abs(_wsum_check - 1.0) < 0.001
+
+    _start = st.session_state.get("backtest_start")
+    _end = st.session_state.get("backtest_end")
+    _dates_ok = _start is not None and _end is not None and _start < _end
+
+    _capital_m = float(st.session_state.get("initial_capital_m", 0))
+    _capital_ok = _capital_m > 0
+
+    _all_ok = _weights_ok and _dates_ok and _capital_ok
+
+    # Validation summary
+    _validation_items = []
+    if _weights_ok:
+        _validation_items.append(f"✅ Tỷ trọng: {len(_committed)} mã, tổng 100%")
+    else:
+        if len(_committed) < 2:
+            _validation_items.append(f"❌ Tỷ trọng: cần tối thiểu 2 mã (hiện: {len(_committed)})")
+        else:
+            _validation_items.append(f"❌ Tỷ trọng: tổng {_wsum_check*100:.1f}% (cần 100%)")
+    if _dates_ok:
+        _validation_items.append(
+            f"✅ Khoảng kiểm thử: {_start.strftime('%d/%m/%Y')} → {_end.strftime('%d/%m/%Y')}"
+        )
+    else:
+        _validation_items.append("❌ Khoảng kiểm thử: chưa hợp lệ")
+    if _capital_ok:
+        _validation_items.append(f"✅ Vốn ban đầu: {_capital_m:,.0f} triệu VND")
+    else:
+        _validation_items.append("❌ Vốn ban đầu: phải lớn hơn 0")
+
+    for _item in _validation_items:
+        st.markdown(f"- {_item}")
+
+    st.markdown("")
+
+    _run_clicked = st.button(
+        "🚀 CHẠY MÔ PHỎNG",
+        type="primary",
+        disabled=not _all_ok,
+        use_container_width=True,
+        key="run_btn_main",
+        help="Backtest danh mục với tỷ trọng + chiến lược + chi phí đã cấu hình",
+    )
+
+    if _run_clicked:
+        st.session_state["run_from_main"] = True
+        st.rerun()  # Phase 2 fix: force immediate rerun so sidebar reads state
+
+
+def _render_portfolio_summary(initial_capital_vnd):
+    """Bước 1 confirmation — chips + total capital only (Phase 2A).
+
+    Phase 2 polish v3 (Option B): Clean chip row, no inline X.
+    Delete handled in sidebar (X next to weight input).
+    """
+    tickers = st.session_state.get("selected_tickers", [])
+    total_capital_m = float(initial_capital_vnd) / 1_000_000
+
+    if not tickers:
+        st.info("💡 Mở sidebar bên trái 👈 để chọn mã VN30.")
+        return
+
+    chips_html = " ".join(
+        f'<span style="display:inline-block;padding:4px 12px;'
+        f"background:#FFFFFF;border:1px solid #BBF7D0;border-radius:12px;"
+        f'margin:3px;font-size:13px;color:#166534;font-weight:600;">'
+        f"{t}</span>"
+        for t in tickers
+    )
+
+    st.markdown(
+        f"""
+        <div style="background:#F0FDF4;border-left:4px solid #16A34A;
+                    padding:12px 16px;border-radius:4px;margin:8px 0;">
+          <div style="font-size:15px;font-weight:600;color:#166534;margin-bottom:8px;">
+            ✅ Đã chọn {len(tickers)} mã · Vốn {total_capital_m:,.1f} triệu VND
+          </div>
+          <div>
+            {chips_html}
+          </div>
+          <div style="font-size:12px;color:#6B7280;margin-top:10px;font-style:italic;">
+            💡 Xóa mã: mở sidebar 👈 nhấn × bên ô tỷ trọng · Tỷ trọng xác định ở Bước 2 (F1) hoặc Bước 3 (tay).
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_buoc3_context(initial_capital_vnd):
+    """Bước 3 context: show weight source. Prefer last_config.target_weights
+    (actual weights used for run) if available; fallback to session_state."""
+    _ws = st.session_state.get("weights_source", "")
+    _tickers = st.session_state.get("selected_tickers", [])
+    _last_config = st.session_state.get("last_config", {})
+
+    # Resolve weights source: last_config (post-run) OR session_state (pre-run)
+    # Always read session_state weights (sidebar updates live, preserved across runs)
+    _weights_dict = dict(st.session_state.get("committed_weights", {}))
+    _wsum_pct = sum(w * 100 for w in _weights_dict.values())
+
+    if _ws.startswith("F1"):
+        rows_html = []
+        for t, w in _weights_dict.items():
+            if w > 0:
+                w_pct = w * 100
+                cap_m = w * float(initial_capital_vnd) / 1_000_000
+                rows_html.append(
+                    f'<tr><td style="padding:4px 12px;border-bottom:1px solid #F3F4F6;"><strong>{t}</strong></td>'
+                    f'<td style="padding:4px 12px;border-bottom:1px solid #F3F4F6;text-align:right;">{w_pct:.1f}%</td>'
+                    f'<td style="padding:4px 12px;border-bottom:1px solid #F3F4F6;text-align:right;color:#166534;">{cap_m:,.1f} triệu</td></tr>'
+                )
+        st.markdown(
+            f"""
+            <div style="background:#DCFCE7;border:2px solid #16A34A;
+                        padding:12px 16px;border-radius:4px;margin:8px 0;">
+              <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:8px;">
+                ⚡ Tỷ trọng từ {_ws} (locked)
+              </div>
+              <table style="width:100%;font-size:13px;">
+                <thead><tr style="background:#FFFFFF;">
+                  <th style="padding:4px 12px;text-align:left;">Mã</th>
+                  <th style="padding:4px 12px;text-align:right;">Tỷ trọng</th>
+                  <th style="padding:4px 12px;text-align:right;">Số tiền</th>
+                </tr></thead>
+                <tbody>{"".join(rows_html) if rows_html else '<tr><td colspan="3" style="padding:12px;text-align:center;color:#6B7280;">Chưa có dữ liệu tỷ trọng</td></tr>'}</tbody>
+              </table>
+              <div style="font-size:12px;color:#6B7280;margin-top:8px;font-style:italic;">
+                Nhấn "Hủy F1" ở Bước 2 để chuyển sang nhập tỷ trọng thủ công.
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    elif abs(_wsum_pct - 100.0) < 0.1 and len(_weights_dict) >= 2:
+        st.success(
+            f"✏️ Dùng tỷ trọng thủ công ({len(_weights_dict)} mã, tổng 100%). Cấu hình Bước 3 ở dưới rồi nhấn 🚀 CHẠY MÔ PHỎNG."
+        )
+    else:
+        st.warning(
+            f"⚠️ Chưa có tỷ trọng hợp lệ. Lựa chọn:\n"
+            f"- Quay lại Bước 2 chạy F1 → chọn điểm → **Dùng tỷ trọng này cho mô phỏng**\n"
+            f"- HOẶC nhập tay ở sidebar: chọn **Nhập tỷ trọng kỳ vọng** → điền % per mã (tổng 100%)\n"
+            f"- Hiện tại: {len(_weights_dict)} mã · tổng {_wsum_pct:.1f}%"
+        )
+
 
 def main():
     st.markdown(_CSS, unsafe_allow_html=True)
 
-    # Day 10 Step C: removed main-area language selector (duplicate of sidebar
-    # VI/EN toggle). Sidebar is single source of truth for language choice.
     st.markdown(
-        f'<div class="combined-header">'
-        f'<h1>{html.escape(_t("page_title"))}</h1>'
-        f'<div class="subtitle">{html.escape(_t("page_subtitle"))}</div>'
-        f"</div>",
+        f'<div class="combined-header">' f'<h1>{html.escape(_t("page_title"))}</h1>' f"</div>",
         unsafe_allow_html=True,
     )
 
-    _render_about()
-    _render_help()
+    _render_landing_hero()
+    _render_workflow_stepper()
 
     config = _render_sidebar()
 
-    # Day 11 F1: Efficient Frontier section (optional, computed independently of Run button)
-    # Allows user to preview optimal portfolios + apply weights before full simulation.
+    # Compute initial capital in VND from session state (for summary table)
+    _initial_capital_m = float(st.session_state.get("initial_capital_m", 100.0))
+    _initial_capital_vnd = _initial_capital_m * 1_000_000
+
+    # Bước 1
+    _render_step_header(
+        1,
+        "Chọn danh mục",
+        "👈 Mở sidebar để thêm mã VN30. Tỷ trọng xác định ở Bước 2 (F1 tối ưu) hoặc Bước 3 (nhập tay).",
+    )
+    _render_portfolio_summary(_initial_capital_vnd)
+
+    # Bước 2
+    _render_step_header(
+        2,
+        "Tối ưu Markowitz (F1) — tùy chọn",
+        "F1 tính tỷ trọng tối ưu theo lý thuyết Markowitz 1952 dựa trên các mã đã chọn ở Bước 1.",
+    )
     preview_config = _build_preview_config()
     _render_f1_section(preview_config, get_factory())
+
+    # Bước 3
+    _weights_src_raw = st.session_state.get("weights_source", "")
+    _weight_source = (
+        f"⚡ {_weights_src_raw}" if _weights_src_raw.startswith("F1") else "✏️ Tỷ trọng thủ công"
+    )
+    _render_step_header(
+        3,
+        "Mô phỏng tái cân bằng (F2)",
+        f"⬇️ Cấu hình giai đoạn kiểm thử · chiến lược · chi phí · nguồn Rf · nhấn CHẠY MÔ PHỎNG ở cuối trang · Tỷ trọng: {_weight_source}",
+    )
+    _render_buoc3_context(_initial_capital_vnd)
+    _render_buoc3_dates()
+    _render_buoc3_advanced()
 
     if config is not None:
         st.session_state.run_status = "running"
         st.session_state.last_config = config
         _run_backtest(config)
 
-    if st.session_state.run_status == "idle":
-        st.info(_t("idle_msg"))
-    elif st.session_state.run_status == "failed":
+    if st.session_state.run_status == "failed":
         st.error(_t("failed_msg", error=st.session_state.last_error))
     elif st.session_state.run_status == "completed" and st.session_state.last_result is not None:
         _render_results(
             st.session_state.last_result,
             st.session_state.get("last_config", {}),
         )
+
+    # Footer
+    with st.expander(_t("about_header")):
+        value_items = _t("about_value_list")
+        limit_items = _t("about_limit_list")
+        value_bullets = "\n".join(f"- {item}" for item in value_items)
+        limit_bullets = "\n".join(f"- {item}" for item in limit_items)
+        # Phase 2 fix: use triple-quoted f-string with ACTUAL newlines
+        # (previous version had escaped "\\n\\n" rendering as literal text)
+        content = f"""**{_t('about_purpose_title')}**
+
+{_t('about_purpose_body')}
+
+**{_t('about_value_title')}**
+
+{value_bullets}
+
+**{_t('about_limit_title')}**
+
+{limit_bullets}"""
+        st.markdown(content)
 
 
 if __name__ == "__main__":
