@@ -1,0 +1,14 @@
+{
+  "N": 200,
+  "H1_ticker_f1": 0.7627,
+  "H2_relevance_accuracy": 0.965,
+  "H3_sentiment_kappa": 0.9667,
+  "H4_event_f1_macro": 0.6293,
+  "pass_count": 2,
+  "targets": {
+    "H1": 0.9,
+    "H2": 0.85,
+    "H3": 0.7,
+    "H4": 0.75
+  }
+}

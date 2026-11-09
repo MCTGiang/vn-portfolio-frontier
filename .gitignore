@@ -169,3 +169,8 @@ logs/
 
 # Local Task Scheduler XML (machine-specific, do not commit)
 scripts/task_scheduler_predictions.xml
+
+# Phase C audit — whitelist for reproducibility (per Ch6 §6.4.4.5)
+!data/sentiment_training/audit_samples.jsonl
+!data/sentiment_training/audit_results.jsonl
+!data/sentiment_training/audit_metrics_summary.json
