@@ -2263,6 +2263,48 @@ def _render_results(result, config):
             else:
                 st.caption(f"ℹ️ Rf = 0% ({_t('rf_zero')})")
 
+    # Export PDF + Excel (Item 09) - outside tabs, always visible
+    st.divider()
+    st.markdown("### 📤 Xuất báo cáo")
+    st.caption("Tải báo cáo tổng hợp để chia sẻ với stakeholders hoặc lưu hồ sơ phân tích.")
+    from vn_portfolio_frontier.interface.streamlit.exports import (
+        export_excel,
+        export_pdf,
+        result_to_export_dicts,
+    )
+
+    _run_meta, _kpis, _orders_list, _dec_list, _daily = result_to_export_dicts(
+        result, config, record, decisions
+    )
+    _ex_c1, _ex_c2 = st.columns(2)
+    with _ex_c1:
+        try:
+            _pdf_bytes = export_pdf(_run_meta, _kpis, _orders_list, _dec_list)
+            st.download_button(
+                "📄 Tải báo cáo PDF (Executive summary)",
+                _pdf_bytes,
+                file_name=f"rebalance_report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="dl_pdf_btn",
+                type="primary",
+            )
+        except Exception as _e:
+            st.error(f"Lỗi tạo PDF: {_e}")
+    with _ex_c2:
+        try:
+            _xlsx_bytes = export_excel(_run_meta, _kpis, _orders_list, _dec_list, _daily)
+            st.download_button(
+                "📊 Tải báo cáo Excel (4 sheets dữ liệu chi tiết)",
+                _xlsx_bytes,
+                file_name=f"rebalance_report_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                key="dl_xlsx_btn",
+                type="primary",
+            )
+        except Exception as _e:
+            st.error(f"Lỗi tạo Excel: {_e}")
     now_str = datetime.now().strftime("%H:%M %d/%m/%Y")
     st.markdown(
         f'<div class="footer-caption">{_t("footer_meta", run_id=result.run_id, ts=now_str)}</div>',
