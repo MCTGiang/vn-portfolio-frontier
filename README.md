@@ -38,6 +38,14 @@ This is **Project 2** in a four-stage research track leading to a bachelor's the
 
 Project 2 is **not** an end-to-end user-facing product. It is a validated research foundation whose outputs (optimization service, rebalance simulator, labeled news corpus) feed the subsequent stages.
 
+## Recent milestones
+
+- `v2.0-sprint12-adr019` (02/11/2026) — Live Prediction Tracking (ADR-019) production go-live
+- `v2.0-phase2-ux` (06/11/2026) — Phase 2 UX linear workflow refactor (Bước 1 → 2 → 3 stepper)
+- Phase C sentiment audit completed (09/11/2026) — 200 samples reviewed, Sentiment Cohen's κ = 0.967 ("almost perfect"), 2/4 hypothesis pass
+
+---
+
 ## Features
 
 Status legend: ✅ Shipped · 🚧 In progress · 📋 Planned (next stage)
@@ -45,9 +53,10 @@ Status legend: ✅ Shipped · 🚧 In progress · 📋 Planned (next stage)
 ### Project 2 (this repository)
 
 - ✅ **Efficient Frontier (F1)** — Full Markowitz efficient frontier with 3 reference portfolios (Minimum Variance, Max Sharpe, Risk Parity) and 20-point curve for user-chosen risk tolerance. Implemented via `scipy.optimize` SLSQP (see ADR-017).
-- ✅ **Auto-Rebalancing Simulator (F2)** — Threshold Band strategy (500 bps default) with Vietnam-specific cost model (TT 111/2013 seller tax, HSX lot size per QĐ 496, user-parameterized broker fee).
-- 🚧 **Structured News Signal Corpus (F3)** — Labeled dataset of 699 Vietnamese financial news articles with 11-field schema (`ticker`, `event_type`, `sentiment`, `magnitude`, `entities`, ...) extracted via Claude Sonnet 5-5 teacher model. Positioned as evidence base for Agentic Retrieval-Augmented Generation (RAG) in later stages, not as a standalone sentiment classifier.
+- ✅ **Auto-Rebalancing Simulator (F2)** — Three rebalancing strategies (Threshold Band 500 bps default, Calendar Monthly, Fixed Window 90-day) with Vietnam-specific cost model (TT 111/2013 seller tax, HSX lot size per QĐ 496, user-parameterized broker fee). Strategy Pattern (GoF) enables extensibility without modifying backtest engine (ADR-015).
+- 🚧 **Structured News Signal Corpus (F3)** — Labeled dataset of 699 Vietnamese financial news articles with 11-field schema (`ticker`, `event_type`, `sentiment`, `magnitude`, `entities`, ...) extracted via Claude Sonnet 5-5 teacher model. **Phase C audit** (200 stratified samples, independent human review) completed 09/11/2026: Sentiment Cohen's κ = 0.967 ("almost perfect" per Landis-Koch 1977), Relevance accuracy = 96.5%. Positioned as evidence base for Agentic Retrieval-Augmented Generation (RAG) in later stages, not as a standalone sentiment classifier.
 - ✅ **Live Prediction Tracking** — Daily prediction logger (ADR-019) running since 02/11/2026 to accumulate 155+ trading observations for empirical evaluation in the thesis stage.
+- ✅ **Export Reports** — Download backtest results as PDF (executive summary) or Excel (4 sheets: Config, KPIs, Decisions, DailyValues) for stakeholder sharing and record-keeping. Vietnamese font support via platform-aware fallback (Arial Windows → DejaVu Linux → Helvetica).
 - ✅ **Hexagonal Architecture** — Four-layer separation (Domain / Application / Infrastructure / Interface) per Cockburn (2005) with Protocol-based ports. Validated by two live case studies: scipy fallback when `vnstock_quant` auth lock (ADR-017), and Task Scheduler bypass for `vnstock` device-lock (ADR-018).
 
 ### Next-stage preview (not implemented in Project 2)

@@ -38,6 +38,14 @@ Nhà đầu tư cá nhân Việt Nam thường đối mặt với ba câu hỏi 
 
 Project 2 **không phải** sản phẩm end-user hoàn chỉnh. Đây là một nền tảng nghiên cứu đã validate với các outputs (dịch vụ tối ưu, mô phỏng rebalance, kho tin tức có nhãn) phục vụ các giai đoạn tiếp theo.
 
+## Milestones gần đây
+
+- `v2.0-sprint12-adr019` (02/11/2026) — Live Prediction Tracking (ADR-019) production go-live
+- `v2.0-phase2-ux` (06/11/2026) — Phase 2 UX refactor workflow tuyến tính (Bước 1 → 2 → 3 stepper)
+- Phase C sentiment audit hoàn thành (09/11/2026) — 200 mẫu review độc lập, Sentiment Cohen's κ = 0,967 ("almost perfect"), 2/4 hypothesis đạt ngưỡng
+
+---
+
 ## Tính năng
 
 Trạng thái: ✅ Đã hoàn thành · 🚧 Đang làm · 📋 Kế hoạch (giai đoạn tiếp theo)
@@ -45,10 +53,11 @@ Trạng thái: ✅ Đã hoàn thành · 🚧 Đang làm · 📋 Kế hoạch (gi
 ### Project 2 (repository này)
 
 - ✅ **Đường biên hiệu quả (F1)** — Full Markowitz efficient frontier với 3 danh mục tham chiếu (Minimum Variance, Max Sharpe, Risk Parity) và đường cong 20 điểm cho người dùng chọn theo khẩu vị rủi ro. Triển khai qua `scipy.optimize` SLSQP (xem ADR-017).
-- ✅ **Mô phỏng tái cân bằng tự động (F2)** — Chiến lược Threshold Band (500 bps mặc định) với mô hình chi phí đặc thù Việt Nam (thuế TT 111/2013, lot size HSX theo QĐ 496, phí môi giới nhập liệu).
-- 🚧 **Kho tín hiệu có cấu trúc từ tin tức (F3)** — Dataset có nhãn 699 bài tin tức tài chính Việt Nam với schema 11-trường (`ticker`, `event_type`, `sentiment`, `magnitude`, `entities`, ...) trích xuất qua Claude Sonnet 5-5 teacher model. Định vị là nền tảng evidence base cho Agentic Retrieval-Augmented Generation (RAG) ở các giai đoạn tiếp theo, không phải sentiment classifier độc lập.
+- ✅ **Mô phỏng tái cân bằng tự động (F2)** — Ba chiến lược tái cân bằng (Threshold Band 500 bps mặc định, Calendar Monthly, Fixed Window 90 ngày) với mô hình chi phí đặc thù Việt Nam (thuế TT 111/2013, lot size HSX theo QĐ 496, phí môi giới nhập liệu). Strategy Pattern (GoF) cho phép mở rộng chiến lược mới mà không sửa engine backtest (ADR-015).
+- ✅ **Kho tín hiệu có cấu trúc từ tin tức (F3)** — Dataset có nhãn 699 bài tin tức tài chính Việt Nam với schema 11-trường (`ticker`, `event_type`, `sentiment`, `magnitude`, `entities`, ...) trích xuất qua Claude Sonnet 5-5 teacher model. **Phase C audit** (200 mẫu phân tầng, human review độc lập) hoàn thành 09/11/2026: Sentiment Cohen's κ = 0,967 ("almost perfect" per Landis-Koch 1977), Relevance accuracy = 96,5%. Định vị là nền tảng evidence base cho Agentic Retrieval-Augmented Generation (RAG) ở các giai đoạn tiếp theo, không phải sentiment classifier độc lập.
 - ✅ **Theo dõi dự đoán trực tiếp** — Logger dự đoán hàng ngày (ADR-019) chạy từ 02/11/2026 để tích lũy 155+ quan sát giao dịch phục vụ đánh giá empirical ở giai đoạn thesis.
 - ✅ **Hexagonal Architecture** — Phân tách bốn lớp (Domain / Application / Infrastructure / Interface) theo Cockburn (2005) với Protocol-based ports. Đã được validate bởi hai case study thực tế: scipy fallback khi `vnstock_quant` khóa auth (ADR-017), và Task Scheduler bypass cho `vnstock` device-lock (ADR-018).
+- ✅ **Xuất báo cáo** — Tải kết quả backtest dưới dạng PDF (executive summary) hoặc Excel (4 sheet: Config, KPIs, Decisions, DailyValues) để chia sẻ với stakeholders hoặc lưu hồ sơ phân tích. Hỗ trợ font tiếng Việt với fallback theo platform (Arial Windows → DejaVu Linux → Helvetica).
 
 ### Xem trước giai đoạn tiếp theo (không triển khai trong Project 2)
 
